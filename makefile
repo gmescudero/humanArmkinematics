@@ -4,13 +4,15 @@ TARGET = app
 current_dir = $(shell pwd)
 $(info $(current_dir))
 # source code directory
-SOURCE_DIR = source
+SOURCE_DIR = $(current_dir)/source
 # binaries directory
-BINARIES_DIR = bin
+BINARIES_DIR = $(current_dir)/bin
 # compiler
 CC = gcc
 # includes
-INC = -I$(current_dir)/$(SOURCE_DIR)/dk_arm -I$(current_dir)/$(SOURCE_DIR)/quat_lib 
+INC = -I$(SOURCE_DIR)/dk_arm \
+	-I$(SOURCE_DIR)/quat_lib \
+	-I$(SOURCE_DIR)/math
 
 # debug
 DEBUG = -g

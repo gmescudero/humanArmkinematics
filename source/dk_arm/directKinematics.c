@@ -28,9 +28,9 @@ void vector3_substract(double a[3], double b[3], double output[3])
 void printArmPose(const ARM_POSE pose)
 {
     printf("\n Arm pose:\n");
-    printf("\t sh: <%0.4f>\t<%0.4f>\t<%0.4f> \n",pose.shoulderPosition[0],pose.shoulderPosition[1],pose.shoulderPosition[2]);
-    printf("\t el: <%0.4f>\t<%0.4f>\t<%0.4f> \n",pose.elbowPosition[0],pose.elbowPosition[1],pose.elbowPosition[2]);
-    printf("\t wr: <%0.4f>\t<%0.4f>\t<%0.4f> \n",pose.wristPosition[0],pose.wristPosition[1],pose.wristPosition[2]);
+    printf("\t sh: \t<%0.4f>\t<%0.4f>\t<%0.4f> \n",pose.shoulderPosition[0],pose.shoulderPosition[1],pose.shoulderPosition[2]);
+    printf("\t el: \t<%0.4f>\t<%0.4f>\t<%0.4f> \n",pose.elbowPosition[0],pose.elbowPosition[1],pose.elbowPosition[2]);
+    printf("\t wr: \t<%0.4f>\t<%0.4f>\t<%0.4f> \n",pose.wristPosition[0],pose.wristPosition[1],pose.wristPosition[2]);
 }
 
 /**
@@ -42,9 +42,9 @@ void getArmPositions(
     ARM_POSE *arm)
 {
     ARM_POSE initialPose = {
-        .shoulderPosition = {0.0,0.0,0.0},
-        .elbowPosition = {-10.0,0.0,0.0},
-        .wristPosition = {-15.0,0.0,0.0},
+        .shoulderPosition = {0.0, 0.0, 0.0},
+        .elbowPosition    = {0.0, 0.0, -10.0},
+        .wristPosition    = {0.0, 0.0, -15.0},
     };
     double sh2el_vector[3];
     double sh2el_vector_rot[3];
