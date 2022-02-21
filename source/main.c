@@ -5,12 +5,12 @@
 
 int main(int argc, char **argv)
 {
-    double rotAxis1[3] = {1.0,0.0,0.0};
     Quaternion q1, q2;
     ARM_POSE arm;
 
-    // Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
-    Quaternion_fromAxisAngle(rotAxis1, PI/2, &q1);
+    Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
+    // Quaternion_fromXRotation(PI/2, &q1);
+
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q2);
     // Quaternion_fromAxisAngle(rotAxis1, PI/2, &q2);
 
