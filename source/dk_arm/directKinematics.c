@@ -9,7 +9,7 @@
  */
 void printArmPose(const ARM_POSE pose)
 {
-    printf("\n Arm pose:\n");
+    printf("Arm pose:\n");
     printf("\t sh: \t<%0.4f>\t<%0.4f>\t<%0.4f> \n",pose.shoulderPosition[0],pose.shoulderPosition[1],pose.shoulderPosition[2]);
     printf("\t el: \t<%0.4f>\t<%0.4f>\t<%0.4f> \n",pose.elbowPosition[0],pose.elbowPosition[1],pose.elbowPosition[2]);
     printf("\t wr: \t<%0.4f>\t<%0.4f>\t<%0.4f> \n",pose.wristPosition[0],pose.wristPosition[1],pose.wristPosition[2]);

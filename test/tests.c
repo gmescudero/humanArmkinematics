@@ -5,17 +5,37 @@
 #include "constants.h"
 #include "directKinematics.h"
 
-int main(int argc, char **argv)
+#include "tst_lib.h"
+
+bool tst_001()
 {
-    double rotAxis1[3] = {1.0,0.0,0.0};
+    bool ok = true;
     Quaternion q1, q2;
     ARM_POSE arm;
+    ARM_POSE expected = {
+        .shoulderPosition = {0.0, 0.0,  0.0 },
+        .elbowPosition    = {0.0, 0.0, -10.0},
+        .wristPosition    = {0.0, 0.0, -15.0},
+    };
 
-    // Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
-    Quaternion_fromAxisAngle(rotAxis1, PI/2, &q1);
-    Quaternion_set(1.0, 0.0, 0.0, 0.0, &q2);
-    // Quaternion_fromAxisAngle(rotAxis1, PI/2, &q2);
-
+    // Get the Arm Joints positions with identity quaternion rotations
+    Quaternion_setIdentity(&q1);
+    Quaternion_setIdentity(&q2);
     getArmPositions(q1,q2, &arm);
-    printArmPose(arm);
+
+    ok &= assert_armEqual(arm, expected);
+
+    testReport(__FUNCTION__, ok);
+    return ok;
+}
+
+
+int main(int argc, char **argv)
+{
+    bool ok = true;
+
+    testSetTraceLevel(ALL_TRACES);
+    ok &= tst_001();
+
+    
 }

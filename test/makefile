@@ -9,7 +9,8 @@ BINARIES_DIR = ../bin
 # includes
 INC = -I$(SOURCE_DIR)/dk_arm \
 	-I$(SOURCE_DIR)/quat_lib \
-	-I$(SOURCE_DIR)/math
+	-I$(SOURCE_DIR)/math \
+	-Itst_lib
 # objects
 OBJS =  $(BINARIES_DIR)/quaternion.o $(BINARIES_DIR)/directKin.o $(BINARIES_DIR)/vector3.o
 
@@ -18,7 +19,7 @@ all: tst_lib.o tests.c $(OBJS)
 	$(CC) $(INC) $(OBJS) tests.c tst_lib/*.o -o $(TARGET) -lm
 
 tst_lib.o: tst_lib/tst_lib.c
-	$(CC) -c tst_lib/tst_lib.c -o tst_lib/$@ 
+	$(CC) $(INC) -c tst_lib/tst_lib.c -o tst_lib/$@ 
 
 clean:
 	rm -rf $(TARGET)
