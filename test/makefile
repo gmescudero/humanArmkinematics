@@ -7,12 +7,12 @@ SOURCE_DIR = ../source
 # binaries directory
 BINARIES_DIR = ../bin
 # includes
-INC = -I$(SOURCE_DIR)/dk_arm \
+INC = -I$(SOURCE_DIR)/arm \
 	-I$(SOURCE_DIR)/quat_lib \
 	-I$(SOURCE_DIR)/math \
 	-Itst_lib
 # objects
-OBJS =  $(BINARIES_DIR)/quaternion.o $(BINARIES_DIR)/directKin.o $(BINARIES_DIR)/vector3.o
+OBJS =  $(BINARIES_DIR)/quaternion.o $(BINARIES_DIR)/arm.o $(BINARIES_DIR)/vector3.o
 
 all: tst_lib.o tests.c $(OBJS)
 	$(info building tests ... )

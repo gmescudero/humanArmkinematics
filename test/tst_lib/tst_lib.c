@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include "tst_lib.h"
-#include "directKinematics.h"
+#include "arm.h"
 
 LOG_LEVEL testTraceLevel = SILENT;
 
 #define WILL_PRINT(ok) ((ALL_TRACES == testTraceLevel) || ((SILENT_NO_ERROR == testTraceLevel) && (true != ok)))
+
+// * TEST FUNCTIONS ***********************************************************
 
 void testSetTraceLevel(LOG_LEVEL testTraceLvl){testTraceLevel = testTraceLvl;}
 
@@ -12,6 +14,26 @@ void testReport(const char *name, bool result)
 {
     printf(" -> Test: %s, result: %s \n",name,(true == result)?"PASSED":"FAILED");
 }
+
+void testCleanUp()
+{
+    terminateArm();
+}
+
+// * PRECONDITIONS ************************************************************
+
+void preconditions_initArm()
+{
+    static ARM_POSE currentPose = {
+        .shoulderPosition = {0.0, 0.0, 0.0},
+        .elbowPosition    = {0.0, 0.0, -10.0},
+        .wristPosition    = {0.0, 0.0, -15.0},
+    };
+    initializeArm(currentPose);
+}
+
+
+// * ASSERTS ******************************************************************
 
 bool assert_vector3Equal(const double actual[3], const double expected[3])
 {

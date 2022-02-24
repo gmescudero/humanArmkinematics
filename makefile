@@ -11,7 +11,7 @@ BINARIES_DIR = $(current_dir)/bin
 # compiler
 CC = gcc
 # includes
-INC = -I$(SOURCE_DIR)/dk_arm \
+INC = -I$(SOURCE_DIR)/arm \
 	-I$(SOURCE_DIR)/quat_lib \
 	-I$(SOURCE_DIR)/math
 
@@ -24,7 +24,7 @@ WARN = -Wall
 
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
-OBJS =  quaternion.o directKin.o vector3.o
+OBJS =  quaternion.o arm.o vector3.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
@@ -39,8 +39,8 @@ main.o: $(SOURCE_DIR)/main.c bin_dir
 quaternion.o: $(SOURCE_DIR)/quat_lib/Quaternion.c bin_dir
 	$(CC) -c  $(CPPFLAGS) $(SOURCE_DIR)/quat_lib/Quaternion.c -o $(BINARIES_DIR)/$@ 
 
-directKin.o: $(SOURCE_DIR)/dk_arm/directKinematics.c vector3.o bin_dir
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/dk_arm/directKinematics.c -o $(BINARIES_DIR)/$@ 
+arm.o: $(SOURCE_DIR)/arm/arm.c vector3.o bin_dir
+	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/arm/arm.c -o $(BINARIES_DIR)/$@ 
 
 vector3.o: $(SOURCE_DIR)/math/vector3.c bin_dir
 	$(CC) -c  $(CPPFLAGS) $(SOURCE_DIR)/math/vector3.c -o $(BINARIES_DIR)/$@ 
