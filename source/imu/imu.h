@@ -23,6 +23,7 @@ extern "C" {
 #include "lpsensor/ImuData.h"
 #endif
 
+#define DEG_2_RAD(x) (x * M_PI/180)
 
 // #define M_PI           3.14159265358979323846  /* pi */
 
@@ -67,8 +68,6 @@ void stop_imus();
 unsigned char setOffsetIMUs(int v);
 
 void imus_direct_kinematics(ImuData (*imus), ARM_JOINTS (*data_query), bool twoImus, ARM_MEASUREMENT arm_params, bool show);
-
-float degree2radian(float degree);
 
 void printMatrix(float (Mat)[4][4]);
 

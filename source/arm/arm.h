@@ -9,8 +9,13 @@ typedef struct ARM_POSE_STRUCT{
     double wristPosition[3];
 } ARM_POSE;
 
+/******************************************************************************/
+/* Function Declarations                                                      */
+/******************************************************************************/
 
-void initializeArm(ARM_POSE initialArmPose);
+void initializeArm(
+    ARM_POSE initialArmPose);
+
 void terminateArm();
 
 void printArmPose(

@@ -96,7 +96,7 @@ unsigned char setOffsetIMUs(int v){
 
 void imus_direct_kinematics(ImuData (*imus), ARM_JOINTS (*data_query), bool twoImus, ARM_MEASUREMENT arm_params, bool show) {
     // Parameters initialization
-    float arm = arm_params.arm;
+    float arm  = arm_params.arm;
     float fore = arm_params.forearm;
     float a = 0.0;
 
@@ -108,9 +108,9 @@ void imus_direct_kinematics(ImuData (*imus), ARM_JOINTS (*data_query), bool twoI
 
     // Degree to Radian
     float theta[3];
-    theta[0] = degree2radian(r[0]);
-    theta[1] = degree2radian(r[1]);
-    theta[2] = degree2radian(r[2]);
+    theta[0] = DEG_2_RAD(r[0]);
+    theta[1] = DEG_2_RAD(r[1]);
+    theta[2] = DEG_2_RAD(r[2]);
 
     // Calculos cinematica directa
     float A1[4][4];
@@ -156,9 +156,9 @@ void imus_direct_kinematics(ImuData (*imus), ARM_JOINTS (*data_query), bool twoI
 
         // Degree to Radian
 
-        theta_Imu_2[0] = degree2radian(r[0]) - theta[0];
-        theta_Imu_2[1] = degree2radian(r[1]) - theta[1];
-        theta_Imu_2[2] = degree2radian(r[2]);
+        theta_Imu_2[0] = DEG_2_RAD(r[0]) - theta[0];
+        theta_Imu_2[1] = DEG_2_RAD(r[1]) - theta[1];
+        theta_Imu_2[2] = DEG_2_RAD(r[2]);
 
 
         float A4[4][4];
@@ -191,11 +191,6 @@ void imus_direct_kinematics(ImuData (*imus), ARM_JOINTS (*data_query), bool twoI
         printf("Euler IMU 2: x: %f, y: %f, z: %f\nEuler IMU 2 (radians): x: %f, y: %f, z: %f\nWrist position: x: %f, y: %f, z: %f\n\n", r_Imu_2[0], r_Imu_2[1], r_Imu_2[2], theta_Imu_2[0], theta_Imu_2[1], theta_Imu_2[2] ,wrist_t[0], wrist_t[1], wrist_t[2]);
     }
 
-}
-
-float degree2radian(float degree) {
-    float radian;
-    return radian = degree * M_PI/180;
 }
 
 void printMatrix(float (Mat)[4][4]) {
