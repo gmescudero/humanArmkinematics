@@ -2,6 +2,7 @@
 #include "Quaternion.h"
 #include "constants.h"
 #include "arm.h"
+#include "imu.h"
 
 int main(int argc, char **argv)
 {

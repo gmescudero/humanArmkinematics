@@ -14,9 +14,12 @@ LD = g++
 INC = \
 	-I$(SOURCE_DIR)/arm \
 	-I$(SOURCE_DIR)/quat_lib \
-	-I$(SOURCE_DIR)/math
+	-I$(SOURCE_DIR)/math \
+	-I$(SOURCE_DIR)/imu
 # libraries
 IMULIB= -L$(current_dir)/lib -lLpSensor -lstdc++ -lX11
+PTHREAD = -pthread
+PTHREADSERIAL = $(PTHREAD) -lserialport
 # debug
 DEBUG = -g
 # optimisation
@@ -31,7 +34,7 @@ OBJS =  quaternion.o arm.o vector3.o imu.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
-	$(LD) $(INC) $(BINARIES_DIR)/*.o -o $(TARGET) -lm -ldl
+	$(LD) $(INC) $(BINARIES_DIR)/*.o $(IMULIB) $(PTHREADSERIAL) -o $(TARGET) -lm -ldl
 
 test: $(OBJS) 
 	cd test && make && cd -
