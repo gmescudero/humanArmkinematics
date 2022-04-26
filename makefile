@@ -7,28 +7,31 @@ $(info $(current_dir))
 SOURCE_DIR = $(current_dir)/source
 # binaries directory
 BINARIES_DIR = $(current_dir)/bin
-
 # compiler
 CC = gcc
+LD = g++
 # includes
-INC = -I$(SOURCE_DIR)/arm \
+INC = \
+	-I$(SOURCE_DIR)/arm \
 	-I$(SOURCE_DIR)/quat_lib \
 	-I$(SOURCE_DIR)/math
-
+# libraries
+IMULIB= -L$(current_dir)/lib -lLpSensor -lstdc++ -lX11
 # debug
 DEBUG = -g
 # optimisation
 OPT = -O0
 # warnings
 WARN = -Wall
-
+# flags
+CCFLAGS = $(DEBUG) $(OPT) $(WARN)
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
-OBJS =  quaternion.o arm.o vector3.o
+OBJS =  quaternion.o arm.o vector3.o imu.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
-	$(CC) $(INC) $(BINARIES_DIR)/*.o -o $(TARGET) -lm
+	$(LD) $(INC) $(BINARIES_DIR)/*.o -o $(TARGET) -lm -ldl
 
 test: $(OBJS) 
 	cd test && make && cd -
@@ -44,6 +47,9 @@ arm.o: $(SOURCE_DIR)/arm/arm.c vector3.o bin_dir
 
 vector3.o: $(SOURCE_DIR)/math/vector3.c bin_dir
 	$(CC) -c  $(CPPFLAGS) $(SOURCE_DIR)/math/vector3.c -o $(BINARIES_DIR)/$@ 
+
+imu.o: $(SOURCE_DIR)/imu/imu.cpp bin_dir
+	$(LD) -c $(CCFLAGS) $(SOURCE_DIR)/imu/imu.cpp -o $(BINARIES_DIR)/$@ 
 
 bin_dir:
 	mkdir -p $(BINARIES_DIR)
