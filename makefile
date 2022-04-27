@@ -12,6 +12,7 @@ CC = gcc
 LD = g++
 # includes
 INC = \
+	-I$(SOURCE_DIR)/general \
 	-I$(SOURCE_DIR)/arm \
 	-I$(SOURCE_DIR)/quat_lib \
 	-I$(SOURCE_DIR)/math \
@@ -30,7 +31,7 @@ WARN = -Wall
 CCFLAGS = $(DEBUG) $(OPT) $(WARN)
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
-OBJS =  quaternion.o arm.o vector3.o imu.o
+OBJS =  quaternion.o arm.o vector3.o imu.o functions.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
@@ -42,6 +43,9 @@ test: $(OBJS)
 main.o: $(SOURCE_DIR)/main.c bin_dir
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/main.c -o $(BINARIES_DIR)/$@
 
+functions.o: $(SOURCE_DIR)/general/functions.c bin_dir
+	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/general/functions.c -o $(BINARIES_DIR)/$@ 
+
 quaternion.o: $(SOURCE_DIR)/quat_lib/Quaternion.c bin_dir
 	$(CC) -c  $(CPPFLAGS) $(SOURCE_DIR)/quat_lib/Quaternion.c -o $(BINARIES_DIR)/$@ 
 
@@ -52,7 +56,7 @@ vector3.o: $(SOURCE_DIR)/math/vector3.c bin_dir
 	$(CC) -c  $(CPPFLAGS) $(SOURCE_DIR)/math/vector3.c -o $(BINARIES_DIR)/$@ 
 
 imu.o: $(SOURCE_DIR)/imu/imu.cpp bin_dir
-	$(LD) -c $(CCFLAGS) $(SOURCE_DIR)/imu/imu.cpp -o $(BINARIES_DIR)/$@ 
+	$(LD) -c $(CCFLAGS) $(INC) $(SOURCE_DIR)/imu/imu.cpp -o $(BINARIES_DIR)/$@ 
 
 bin_dir:
 	mkdir -p $(BINARIES_DIR)

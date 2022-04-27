@@ -18,6 +18,7 @@ extern "C" {
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include "errors.h"
 
 #ifdef __GNUC__
 #include "lpsensor/ImuData.h"
@@ -55,11 +56,16 @@ typedef struct _ARM_MEASUREMENT{
 /******************************************************************************/
 /*                            Exported functions                              */
 /******************************************************************************/
-// extern "C" void initilize_imus(int);
-// extern "C" void read_imus(ImuData);
-// extern "C" void stop_imus();
 
-bool initialize_imus(int n_imus, int init);
+/**
+ * @brief Initialize imu sensors and wait for them to connect.
+ * 
+ * @param n_imus The total number of IMU sensors to initialize
+ * @param init The initial COM port to use 
+ * @return RET_OK If the initialization works correctly
+ * @return RET_ERROR If the initialization suffers any kind of error
+ */
+ERROR_CODE initialize_imus(int n_imus, int init);
 
 void read_imus(ImuData *imus);
 

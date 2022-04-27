@@ -23,21 +23,14 @@ char imu_conn[15] = "/dev/ttyUSB0";
 
 #include "imu.h"
 extern "C" unsigned int sleep(unsigned int __seconds);
-// extern "C" void initilize_imus(int n_imus, int init);
-// extern "C" void read_imus(ImuData *imus);
-// extern "C" void stop_imus();
-
 
 unsigned char num_imus = 0;
 int initial_COM = -1;
 LpmsSensorManagerI* manager; /* Gets a LpmsSensorManager instance */
 LpmsSensorI* lpms[7];
 
-/* 
-* Initialize imu sensors and wait for them to connect.
-* Return true if all correctly connected and false otherwise
-*/
-bool initialize_imus(int n_imus, int init){
+
+ERROR_CODE initialize_imus(int n_imus, int init){
     bool    ret = true;
     int     connection_status = SENSOR_CONNECTION_CONNECTED;
     short   timeout_counter;
