@@ -19,12 +19,25 @@ extern "C" {
 #include <stdbool.h>
 #include <math.h>
 #include "errors.h"
+#include "functions.h"
 
 #ifdef __GNUC__
 #include "lpsensor/ImuData.h"
 #endif
 
+/**
+ * @brief Conversion from Degrees to Radians
+ */
 #define DEG_2_RAD(x) (x * M_PI/180)
+
+/**
+ * @brief Maximum number of IMU sensors
+ */
+#define IMU_MAX_NUMBER (COM_PORTS_MAX_NUM)
+/**
+ * @brief Maximum timeout to wait for IMU connection in seconds
+ */
+#define IMU_CONNECTION_TIMEOUT (4)
 
 // #define M_PI           3.14159265358979323846  /* pi */
 
@@ -58,14 +71,21 @@ typedef struct _ARM_MEASUREMENT{
 /******************************************************************************/
 
 /**
- * @brief Initialize imu sensors and wait for them to connect.
+ * @brief Initialize an IMU sensor connected to a given COM port
  * 
- * @param n_imus The total number of IMU sensors to initialize
- * @param init The initial COM port to use 
- * @return RET_OK If the initialization works correctly
- * @return RET_ERROR If the initialization suffers any kind of error
+ * @param com_port (input) The COM port where the IMU is connected
+ * @return ERROR_CODE: RET_OK on succes and RET_ERROR otherwise
  */
-ERROR_CODE initialize_imus(int n_imus, int init);
+ERROR_CODE imu_initialize(const char *com_port);
+
+/**
+ * @brief Initialize a set of IMU sensors from a given set of COM ports
+ * 
+ * @param com_ports (input) The list of COM ports 
+ * @param imus_num (input) How many IMU sensors to initialize
+ * @return ERROR_CODE: RET_OK on succes and RET_ERROR otherwise
+ */
+ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num);
 
 void read_imus(ImuData *imus);
 

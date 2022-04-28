@@ -12,10 +12,15 @@ int main(int argc, char **argv) {
 
     /* Look for com ports avalilable in the system */
     if (RET_OK != com_ports_list(&discoveredPorts)){
-        printf("DEP\n");
+        printf("DEP: %d\n",__LINE__);
         return RET_ERROR;
     }
 
+    /* Initialize imu in a given COM port */
+    if (RET_OK != imu_initialize("/dev/ttyS3")){
+        printf("DEP: %d\n",__LINE__);
+        return RET_ERROR;
+    }
     
 
 }

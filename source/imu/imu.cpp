@@ -25,40 +25,52 @@ char imu_conn[15] = "/dev/ttyUSB0";
 extern "C" unsigned int sleep(unsigned int __seconds);
 
 unsigned char num_imus = 0;
-int initial_COM = -1;
-LpmsSensorManagerI* manager; /* Gets a LpmsSensorManager instance */
-LpmsSensorI* lpms[7];
+LpmsSensorManagerI* manager = NULL; /* Gets a LpmsSensorManager instance */
+LpmsSensorI* lpms[IMU_MAX_NUMBER] = {NULL};
 
+ERROR_CODE imu_initialize(const char *com_port){
+    int   connection_status = SENSOR_CONNECTION_CONNECTED;
+    short timeout_counter   = IMU_CONNECTION_TIMEOUT; 
+    unsigned int index      = (unsigned int) num_imus;
 
-ERROR_CODE initialize_imus(int n_imus, int init){
-    bool    ret = true;
-    int     connection_status = SENSOR_CONNECTION_CONNECTED;
-    short   timeout_counter;
+    // Check given arguments
+    if (NULL == com_port) return RET_ERROR;
+    if (IMU_MAX_NUMBER <= index) return RET_ERROR;
 
-    num_imus    = n_imus;
-    initial_COM = init;
-    manager = LpmsSensorManagerFactory();
-    for (int i = 0; i < num_imus; i++) {
-        imu_conn[strlen(imu_conn)-1] = init + '0';
-        lpms[i] = manager->addSensor(DEVICE_LPMS_U2, imu_conn);
-        init++; 
+    // Initialize LPMS manager if not done already
+    if (NULL == manager){
+        manager = LpmsSensorManagerFactory();   
     }
 
-    // Wait for connection
-    for (int i = 0; (i < num_imus) && (SENSOR_CONNECTION_CONNECTED == connection_status); i++) {
-        connection_status = lpms[i]->getConnectionStatus();
-        timeout_counter = 4; // wait for 4 seconds maximum until each imu is connected
-        while ((connection_status != SENSOR_CONNECTION_CONNECTED) && (timeout_counter > 0)){
-            sleep(1);
-            timeout_counter--;
-            connection_status = lpms[i]->getConnectionStatus();
-        }
-        if (connection_status != SENSOR_CONNECTION_CONNECTED) {
-            printf("IMU Sensor %d failed to connect\n",i);
-            ret = false;
-        }
+    // Add a new sensor to the list
+    lpms[index] = manager->addSensor(DEVICE_LPMS_U2, com_port);
+
+    // Retrieve cthe connection status
+    connection_status = lpms[index]->getConnectionStatus();
+    // Wait for the connection status to be CONNECTED
+    while ((connection_status != SENSOR_CONNECTION_CONNECTED) && (timeout_counter > 0)){
+        sleep(1);
+        timeout_counter--;
+        connection_status = lpms[index]->getConnectionStatus();
     }
-    return ret;
+    if (connection_status != SENSOR_CONNECTION_CONNECTED) {
+        printf("IMU Sensor %d failed to connect through %s\n", index, com_port);
+        return RET_ERROR;
+    }
+
+    num_imus++;
+    return RET_OK;
+}
+
+ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num){
+    ERROR_CODE status;
+    if (imus_num > com_ports.ports_number || imus_num <= 0) return RET_ERROR;
+
+    for (unsigned int i = 0; i < imus_num && RET_OK == status; i++) {
+        status = imu_initialize(com_ports.ports_names[i]);
+    }
+
+    return status;
 }
 
 void read_imus(ImuData *imus){
