@@ -1,3 +1,13 @@
+/**
+ * @file arm.c
+ * @author German Moreno Escudero
+ * @brief Human Arm descriptor package
+ * @version 0.1
+ * @date 2022-04-28
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include "arm.h"
 #include "Quaternion.h"
 #include "vector3.h"

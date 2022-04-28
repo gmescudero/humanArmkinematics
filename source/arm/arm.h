@@ -1,3 +1,13 @@
+/**
+ * @file arm.h
+ * @author German Moreno Escudero
+ * @brief Human Arm descriptor package
+ * @version 0.1
+ * @date 2022-04-28
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #ifndef __arm_h__
 #define __arm_h__
 

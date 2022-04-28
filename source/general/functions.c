@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
 #include <libserialport.h>  /* READ COM ports before connect */
 #include <time.h>
@@ -40,33 +41,32 @@ ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts) {
     return RET_OK;
 }
 
-
-#if 0
 void log_str(char *text, ...){
     va_list args;
-    time_t raw_time;
-    struct tm * time_info;
-    time ( &raw_time );
-    time_info = localtime ( &raw_time );
-    int mill3 = current_timestamp() % 1000;
-
-    flog = fopen(log_name, "a+"); // Opens a file for reading and appending.
-    if (flog != NULL) {
-        // Print timestamp
-        fprintf(flog,"[%02d%02d%02d_%03d] ", time_info->tm_hour, time_info->tm_min,
-                time_info->tm_sec, mill3);
-        // Print the trace with the va arguments
-        va_start(args, text);
-        vfprintf(flog, text, args);
-        va_end(args);
-        // Close file
-        fclose(flog);
-    }else{
-        printf("-> Error opening log File [%s]\n", log_name);
-    }
 
     va_start(args, text);
+    printf("[INFO   ] ");
     vprintf(text, args);
+    printf("\n");
     va_end(args);
 }
-#endif
+
+void wrn_str(char *text, ...){
+    va_list args;
+
+    va_start(args, text);
+    printf("[WARNING] ");
+    vprintf(text, args);
+    printf("\n");
+    va_end(args);
+}
+
+void err_str(char *text, ...){
+    va_list args;
+
+    va_start(args, text);
+    printf("[ERROR  ] ");
+    vprintf(text, args);
+    printf("\n");
+    va_end(args);
+}

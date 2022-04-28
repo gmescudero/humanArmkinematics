@@ -1,29 +1,30 @@
-/******************************************************************************/
-/*
- * Project  : ExoFlex
- * Version  : 0.1
- * File:   imu.cpp
- * Author: Aldo Contreras
- * Description : GUI for read serial port
- * Created on June 23, 2019, 11:37
+/**
+ * @file imu.cpp
+ * @author German Moreno Escudero
+ * @brief LPMS IMU managing pack
+ * @version 0.1
+ * @date 2022-04-28
+ * 
+ * @copyright Copyright (c) 2022
+ * 
  */
-/******************************************************************************/
 
 #ifdef _WIN32
 #include "LpmsSensorI.h"
 #include "LpmsSensorManagerI.h"
-char imu_conn[15] = "COM0";
+// #define IMU_CONNECTION_PORT "COM0"
 #endif
 
 #ifdef __GNUC__
 #include "lpsensor/LpmsSensorI.h"
 #include "lpsensor/LpmsSensorManagerI.h"
-char imu_conn[15] = "/dev/ttyUSB0";
+// #define IMU_CONNECTION_PORT "/dev/ttyUSB0";
 #endif
 
 #include "imu.h"
-extern "C" unsigned int sleep(unsigned int __seconds);
+#include <unistd.h>
 
+// char imu_conn[15] = IMU_CONNECTION_PORT;
 unsigned char num_imus = 0;
 LpmsSensorManagerI* manager = NULL; /* Gets a LpmsSensorManager instance */
 LpmsSensorI* lpms[IMU_MAX_NUMBER] = {NULL};
@@ -44,6 +45,7 @@ ERROR_CODE imu_initialize(const char *com_port){
 
     // Add a new sensor to the list
     lpms[index] = manager->addSensor(DEVICE_LPMS_U2, com_port);
+    if (NULL == lpms[index]) return RET_ERROR;
 
     // Retrieve cthe connection status
     connection_status = lpms[index]->getConnectionStatus();
@@ -72,6 +74,9 @@ ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num){
 
     return status;
 }
+
+
+
 
 void read_imus(ImuData *imus){
     for (int i = 0; i < num_imus; i++) {

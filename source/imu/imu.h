@@ -1,13 +1,13 @@
-/******************************************************************************/
-/*
- * Project  : ExoFlex
- * Version  : 0.1
- * File:   imu.h
- * Author: Aldo Contreras
- * Description : GUI for read serial port
- * Created on June 23, 2019, 11:36
+/**
+ * @file imu.h
+ * @author German Moreno Escudero
+ * @brief LPMS IMU managing pack
+ * @version 0.1
+ * @date 2022-04-28
+ * 
+ * @copyright Copyright (c) 2022
+ * 
  */
-/******************************************************************************/
 #ifdef __cplusplus
 extern "C" {
 #endif

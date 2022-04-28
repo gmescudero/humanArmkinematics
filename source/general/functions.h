@@ -26,7 +26,6 @@ typedef struct COM_PORTS_STRUCT {
     char ports_names[COM_PORTS_MAX_NUM][COM_PORTS_LENGTH];
 } COM_PORTS; 
 
- 
 /**
  * @brief Retrieve all COM ports available in the system
  * 
@@ -36,5 +35,26 @@ typedef struct COM_PORTS_STRUCT {
  */
 ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts);
 
+/**
+ * @brief Log a informative string
+ * 
+ * @param text The text to be formated
+ * @param ... The formating args
+ */
+void log_str(char *text, ...);
+/**
+ * @brief Log a warning string
+ * 
+ * @param text The text to be formated
+ * @param ... The formating args
+ */
+void wrn_str(char *text, ...);
+/**
+ * @brief Log an error string
+ * 
+ * @param text The text to be formated
+ * @param ... The formating args
+ */
+void err_str(char *text, ...);
 
 #endif /* __functions_h__ */
