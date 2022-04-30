@@ -67,14 +67,14 @@ typedef struct _ARM_MEASUREMENT{
 }ARM_MEASUREMENT;
 
 /******************************************************************************/
-/*                            Exported functions                              */
+/*                            Declare functions                               */
 /******************************************************************************/
 
 /**
  * @brief Initialize an IMU sensor connected to a given COM port
  * 
  * @param com_port (input) The COM port where the IMU is connected
- * @return ERROR_CODE: RET_OK on succes and RET_ERROR otherwise
+ * @return ERROR_CODE: RET_OK on succes, RET_ERROR on failure and RET_ARG_ERROR if the given arguments are invalid
  */
 ERROR_CODE imu_initialize(const char *com_port);
 
@@ -83,13 +83,44 @@ ERROR_CODE imu_initialize(const char *com_port);
  * 
  * @param com_ports (input) The list of COM ports 
  * @param imus_num (input) How many IMU sensors to initialize
- * @return ERROR_CODE: RET_OK on succes and RET_ERROR otherwise
+ * @return ERROR_CODE: RET_OK on succes, RET_ERROR on failure and RET_ARG_ERROR if the given arguments are invalid
  */
 ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num);
 
-void read_imus(ImuData *imus);
+/**
+ * @brief Terminate all imu connections and handlers
+ */
+void imu_batch_terminate();
 
-void stop_imus();
+/**
+ * @brief Read data from an IMU sensor with a given index
+ * 
+ * @param index (input) Index of the IMU sensor to be read
+ * @param imus (output) IMU data retrieved
+ * @return ERROR_CODE: RET_OK on succes, RET_ERROR on failure and RET_ARG_ERROR if the given arguments are invalid
+ */
+ERROR_CODE imu_read(unsigned int index, ImuData *imus) ;
+
+/**
+ * @brief Read data from a set of IMU sensors
+ * 
+ * @param imus_num (input) The number of IMU sensors to be read starting from index 0
+ * @param imus (output) IMU data retrieved
+ * @return ERROR_CODE: RET_OK on succes, RET_ERROR on failure and RET_ARG_ERROR if the given arguments are invalid
+ */
+ERROR_CODE imu_batch_read(unsigned int imus_num, ImuData imus[]);
+
+/**
+ * @brief Print the IMU data through console
+ * 
+ * @param imu IMU data to be printed
+ */
+void imu_data_print (ImuData imu);
+
+
+
+
+
 
 unsigned char setOffsetIMUs(int v);
 

@@ -35,26 +35,52 @@ typedef struct COM_PORTS_STRUCT {
  */
 ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts);
 
+typedef enum TRACE_LEVEL_ENUM {
+    NONE = 0,
+    ERROR,
+    WARNING,
+    INFO, // Default
+    DEBUG,
+
+    NUMBER_OF_LEVELS
+} TRACE_LEVEL;
+
+
+/**
+ * @brief Set the tracing level to moderate the ammount of data print
+ * 
+ * @param lvl The new trace level
+ * @return ERROR_CODE: RET_OK on success and RET_ARG_ERROR when invalid level given
+ */
+ERROR_CODE trace_level_set(TRACE_LEVEL lvl);
+
+/**
+ * @brief Log a debug string
+ * 
+ * @param text The text to be formated
+ * @param ... The formating args
+ */
+void dbg_str(const char *text, ...);
 /**
  * @brief Log a informative string
  * 
  * @param text The text to be formated
  * @param ... The formating args
  */
-void log_str(char *text, ...);
+void log_str(const char *text, ...);
 /**
  * @brief Log a warning string
  * 
  * @param text The text to be formated
  * @param ... The formating args
  */
-void wrn_str(char *text, ...);
+void wrn_str(const char *text, ...);
 /**
  * @brief Log an error string
  * 
  * @param text The text to be formated
  * @param ... The formating args
  */
-void err_str(char *text, ...);
+void err_str(const char *text, ...);
 
 #endif /* __functions_h__ */

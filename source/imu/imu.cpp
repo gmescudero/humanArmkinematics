@@ -29,14 +29,15 @@ unsigned char num_imus = 0;
 LpmsSensorManagerI* manager = NULL; /* Gets a LpmsSensorManager instance */
 LpmsSensorI* lpms[IMU_MAX_NUMBER] = {NULL};
 
+
 ERROR_CODE imu_initialize(const char *com_port){
     int   connection_status = SENSOR_CONNECTION_CONNECTED;
     short timeout_counter   = IMU_CONNECTION_TIMEOUT; 
     unsigned int index      = (unsigned int) num_imus;
 
     // Check given arguments
-    if (NULL == com_port) return RET_ERROR;
-    if (IMU_MAX_NUMBER <= index) return RET_ERROR;
+    if (NULL == com_port) return RET_ARG_ERROR;
+    if (IMU_MAX_NUMBER <= index) return RET_ARG_ERROR;
 
     // Initialize LPMS manager if not done already
     if (NULL == manager){
@@ -66,7 +67,8 @@ ERROR_CODE imu_initialize(const char *com_port){
 
 ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num){
     ERROR_CODE status;
-    if (imus_num > com_ports.ports_number || imus_num <= 0) return RET_ERROR;
+    // Check arguments
+    if (imus_num > com_ports.ports_number || imus_num <= 0) return RET_ARG_ERROR;
 
     for (unsigned int i = 0; i < imus_num && RET_OK == status; i++) {
         status = imu_initialize(com_ports.ports_names[i]);
@@ -75,33 +77,105 @@ ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num){
     return status;
 }
 
-
-
-
-void read_imus(ImuData *imus){
-    for (int i = 0; i < num_imus; i++) {
-        if (lpms[i]->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED && lpms[i]->hasImuData() ){
-            imus[i] = lpms[i]->getCurrentData();
-        }
-    }
-}
-
-void stop_imus(){
+void imu_batch_terminate(){
     // Removes the initialized sensor
     for (int i = 0; i < num_imus; i++) {
         manager->removeSensor(lpms[i]);
     }
     // Deletes LpmsSensorManager object
     delete manager;
+    // Set total number of IMUs to 0
+    num_imus = 0;
 }
 
-unsigned char setOffsetIMUs(int v){
-    if (num_imus == 0) return 0;
-    for (int i = 0; i < num_imus; i++) {
-        if (lpms[i]->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED && lpms[i]->hasImuData() ) { lpms[i]->setOrientationOffset(v);}
-        else {return 0;}
+ERROR_CODE imu_read(unsigned int index, ImuData *imu) {
+    // Check arguments
+    if (NULL == imu) return RET_ARG_ERROR;
+    if (0 > index || num_imus <= index) return RET_ARG_ERROR;
+    if (lpms[index]->getConnectionStatus() != SENSOR_CONNECTION_CONNECTED) return RET_ERROR;
+    if (false == lpms[index]->hasImuData()) return RET_NO_EXEC;
+
+    // Retrieve IMU data
+    *imu = lpms[index]->getCurrentData();
+
+    return RET_OK;
+}
+
+ERROR_CODE imu_batch_read(unsigned int imus_num, ImuData imus[]) {
+    ERROR_CODE status = RET_OK;
+    // Check arguments
+    if (imus_num > num_imus || imus_num <= 0) return RET_ARG_ERROR;
+    if (NULL == imus) return RET_ARG_ERROR;
+
+    for (unsigned int i = 0; i < imus_num && RET_OK == status; i++) {
+        status = imu_read(i, &imus[i]);
     }
-    return 1;
+
+    return status;
+}
+
+
+void imu_data_print (ImuData imu){
+    log_str(" =========== IMU DATA =========== ");
+
+    log_str("\topenMatId:           %d",imu.openMatId);
+    log_str("\ttimeStamp:           %g",imu.timeStamp);
+
+    log_str("\taccelerometer_raw:   [%g,%g,%g]",imu.aRaw[0],imu.aRaw[1],imu.aRaw[2]);
+    log_str("\tgyroscope_raw:       [%g,%g,%g]",imu.gRaw[0],imu.gRaw[1],imu.gRaw[2]);
+    log_str("\tmagnetometer_raw:    [%g,%g,%g]",imu.bRaw[0],imu.bRaw[1],imu.bRaw[2]);
+
+    log_str("\taccelerometer_calib: [%g,%g,%g]",imu.a[0],imu.a[1],imu.a[2]);
+    log_str("\tgyroscope_calib:     [%g,%g,%g]",imu.g[0],imu.g[1],imu.g[2]);
+    log_str("\tmagnetometer_calib:  [%g,%g,%g]",imu.b[0],imu.b[1],imu.b[2]);
+
+    log_str("\tangular_vel:         [%g,%g,%g]",imu.w[0],imu.w[1],imu.w[2]);
+    log_str("\teuler_angles:        [%g,%g,%g]",imu.r[0],imu.r[1],imu.r[2]);
+    log_str("\tquaternion:          [%g,%g,%g,%g]",imu.q[0],imu.q[1],imu.q[2],imu.q[3]);
+
+    log_str("\trotation_matrix: \n"
+        "\t\t[%g,%g,%g]\n\t\t[%g,%g,%g]\n\t\t[%g,%g,%g]",
+        imu.rotationM[0],imu.rotationM[1],imu.rotationM[2],
+        imu.rotationM[3],imu.rotationM[4],imu.rotationM[5],
+        imu.rotationM[6],imu.rotationM[7],imu.rotationM[8]);
+    log_str("\trotation_matrix (zeroed): \n"
+        "\t\t[%g,%g,%g]\n\t\t[%g,%g,%g]\n\t\t[%g,%g,%g]",
+        imu.rotOffsetM[0],imu.rotOffsetM[1],imu.rotOffsetM[2],
+        imu.rotOffsetM[3],imu.rotOffsetM[4],imu.rotOffsetM[5],
+        imu.rotOffsetM[6],imu.rotOffsetM[7],imu.rotOffsetM[8]);
+    log_str("\tlinear_accel:        [%g,%g,%g]",imu.linAcc[0],imu.linAcc[1],imu.linAcc[2]);
+
+    log_str("\tpressure:            %g",imu.pressure);
+    log_str("\tgyro_temp:           %g",imu.pressure);
+    log_str("\ttemperature:         %g",imu.temperature);
+
+    log_str("\tdata_frame_index:    %d",imu.frameCount);
+
+    // HeaveMotionModule hm;
+    // GaitTrackingModule gm;
+
+    log_str(" ================================ ");
+}
+
+
+
+
+
+
+
+unsigned char setOffsetIMUs(int v){
+    // Check status
+    if (num_imus == 0) return RET_ERROR;
+
+    for (int i = 0; i < num_imus; i++) {
+        if (lpms[i]->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED && lpms[i]->hasImuData() ) { 
+            lpms[i]->setOrientationOffset(v);
+        }
+        else {
+            return RET_ERROR;
+        }
+    }
+    return RET_OK;
 }
 
 void imus_direct_kinematics(ImuData (*imus), ARM_JOINTS (*data_query), bool twoImus, ARM_MEASUREMENT arm_params, bool show) {

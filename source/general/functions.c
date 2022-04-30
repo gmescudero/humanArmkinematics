@@ -7,6 +7,7 @@
 #include "functions.h"
 
 struct sp_port **ports;
+TRACE_LEVEL trace_level = INFO;
 
 ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts) {
     enum sp_return error;
@@ -22,7 +23,7 @@ ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts) {
 
     /* Check error */
     if (SP_OK == error) {
-        printf("Ports found: \n");
+        log_str("Ports found: ");
         /* Show all COM ports */
         for(int i = 0; ports[i]; i++){
             /* Increment COM ports total number of ports */
@@ -30,43 +31,70 @@ ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts) {
             /* Copy the port name to the given structure */
             strcpy(discoveredPorts->ports_names[i], sp_get_port_name(ports[i]));
 
-            printf("\tFound port: '%s'\n", discoveredPorts->ports_names[i]);
+            log_str("\tFound port: '%s'", discoveredPorts->ports_names[i]);
         }
     }
     else {
-        printf("Error looking for COM ports (%d) \n",(int)error);
+        log_str("Error looking for COM ports (%d) ",(int)error);
         return RET_ERROR;
     }
 
     return RET_OK;
 }
 
-void log_str(char *text, ...){
-    va_list args;
 
-    va_start(args, text);
-    printf("[INFO   ] ");
-    vprintf(text, args);
-    printf("\n");
-    va_end(args);
+ERROR_CODE trace_level_set(TRACE_LEVEL lvl) {
+    /* Check arguments */
+    if (NONE > lvl || NUMBER_OF_LEVELS <= lvl) return RET_ARG_ERROR;
+
+    trace_level = lvl;
+    return RET_OK;
 }
 
-void wrn_str(char *text, ...){
+void dbg_str(const char *text, ...){
     va_list args;
 
-    va_start(args, text);
-    printf("[WARNING] ");
-    vprintf(text, args);
-    printf("\n");
-    va_end(args);
+    if (DEBUG <= trace_level) {
+        va_start(args, text);
+        printf("[DEBUG  ] ");
+        vprintf(text, args);
+        printf("\n");
+        va_end(args);
+    }
 }
 
-void err_str(char *text, ...){
+void log_str(const char *text, ...){
     va_list args;
 
-    va_start(args, text);
-    printf("[ERROR  ] ");
-    vprintf(text, args);
-    printf("\n");
-    va_end(args);
+    if (INFO <= trace_level) {
+        va_start(args, text);
+        printf("[INFO   ] ");
+        vprintf(text, args);
+        printf("\n");
+        va_end(args);
+    }
+}
+
+void wrn_str(const char *text, ...){
+    va_list args;
+
+    if (WARNING <= trace_level) {
+        va_start(args, text);
+        printf("[WARNING] ");
+        vprintf(text, args);
+        printf("\n");
+        va_end(args);
+    }
+}
+
+void err_str(const char *text, ...){
+    va_list args;
+
+    if (ERROR <= trace_level) {
+        va_start(args, text);
+        printf("[ERROR  ] ");
+        vprintf(text, args);
+        printf("\n");
+        va_end(args);
+    }
 }

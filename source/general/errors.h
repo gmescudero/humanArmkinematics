@@ -26,5 +26,14 @@ typedef int ERROR_CODE;
  */
 #define RET_ERROR (-1)
 
+/**
+ * @brief Input or Output value of a function is invalid
+ */
+#define RET_ARG_ERROR (-2)
+
+/**
+ * @brief Procedure could not be done 
+ */
+#define RET_NO_EXEC (-3)
 
 #endif /* __errors_h__ */
