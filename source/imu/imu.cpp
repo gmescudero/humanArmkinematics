@@ -25,9 +25,9 @@
 #include <unistd.h>
 
 // char imu_conn[15] = IMU_CONNECTION_PORT;
-unsigned char num_imus = 0;
-LpmsSensorManagerI* manager = NULL; /* Gets a LpmsSensorManager instance */
-LpmsSensorI* lpms[IMU_MAX_NUMBER] = {NULL};
+static unsigned char num_imus = 0;
+static LpmsSensorManagerI* manager = NULL; /* Gets a LpmsSensorManager instance */
+static LpmsSensorI* lpms[IMU_MAX_NUMBER] = {NULL};
 
 
 ERROR_CODE imu_initialize(const char *com_port){

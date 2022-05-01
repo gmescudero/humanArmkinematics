@@ -9,18 +9,94 @@
  * 
  */
 #include "vector3.h"
+#include "math.h"
+#include "functions.h"
+#include <stddef.h>
 
+ERROR_CODE vector3_add(double a[3], double b[3], double output[3]) {
+    // Check arguments
+    if (NULL == a)      return RET_ARG_ERROR;
+    if (NULL == b)      return RET_ARG_ERROR;
+    if (NULL == output) return RET_ARG_ERROR;
 
-void vector3_add(double a[3], double b[3], double output[3])
-{
     output[0] = a[0] + b[0];
     output[1] = a[1] + b[1];
     output[2] = a[2] + b[2];
+
+    return RET_OK;
 }
 
-void vector3_substract(double a[3], double b[3], double output[3])
-{
+ERROR_CODE vector3_substract(double a[3], double b[3], double output[3]) {
+    // Check arguments
+    if (NULL == a)      return RET_ARG_ERROR;
+    if (NULL == b)      return RET_ARG_ERROR;
+    if (NULL == output) return RET_ARG_ERROR;
+
     output[0] = a[0] - b[0];
     output[1] = a[1] - b[1];
     output[2] = a[2] - b[2];
+
+    return RET_OK;
+}
+
+ERROR_CODE vector3_rotate90y(double a[3], double output[3]) {
+    // Check arguments
+    if (NULL == a)      return RET_ARG_ERROR;
+    if (NULL == output) return RET_ARG_ERROR;
+
+    output[0] = -a[2];
+    output[1] =  a[1];
+    output[2] =  a[0];
+
+    return RET_OK;
+}
+
+ERROR_CODE vector3_rotateMinus90y(double a[3], double output[3]) {
+    // Check arguments
+    if (NULL == a)      return RET_ARG_ERROR;
+    if (NULL == output) return RET_ARG_ERROR;
+
+    output[0] =  a[2];
+    output[1] =  a[1];
+    output[2] = -a[0];
+
+    return RET_OK;
+}
+
+ERROR_CODE vector3_dot(double a[3], double b[3], double *output) {
+    // Check arguments
+    if (NULL == a)      return RET_ARG_ERROR;
+    if (NULL == b)      return RET_ARG_ERROR;
+    if (NULL == output) return RET_ARG_ERROR;
+
+    *output = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+
+    return RET_OK;
+}
+
+ERROR_CODE vector3_norm(double a[3], double *output) {
+    // Check arguments
+    if (NULL == a)      return RET_ARG_ERROR;
+    if (NULL == output) return RET_ARG_ERROR;
+
+    *output = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+
+    return RET_OK;
+}
+
+ERROR_CODE vector3_normalize(double a[3], double output[3]) {
+    ERROR_CODE status;
+    double norm;
+    // Check arguments
+    if (NULL == a)      return RET_ARG_ERROR;
+    if (NULL == output) return RET_ARG_ERROR;
+
+    status = vector3_norm(a, &norm);
+    if (RET_OK == status) {
+        output[0] = a[0]/norm;
+        output[1] = a[1]/norm;
+        output[2] = a[2]/norm;
+    }
+    
+    return status;
 }

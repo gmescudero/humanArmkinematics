@@ -16,7 +16,7 @@
 #include "errors.h"
 #include "functions.h"
 
-#define STATUS_EVAL(code) {if (RET_OK != status) err_str("[%d] DEP: %d \n",__LINE__, code);}
+#define STATUS_EVAL(code) {if (RET_OK != code) err_str("[%d] DEP: %d \n",__LINE__, code);}
 
 int main(int argc, char **argv) {
     ERROR_CODE status = RET_OK;
