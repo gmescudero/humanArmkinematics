@@ -45,14 +45,15 @@ typedef enum TRACE_LEVEL_ENUM {
     NUMBER_OF_LEVELS
 } TRACE_LEVEL;
 
-
+ERROR_CODE log_file_initalize();
 /**
  * @brief Set the tracing level to moderate the ammount of data print
  * 
  * @param lvl The new trace level
+ * @param file_lvl The new trace level for log file
  * @return ERROR_CODE: RET_OK on success and RET_ARG_ERROR when invalid level given
  */
-ERROR_CODE trace_level_set(TRACE_LEVEL lvl);
+ERROR_CODE trace_level_set(TRACE_LEVEL lvl, TRACE_LEVEL file_lvl);
 
 /**
  * @brief Log a debug string

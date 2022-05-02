@@ -7,6 +7,8 @@ $(info $(current_dir))
 SOURCE_DIR = $(current_dir)/source
 # binaries directory
 BINARIES_DIR = $(current_dir)/bin
+# logs directory
+LOGGING_DIR = $(current_dir)/log
 # compiler
 CC = gcc
 LD = g++
@@ -31,7 +33,7 @@ WARN = -Wall
 CCFLAGS = $(DEBUG) $(OPT) $(WARN)
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
-OBJS =  quaternion.o arm.o vector3.o imu.o functions.o
+OBJS =  quaternion.o arm.o vector3.o imu.o functions.o logging.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
@@ -45,6 +47,9 @@ main.o: $(SOURCE_DIR)/main.c bin_dir
 
 functions.o: $(SOURCE_DIR)/general/functions.c bin_dir
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/general/functions.c -o $(BINARIES_DIR)/$@ 
+
+logging.o: $(SOURCE_DIR)/general/logging.c bin_dir
+	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/general/logging.c -o $(BINARIES_DIR)/$@ 
 
 quaternion.o: $(SOURCE_DIR)/quat_lib/Quaternion.c bin_dir
 	$(CC) -c  $(CPPFLAGS) $(SOURCE_DIR)/quat_lib/Quaternion.c -o $(BINARIES_DIR)/$@ 
@@ -60,8 +65,9 @@ imu.o: $(SOURCE_DIR)/imu/imu.cpp bin_dir
 
 bin_dir:
 	mkdir -p $(BINARIES_DIR)
+	mkdir -p $(LOGGING_DIR)
 
 clean:
 	$(info cleaning up workspace ...)
-	rm -rf $(BINARIES_DIR) $(TARGET)
+	rm -rf $(BINARIES_DIR) $(LOGGING_DIR) $(TARGET)
 	cd test && make clean && cd -

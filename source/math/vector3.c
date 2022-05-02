@@ -10,7 +10,8 @@
  */
 #include "vector3.h"
 #include "math.h"
-#include "functions.h"
+#include "general.h"
+#include "constants.h"
 #include <stddef.h>
 
 ERROR_CODE vector3_add(double a[3], double b[3], double output[3]) {
@@ -93,9 +94,14 @@ ERROR_CODE vector3_normalize(double a[3], double output[3]) {
 
     status = vector3_norm(a, &norm);
     if (RET_OK == status) {
-        output[0] = a[0]/norm;
-        output[1] = a[1]/norm;
-        output[2] = a[2]/norm;
+        if (EPSI > norm) {
+            status = RET_ERROR;
+        }
+        else {
+            output[0] = a[0]/norm;
+            output[1] = a[1]/norm;
+            output[2] = a[2]/norm;
+        }
     }
     
     return status;

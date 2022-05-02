@@ -11,7 +11,7 @@
 #include "arm.h"
 #include "Quaternion.h"
 #include "vector3.h"
-#include "functions.h"
+#include "general.h"
 #include <string.h>
 
 #define DEFAULT_SHOULDER_2_ELBOW_LENGTH (10.0)
@@ -266,8 +266,10 @@ ERROR_CODE calibrateRotationAxis(
  */
 static void sBufferShiftAndInsert(double array[], double value, int size) {
     int i;
-    for (i = size-2; i >= 0; i--) {
-        array[i+1] = array[i];
+    if (2 <= size) {
+        for (i = size-2; i >= 0; i--) {
+            array[i+1] = array[i];
+        }
     }
     array[0] = value;
 }

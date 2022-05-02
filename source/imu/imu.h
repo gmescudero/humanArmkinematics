@@ -19,7 +19,7 @@ extern "C" {
 #include <stdbool.h>
 #include <math.h>
 #include "errors.h"
-#include "functions.h"
+#include "general.h"
 
 #ifdef __GNUC__
 #include "lpsensor/ImuData.h"

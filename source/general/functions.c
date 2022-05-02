@@ -1,13 +1,10 @@
 
-#include <stdio.h>
-#include <stdarg.h>
 #include <string.h>
 #include <libserialport.h>  /* READ COM ports before connect */
 #include <time.h>
-#include "functions.h"
+#include "general.h"
 
 struct sp_port **ports;
-TRACE_LEVEL trace_level = INFO;
 
 ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts) {
     enum sp_return error;
@@ -42,59 +39,3 @@ ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts) {
     return RET_OK;
 }
 
-
-ERROR_CODE trace_level_set(TRACE_LEVEL lvl) {
-    /* Check arguments */
-    if (NONE > lvl || NUMBER_OF_LEVELS <= lvl) return RET_ARG_ERROR;
-
-    trace_level = lvl;
-    return RET_OK;
-}
-
-void dbg_str(const char *text, ...){
-    va_list args;
-
-    if (DEBUG <= trace_level) {
-        va_start(args, text);
-        printf("[DEBUG  ] ");
-        vprintf(text, args);
-        printf("\n");
-        va_end(args);
-    }
-}
-
-void log_str(const char *text, ...){
-    va_list args;
-
-    if (INFO <= trace_level) {
-        va_start(args, text);
-        printf("[INFO   ] ");
-        vprintf(text, args);
-        printf("\n");
-        va_end(args);
-    }
-}
-
-void wrn_str(const char *text, ...){
-    va_list args;
-
-    if (WARNING <= trace_level) {
-        va_start(args, text);
-        printf("[WARNING] ");
-        vprintf(text, args);
-        printf("\n");
-        va_end(args);
-    }
-}
-
-void err_str(const char *text, ...){
-    va_list args;
-
-    if (ERROR <= trace_level) {
-        va_start(args, text);
-        printf("[ERROR  ] ");
-        vprintf(text, args);
-        printf("\n");
-        va_end(args);
-    }
-}

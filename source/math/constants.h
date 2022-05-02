@@ -25,6 +25,9 @@
  */
 #define SQRT_2 (1.41421356237)
 
-
+/**
+ * @brief Minimum precission value
+ */
+#define EPSI (1e-9)
 
 #endif

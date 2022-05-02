@@ -14,7 +14,7 @@
 #include "arm.h"
 #include "imu.h"
 #include "errors.h"
-#include "functions.h"
+#include "general.h"
 
 #define STATUS_EVAL(code) {if (RET_OK != code) err_str("[%d] DEP: %d \n",__LINE__, code);}
 
@@ -23,6 +23,13 @@ int main(int argc, char **argv) {
     COM_PORTS discoveredPorts;
     ImuData data;
 
+    log_file_initalize();
+    trace_level_set(DEBUG,DEBUG);
+    err_str("pollo");
+    wrn_str("pollo");
+    log_str("pollo");
+    dbg_str("pollo");
+#if 0
     /* Look for com ports avalilable in the system */
     if (RET_OK == status) {
         status = com_ports_list(&discoveredPorts);
@@ -51,6 +58,6 @@ int main(int argc, char **argv) {
     if (RET_OK == status) {
         imu_batch_terminate();
     }
-
+#endif
     return status;
 }
