@@ -16,19 +16,26 @@
 #include "errors.h"
 #include "general.h"
 
-#define STATUS_EVAL(code) {if (RET_OK != code) err_str("[%d] DEP: %d \n",__LINE__, code);}
+#define STATUS_EVAL(code) {if (RET_OK != code) err_str("[%d] Failed: %d \n",__LINE__, code);}
 
 int main(int argc, char **argv) {
     ERROR_CODE status = RET_OK;
     COM_PORTS discoveredPorts;
     ImuData data;
+    double csvTry[CSV_FILE_VALUES_NUMBER] = {
+        0.0,0.1,0.2,0.3,0.4,
+        1.0,2.0,3.0,4.0,5.0,
+        10.0,20.0,30.0,40.0,50.0,
+        123.4,567.8,901.2,345.6,789.0
+    };
+    char *csvHead[CSV_FILE_VALUES_NUMBER] = {
+        "Hello","Csv","Values","","","","","","","","","","","","","","","","","" 
+    };
 
     log_file_initalize();
     trace_level_set(DEBUG,DEBUG);
-    err_str("pollo");
-    wrn_str("pollo");
-    log_str("pollo");
-    dbg_str("pollo");
+    // csv_set_headers(csvHead);
+    csv_log(csvTry);
 #if 0
     /* Look for com ports avalilable in the system */
     if (RET_OK == status) {

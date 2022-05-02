@@ -11,6 +11,11 @@
  * @brief Maximum number of COM ports to be discovered
  */
 #define COM_PORTS_MAX_NUM (7)
+/**
+ * @brief The maximum number of values to log to the csv file
+ */
+#define CSV_FILE_VALUES_NUMBER (20)
+
 
 /**
  * @brief COM ports structure
@@ -45,6 +50,11 @@ typedef enum TRACE_LEVEL_ENUM {
     NUMBER_OF_LEVELS
 } TRACE_LEVEL;
 
+/**
+ * @brief Set up log file 
+ * 
+ * @return ERROR_CODE: RET_OK on success
+ */
 ERROR_CODE log_file_initalize();
 /**
  * @brief Set the tracing level to moderate the ammount of data print
@@ -83,5 +93,18 @@ void wrn_str(const char *text, ...);
  * @param ... The formating args
  */
 void err_str(const char *text, ...);
+
+/**
+ * @brief Set the first line of a csv file with a set of given headers
+ * 
+ * @param headers input) Array of headers
+ */
+void csv_set_headers(char *headers[CSV_FILE_VALUES_NUMBER]);
+/**
+ * @brief Log a set of values to the csv file
+ * 
+ * @param data (input) Array of values
+ */
+void csv_log(double data[CSV_FILE_VALUES_NUMBER]);
 
 #endif /* __functions_h__ */

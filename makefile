@@ -7,8 +7,9 @@ $(info $(current_dir))
 SOURCE_DIR = $(current_dir)/source
 # binaries directory
 BINARIES_DIR = $(current_dir)/bin
-# logs directory
+# log directories
 LOGGING_DIR = $(current_dir)/log
+DATA_DIR    = $(current_dir)/data
 # compiler
 CC = gcc
 LD = g++
@@ -66,6 +67,7 @@ imu.o: $(SOURCE_DIR)/imu/imu.cpp bin_dir
 bin_dir:
 	mkdir -p $(BINARIES_DIR)
 	mkdir -p $(LOGGING_DIR)
+	mkdir -p $(DATA_DIR)
 
 clean:
 	$(info cleaning up workspace ...)
