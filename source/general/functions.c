@@ -6,6 +6,22 @@
 
 struct sp_port **ports;
 
+ERROR_CODE millis_sleep(int millis) {
+    struct timespec ts;
+    int res;
+
+    if (millis < 0) return RET_ARG_ERROR;
+
+    ts.tv_sec = millis / 1000;
+    ts.tv_nsec = (millis % 1000) * 1000000;
+
+    do {
+        res = nanosleep(&ts, &ts);
+    } while (res);
+
+    return RET_OK;
+}
+
 ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts) {
     enum sp_return error;
 
@@ -30,9 +46,13 @@ ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts) {
 
             log_str("\tFound port: '%s'", discoveredPorts->ports_names[i]);
         }
+        if (0 == discoveredPorts->ports_number) {
+            log_str("\tNone");
+            return RET_NO_EXEC;
+        }
     }
     else {
-        log_str("Error looking for COM ports (%d) ",(int)error);
+        err_str("Error looking for COM ports (%d) ",(int)error);
         return RET_ERROR;
     }
 

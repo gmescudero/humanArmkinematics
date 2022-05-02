@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 #include <time.h>
 #include "general.h"
 
@@ -23,6 +24,7 @@ static void slog_file_name_build(char *directory, char* name_prefix, char *exten
 static ERROR_CODE sfile_create(char *file_name);
 static void sstr_console_print(const char *trace_type, const char *text, va_list va);
 static void sstr_file_print(const char *file_name, const char *trace_type, const char *text, va_list va);
+static void scsv_default_headers_set(void);
 
 
 TRACE_LEVEL trace_level = WARNING;
@@ -34,9 +36,6 @@ char log_file_name[LOG_FILE_NAME_LENGTH] = {'\0'};
 
 ERROR_CODE log_file_initalize(){
     ERROR_CODE status;
-    char *csv_default_headers[CSV_FILE_VALUES_NUMBER] = {
-        "","","","","","","","","","","","","","","","","","","","" 
-    };
 
     slog_file_name_build(LOG_FILE_DIRECTORY,LOG_FILE_NAME,LOG_FILE_EXTENSION, log_file_name);
     status = sfile_create(log_file_name);
@@ -44,7 +43,7 @@ ERROR_CODE log_file_initalize(){
         slog_file_name_build(CSV_FILE_DIRECTORY,CSV_FILE_NAME,CSV_FILE_EXTENSION, csv_file_name);
         status = sfile_create(csv_file_name);
         if (RET_OK == status) {
-            csv_set_headers(csv_default_headers);
+            scsv_default_headers_set();
         }
     }
     return status;
@@ -62,68 +61,71 @@ ERROR_CODE trace_level_set(TRACE_LEVEL lvl, TRACE_LEVEL file_lvl) {
 
 void dbg_str(const char *text, ...){
     va_list args;
-
-    va_start(args, text);
     if (DEBUG <= trace_level) {
-        sstr_console_print(LOG_FILE_TRACE_DEBUG, text,args);
+        va_start(args, text);
+        sstr_console_print(LOG_FILE_TRACE_DEBUG, text, args);
+        va_end(args);
     }
     if (DEBUG <= trace_file_level) {
+        va_start(args, text);
         sstr_file_print(log_file_name, LOG_FILE_TRACE_DEBUG, text, args);
+        va_end(args);
     }
-    va_end(args);
 }
 
 void log_str(const char *text, ...){
     va_list args;
-
-    va_start(args, text);
     if (INFO <= trace_level) {
-        sstr_console_print(LOG_FILE_TRACE_INFO, text,args);
+        va_start(args, text);
+        sstr_console_print(LOG_FILE_TRACE_INFO, text, args);
+        va_end(args);
     }
     if (INFO <= trace_file_level) {
+        va_start(args, text);
         sstr_file_print(log_file_name, LOG_FILE_TRACE_INFO, text, args);
+        va_end(args);
     }
-    va_end(args);
 }
 
 void wrn_str(const char *text, ...){
     va_list args;
-
-    va_start(args, text);
     if (WARNING <= trace_level) {
-        sstr_console_print(LOG_FILE_TRACE_WARNING, text,args);
+        va_start(args, text);
+        sstr_console_print(LOG_FILE_TRACE_WARNING, text, args);
+        va_end(args);
     }
     if (WARNING <= trace_file_level) {
+        va_start(args, text);
         sstr_file_print(log_file_name, LOG_FILE_TRACE_WARNING, text, args);
+        va_end(args);
     }
-    va_end(args);
 }
 
 void err_str(const char *text, ...){
     va_list args;
-
-    va_start(args, text);
     if (ERROR <= trace_level) {
-        sstr_console_print(LOG_FILE_TRACE_ERROR, text,args);
+        va_start(args, text);
+        sstr_console_print(LOG_FILE_TRACE_ERROR, text, args);
+        va_end(args);
     }
     if (ERROR <= trace_file_level) {
+        va_start(args, text);
         sstr_file_print(log_file_name, LOG_FILE_TRACE_ERROR, text, args);
+        va_end(args);
     }
-    va_end(args);
 }
 
-void csv_set_headers(char *headers[CSV_FILE_VALUES_NUMBER]) {
+/**
+ * @brief Set the default headers for the CSV file
+ */
+static void scsv_default_headers_set(void) {
     FILE *fd = NULL;
     if ('\0' != csv_file_name[0]) {
         fd = fopen(csv_file_name, "w");
         if (NULL != fd) {
             for (int i = 0; i < CSV_FILE_VALUES_NUMBER; i++) {
-                if ('\0' != headers[i][0]){
-                    fprintf(fd,"%s,",headers[i]);
-                }
-                else {
-                    fprintf(fd,"data%d,",i);
-                }
+                fprintf(fd,"data%d,",i);
+                if (i<CSV_FILE_VALUES_NUMBER-1) fprintf(fd,",");
             }
             fprintf(fd,"\n");
             fclose(fd);
@@ -131,13 +133,34 @@ void csv_set_headers(char *headers[CSV_FILE_VALUES_NUMBER]) {
     }
 }
 
-void csv_log(double data[CSV_FILE_VALUES_NUMBER]) {
+void csv_headers_set(const char *headers[CSV_FILE_VALUES_NUMBER]) {
+    FILE *fd = NULL;
+    if ('\0' != csv_file_name[0]) {
+        fd = fopen(csv_file_name, "w");
+        if (NULL != fd) {
+            for (int i = 0; i < CSV_FILE_VALUES_NUMBER; i++) {
+                if (0 < strlen(headers[i])){
+                    fprintf(fd,"%s",headers[i]);
+                }
+                else {
+                    fprintf(fd,"data%d",i);
+                }
+                if (i<CSV_FILE_VALUES_NUMBER-1) fprintf(fd,",");
+            }
+            fprintf(fd,"\n");
+            fclose(fd);
+        }
+    }
+}
+
+void csv_log(const double data[CSV_FILE_VALUES_NUMBER]) {
     FILE *fd = NULL;
     if ('\0' != csv_file_name[0]) {
         fd = fopen(csv_file_name, "a");
         if (NULL != fd) {
             for (int i = 0; i < CSV_FILE_VALUES_NUMBER; i++) {
-                fprintf(fd,"%f,",data[i]);
+                fprintf(fd,"%f",data[i]);
+                if (i<CSV_FILE_VALUES_NUMBER-1) fprintf(fd,",");
             }
             fprintf(fd,"\n");
             fclose(fd);

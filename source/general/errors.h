@@ -14,26 +14,25 @@
 /**
  * @brief Type for error codes
  */
-typedef int ERROR_CODE;
+typedef enum ERROR_CODE_ENUM {
+    /**
+     * @brief Successful execution
+     */
+    RET_OK = 0,
+    /**
+     * @brief Generic error during execution
+     */
+    RET_ERROR,
+    /**
+     * @brief Input or Output value of a function is invalid
+     */
+    RET_ARG_ERROR,
+    /**
+     * @brief Nothing has been done 
+     */
+    RET_NO_EXEC,
+}ERROR_CODE;
 
-/**
- * @brief Correct execution
- */
-#define RET_OK (0)
 
-/**
- * @brief Generic error during execution
- */
-#define RET_ERROR (-1)
-
-/**
- * @brief Input or Output value of a function is invalid
- */
-#define RET_ARG_ERROR (-2)
-
-/**
- * @brief Procedure could not be done 
- */
-#define RET_NO_EXEC (-3)
 
 #endif /* __errors_h__ */

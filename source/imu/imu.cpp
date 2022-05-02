@@ -158,6 +158,51 @@ void imu_data_print (ImuData imu){
 }
 
 
+void imu_csv_headers_set(void) {
+    const char *headers[CSV_FILE_VALUES_NUMBER] = {
+        "timestamp",
+        "rawAcc0","rawAcc1","rawAcc2",
+        "rawGyr0","rawGyr1","rawGyr2",
+        "rawMag0","rawMag1","rawMag2",
+        "acc0","acc1","acc2",
+        "gyr0","gyr1","gyr2",
+        "mag0","mag1","mag2",
+        "linAcc0","linAcc1","linAcc2",
+        "angVel0","angVel1","angVel2",
+        "quatW","quatX","quatY","quatZ",
+        ""
+    };
+
+    csv_headers_set(headers);
+}
+
+void imu_csv_log(ImuData d) {
+    const double dat[CSV_FILE_VALUES_NUMBER] = {
+        // Timestamp
+        d.timeStamp,
+        // Raw accelerometer
+        d.aRaw[0], d.aRaw[1], d.aRaw[2],
+        // Raw gyroscope
+        d.gRaw[0], d.gRaw[1], d.gRaw[2],
+        // Raw magnetometer
+        d.bRaw[0], d.bRaw[1], d.bRaw[2],
+        // Calibrated accelerometer
+        d.a[0], d.a[1], d.a[2],
+        // Calibrated gyroscope
+        d.g[0], d.g[1], d.g[2],
+        // Calibrated magnetometer
+        d.b[0], d.b[1], d.b[2],
+        // Linear acceleration
+        d.linAcc[0], d.linAcc[1], d.linAcc[2],
+        // Angular velocity
+        d.w[0], d.w[1], d.w[2],
+        // Quaternion 
+        d.q[0], d.q[1], d.q[2], d.q[3],
+
+        0.0};
+        
+    csv_log(dat);
+}
 
 
 

@@ -71,5 +71,5 @@ bin_dir:
 
 clean:
 	$(info cleaning up workspace ...)
-	rm -rf $(BINARIES_DIR) $(LOGGING_DIR) $(TARGET)
+	rm -rf $(BINARIES_DIR) $(LOGGING_DIR) $(DATA_DIR) $(TARGET)
 	cd test && make clean && cd -

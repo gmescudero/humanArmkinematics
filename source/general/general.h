@@ -14,7 +14,7 @@
 /**
  * @brief The maximum number of values to log to the csv file
  */
-#define CSV_FILE_VALUES_NUMBER (20)
+#define CSV_FILE_VALUES_NUMBER (30)
 
 
 /**
@@ -31,15 +31,6 @@ typedef struct COM_PORTS_STRUCT {
     char ports_names[COM_PORTS_MAX_NUM][COM_PORTS_LENGTH];
 } COM_PORTS; 
 
-/**
- * @brief Retrieve all COM ports available in the system
- * 
- * @param discoveredPorts Output structure containing retrieved COM ports data
- * @return true If the COM ports discovery performs correctly even if there are not any COM ports available
- * @return false If any error appears while discovering COM ports
- */
-ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts);
-
 typedef enum TRACE_LEVEL_ENUM {
     NONE = 0,
     ERROR,
@@ -49,6 +40,23 @@ typedef enum TRACE_LEVEL_ENUM {
 
     NUMBER_OF_LEVELS
 } TRACE_LEVEL;
+
+/**
+ * @brief Retrieve all COM ports available in the system
+ * 
+ * @param discoveredPorts Output structure containing retrieved COM ports data
+ * @return true If the COM ports discovery performs correctly even if there are not any COM ports available
+ * @return false If any error appears while discovering COM ports
+ */
+ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts);
+
+/**
+ * @brief Sleep with milliseconds precision
+ * 
+ * @param millis (input) Milliseconds to wait
+ * @return ERROR_CODE: RET_OK on success
+ */
+ERROR_CODE millis_sleep(int millis);
 
 /**
  * @brief Set up log file 
@@ -99,12 +107,12 @@ void err_str(const char *text, ...);
  * 
  * @param headers input) Array of headers
  */
-void csv_set_headers(char *headers[CSV_FILE_VALUES_NUMBER]);
+void csv_headers_set(const char *headers[CSV_FILE_VALUES_NUMBER]);
 /**
  * @brief Log a set of values to the csv file
  * 
  * @param data (input) Array of values
  */
-void csv_log(double data[CSV_FILE_VALUES_NUMBER]);
+void csv_log(const double data[CSV_FILE_VALUES_NUMBER]);
 
 #endif /* __functions_h__ */

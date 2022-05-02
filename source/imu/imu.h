@@ -93,6 +93,18 @@ ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num);
 void imu_batch_terminate();
 
 /**
+ * @brief Set CSV logging file with IMU related headers
+ */
+void imu_csv_headers_set(void);
+
+/**
+ * @brief Log a given set of IMU data to a CSV file
+ * 
+ * @param d (input) Given IMU data
+ */
+void imu_csv_log(ImuData d);
+
+/**
  * @brief Read data from an IMU sensor with a given index
  * 
  * @param index (input) Index of the IMU sensor to be read
