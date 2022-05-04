@@ -18,11 +18,10 @@
 #define DEFAULT_ELBOW_2_WRIST_LENGTH    (5.0)
 #define DEFAULT_TOTAL_ARM_LENGTH (DEFAULT_SHOULDER_2_ELBOW_LENGTH+DEFAULT_ELBOW_2_WRIST_LENGTH)
 
-#define DEFAULT_ROT_AXIS_CALIB_WINDOW  (10)
-#define DEFAULT_ROT_AXIS_CALIB_STEP_SZ (1.0)
+#define DEFAULT_ROT_AXIS_CALIB_WINDOW  (100)
+#define DEFAULT_ROT_AXIS_CALIB_STEP_SZ (2.0)
 #define DEFAULT_ROT_AXIS_CALIB_MIN_VEL (3e-1)
 
-#define ROT_AXIS_CALIB_ERROR_VECTOR_SIZE (500)
 
 static void sBufferShiftAndInsert(double array[], double value, int size);
 
@@ -39,8 +38,6 @@ static ARM_ROT_AXIS_CALIB_CONFIG calConfig = {
     .stepSize = DEFAULT_ROT_AXIS_CALIB_STEP_SZ,
     .minVel   = DEFAULT_ROT_AXIS_CALIB_MIN_VEL
 };
-
-static double autoCalibError[ROT_AXIS_CALIB_ERROR_VECTOR_SIZE] = {0.0};
 
 void initializeArm(ARM_POSE initialArmPose)
 {
@@ -105,12 +102,13 @@ ARM_POSE getArmPositions()
 ERROR_CODE calibrateRotationAxis(
     double rotationV[3],
     double omegaR[3],
-    double newRotV[3])
+    double newRotV[3],
+    double *error)
 {
     ERROR_CODE status = RET_OK;
 
-    static double dJk_t[ROT_AXIS_CALIB_MAX_WINDOW] = {0.0};
-    static double dJk_r[ROT_AXIS_CALIB_MAX_WINDOW] = {0.0};
+    static double dJk_t[DEFAULT_ROT_AXIS_CALIB_WINDOW] = {0.0};
+    static double dJk_r[DEFAULT_ROT_AXIS_CALIB_WINDOW] = {0.0};
 
     int m           = calConfig.window;
     double lambda   = calConfig.stepSize;
@@ -149,7 +147,7 @@ ERROR_CODE calibrateRotationAxis(
         // No movement
         sBufferShiftAndInsert(dJk_t, 0.0, m);
         sBufferShiftAndInsert(dJk_r, 0.0, m);
-        sBufferShiftAndInsert(autoCalibError, 0.0, ROT_AXIS_CALIB_ERROR_VECTOR_SIZE);
+        *error = 0.0;
         memcpy(newRotV, rotationV, sizeof(double)*3);
         return RET_OK;
     }
@@ -248,11 +246,10 @@ ERROR_CODE calibrateRotationAxis(
 
     // Store the error
     if (RET_OK == status) {
-        status = vector3_dot(err,err,&aux1);
+        status = vector3_dot(err,err, error);
     }
-    if (RET_OK == status) {
-        sBufferShiftAndInsert(autoCalibError, aux1, ROT_AXIS_CALIB_ERROR_VECTOR_SIZE);
-    }
+
+    // dbg_str("omegaR: [%f, %f, %f] | omegaRnorm: %f",omegaR[0],omegaR[1],omegaR[2],omegaRnorm);
 
     return status;
 }

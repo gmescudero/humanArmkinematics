@@ -35,6 +35,8 @@ ERROR_CODE imu_initialize(const char *com_port){
     short timeout_counter   = IMU_CONNECTION_TIMEOUT; 
     unsigned int index      = (unsigned int) num_imus;
 
+    dbg_str("%s -> Connect IMU %d through COM port \"%s\" ",__FUNCTION__,index, com_port);
+
     // Check given arguments
     if (NULL == com_port) return RET_ARG_ERROR;
     if (IMU_MAX_NUMBER <= index) return RET_ARG_ERROR;
@@ -57,7 +59,7 @@ ERROR_CODE imu_initialize(const char *com_port){
         connection_status = lpms[index]->getConnectionStatus();
     }
     if (connection_status != SENSOR_CONNECTION_CONNECTED) {
-        printf("IMU Sensor %d failed to connect through %s\n", index, com_port);
+        err_str("IMU Sensor %d failed to connect through %s", index, com_port);
         return RET_ERROR;
     }
 
@@ -67,6 +69,9 @@ ERROR_CODE imu_initialize(const char *com_port){
 
 ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num){
     ERROR_CODE status;
+
+    dbg_str("%s -> Connect %d IMUs out of %d",__FUNCTION__, imus_num, com_ports.ports_number);
+
     // Check arguments
     if (imus_num > com_ports.ports_number || imus_num <= 0) return RET_ARG_ERROR;
 
@@ -89,11 +94,13 @@ void imu_batch_terminate(){
 }
 
 ERROR_CODE imu_read(unsigned int index, ImuData *imu) {
+    // dbg_str("%s -> Read IMU %d out of %d",__FUNCTION__, index, num_imus);
+
     // Check arguments
     if (NULL == imu) return RET_ARG_ERROR;
     if (0 > index || num_imus <= index) return RET_ARG_ERROR;
     if (lpms[index]->getConnectionStatus() != SENSOR_CONNECTION_CONNECTED) return RET_ERROR;
-    if (false == lpms[index]->hasImuData()) return RET_NO_EXEC;
+    if (0 >= lpms[index]->hasImuData()) return RET_NO_EXEC;
 
     // Retrieve IMU data
     *imu = lpms[index]->getCurrentData();
@@ -204,6 +211,54 @@ void imu_csv_log(ImuData d) {
     csv_log(dat);
 }
 
+
+ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOISE_DATA *noise) {
+    ERROR_CODE status = RET_OK;
+    ImuData data;
+
+    double sumAcc[3]  = {0.0};
+    double sumAcc2[3] = {0.0};
+    double sumGyr[3]  = {0.0};
+    double sumGyr2[3] = {0.0};
+    double sumMag[3]  = {0.0};
+    double sumMag2[3] = {0.0};
+        
+    // Check arguments
+    if (1 > iterations || 100000 <= iterations) return RET_ARG_ERROR; // TODO make this a macro
+    if (0 > index || num_imus <= index) return RET_ARG_ERROR;
+    if (NULL == noise) return RET_ARG_ERROR;
+    // Check availability
+    if (lpms[index]->getConnectionStatus() != SENSOR_CONNECTION_CONNECTED) return RET_ERROR;
+
+    for (int i = 0; i < iterations && RET_OK == status; i++) {
+        // Pause
+        while (0 >= lpms[index]->hasImuData()) {
+            millis_sleep(1);
+        }
+        // Read imu
+        status = imu_read(index,&data);
+        // Aggregate values
+        for (int j = 0; j < 3 && RET_OK == status; j++) {
+            sumAcc[j]  += data.a[j];
+            sumAcc2[j] += data.a[j]*data.a[j];
+            sumGyr[j]  += data.g[j];
+            sumGyr2[j] += data.g[j]*data.g[j];
+            sumMag[j]  += data.b[j];
+            sumMag2[j] += data.b[j]*data.b[j];
+        }
+    }
+
+    for (int j = 0; j < 3 && RET_OK == status; j++) {
+        noise->accMean[j] = sumAcc[j]/iterations;
+        noise->accVar[j]  = (sumAcc2[j] - (noise->accMean[j])*(noise->accMean[j]))/(iterations-1);
+        noise->gyrMean[j] = sumGyr[j]/iterations;
+        noise->gyrVar[j]  = (sumGyr2[j] - (noise->gyrMean[j])*(noise->gyrMean[j]))/(iterations-1);
+        noise->magMean[j] = sumMag[j]/iterations;
+        noise->magVar[j]  = (sumMag2[j] - (noise->magMean[j])*(noise->magMean[j]))/(iterations-1);
+    }
+
+    return status;
+}
 
 
 
@@ -318,7 +373,7 @@ void imus_direct_kinematics(ImuData (*imus), ARM_JOINTS (*data_query), bool twoI
     if (show) {
         printf("Euler IMU 1: x: %f, y: %f, z: %f\nEuler IMU 1 (radians): x: %f, y: %f, z: %f\nElbow position: x: %f, y: %f, z: %f\n", r[0], r[1], r[2], theta[0], theta[1], theta[2], elbow_t[0], elbow_t[1], elbow_t[2]);
         printf("Euler IMU 2: x: %f, y: %f, z: %f\nEuler IMU 2 (radians): x: %f, y: %f, z: %f\nWrist position: x: %f, y: %f, z: %f\n\n", r_Imu_2[0], r_Imu_2[1], r_Imu_2[2], theta_Imu_2[0], theta_Imu_2[1], theta_Imu_2[2] ,wrist_t[0], wrist_t[1], wrist_t[2]);
-    }
+        } 
 
 }
 

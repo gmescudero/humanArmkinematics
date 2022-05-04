@@ -47,6 +47,15 @@ typedef enum{
     IMUS_READING
 }IMUS_CONNECTION_STATUS;
 
+typedef struct _IMU_NOISE_DATA{
+    double accMean[3];
+    double accVar[3];
+    double gyrMean[3];
+    double gyrVar[3];
+    double magMean[3];
+    double magVar[3];
+} IMU_NOISE_DATA;
+
 typedef struct _IMUS_POSE{
     // Translation vector
     float t[3];
@@ -129,6 +138,15 @@ ERROR_CODE imu_batch_read(unsigned int imus_num, ImuData imus[]);
  */
 void imu_data_print (ImuData imu);
 
+/**
+ * @brief Take measures from the IMU in a static position to measure the mean and variance of the IMU data
+ * 
+ * @param index (input) IMU index to read
+ * @param iterations (input) Number of iterations to use for noise calculations
+ * @param noise 
+ * @return ERROR_CODE 
+ */
+ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOISE_DATA *noise);
 
 
 

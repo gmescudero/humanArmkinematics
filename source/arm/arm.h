@@ -14,8 +14,6 @@
 #include "Quaternion.h"
 #include "errors.h"
 
-#define ROT_AXIS_CALIB_MAX_WINDOW (50)
-
 typedef struct ARM_POSE_STRUCT{
     double shoulderPosition[3];
     double elbowPosition[3];
@@ -54,11 +52,13 @@ ARM_POSE getArmPositions();
  * @param rotationV (input) Current rotation vector
  * @param omegaR (input) Current angular velocity
  * @param newRotV (output) New rotation vector
+ * @param error (output) Current error value
  * @return ERROR_CODE: RET_OK on success
  */
 ERROR_CODE calibrateRotationAxis(
     double rotationV[3],
     double omegaR[3],
-    double newRotV[3]);
+    double newRotV[3],
+    double *error);
 
 #endif
