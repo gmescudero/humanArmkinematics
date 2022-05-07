@@ -19,7 +19,9 @@ INC = \
 	-I$(SOURCE_DIR)/arm \
 	-I$(SOURCE_DIR)/quat_lib \
 	-I$(SOURCE_DIR)/math \
-	-I$(SOURCE_DIR)/imu
+	-I$(SOURCE_DIR)/imu \
+	-I$(SOURCE_DIR)/database
+	
 # libraries
 IMULIB= -L$(current_dir)/lib -lLpSensor -lstdc++ -lX11
 PTHREAD = -pthread
@@ -34,7 +36,7 @@ WARN = -Wall
 CCFLAGS = $(DEBUG) $(OPT) $(WARN)
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
-OBJS =  quaternion.o arm.o vector3.o imu.o functions.o logging.o
+OBJS =  quaternion.o arm.o vector3.o imu.o functions.o logging.o database.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
@@ -63,6 +65,9 @@ vector3.o: $(SOURCE_DIR)/math/vector3.c bin_dir
 
 imu.o: $(SOURCE_DIR)/imu/imu.cpp bin_dir
 	$(LD) -c $(CCFLAGS) $(INC) $(SOURCE_DIR)/imu/imu.cpp -o $(BINARIES_DIR)/$@ 
+
+database.o: $(SOURCE_DIR)/database/database.c bin_dir
+	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/database/database.c -o $(BINARIES_DIR)/$@ 
 
 bin_dir:
 	mkdir -p $(BINARIES_DIR)

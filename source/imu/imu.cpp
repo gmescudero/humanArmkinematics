@@ -176,11 +176,10 @@ void imu_csv_headers_set(void) {
         "mag0","mag1","mag2",
         "linAcc0","linAcc1","linAcc2",
         "angVel0","angVel1","angVel2",
-        "quatW","quatX","quatY","quatZ",
-        ""
+        "quatW","quatX","quatY","quatZ"
     };
 
-    csv_headers_set(headers);
+    csv_headers_set(headers, 29);
 }
 
 void imu_csv_log(ImuData d) {

@@ -27,7 +27,7 @@ static void sstr_file_print(const char *file_name, const char *trace_type, const
 static void scsv_default_headers_set(void);
 
 
-TRACE_LEVEL trace_level = WARNING;
+TRACE_LEVEL trace_level = INFO;
 TRACE_LEVEL trace_file_level = DEBUG;
 
 
@@ -133,13 +133,13 @@ static void scsv_default_headers_set(void) {
     }
 }
 
-void csv_headers_set(const char *headers[CSV_FILE_VALUES_NUMBER]) {
+void csv_headers_set(const char *headers[CSV_FILE_VALUES_NUMBER], int data_num) { // TODO improve robustness
     FILE *fd = NULL;
     if ('\0' != csv_file_name[0]) {
         fd = fopen(csv_file_name, "w");
         if (NULL != fd) {
             for (int i = 0; i < CSV_FILE_VALUES_NUMBER; i++) {
-                if (0 < strlen(headers[i])){
+                if (i < data_num && 0 < strlen(headers[i])){
                     fprintf(fd,"%s",headers[i]);
                 }
                 else {

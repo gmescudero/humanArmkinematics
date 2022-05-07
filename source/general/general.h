@@ -105,9 +105,10 @@ void err_str(const char *text, ...);
 /**
  * @brief Set the first line of a csv file with a set of given headers
  * 
- * @param headers input) Array of headers
+ * @param headers (input) Array of headers
+ * @param data_num (input) The number of data instances
  */
-void csv_headers_set(const char *headers[CSV_FILE_VALUES_NUMBER]);
+void csv_headers_set(const char *headers[CSV_FILE_VALUES_NUMBER], int data_num);
 /**
  * @brief Log a set of values to the csv file
  * 
