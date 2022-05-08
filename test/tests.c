@@ -19,7 +19,7 @@ bool tst_001()
 
     preconditions_initArm();
     // Get the Arm Joints positions
-    arm = getArmPositions();
+    arm = arm_pose_get();
     ok &= assert_armEqual(arm, expected);
 
     testCleanUp();
@@ -42,7 +42,7 @@ bool tst_002()
     // Get the Arm Joints positions with identity quaternion rotations
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q2);
-    arm = rotateArm(q1,q2);
+    arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected);
 
     testCleanUp();
@@ -65,7 +65,7 @@ bool tst_003()
     // Get the Arm Joints positions with identity quaternion rotation for shoulder and 90 degrees rotation in X axis (global frame) for elbow
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
     Quaternion_fromXRotation(PI/2, &q2);
-    arm = rotateArm(q1,q2);
+    arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected);
 
     testCleanUp();
@@ -88,7 +88,7 @@ bool tst_004()
     // Get the Arm Joints positions with identity quaternion rotation for elbow and 90 degrees rotation in X axis (global frame) for shoulder
     Quaternion_fromXRotation(PI/2, &q1);
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q2);
-    arm = rotateArm(q1,q2);
+    arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected);
 
     testCleanUp();
@@ -111,12 +111,12 @@ bool tst_005()
     // Rotate joints in Z axis (global frame) to see nothing happens
     Quaternion_fromZRotation(PI/2, &q1);
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q2);
-    arm = rotateArm(q1,q2);
+    arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected);
 
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
     Quaternion_fromZRotation(PI/2, &q2);
-    arm = rotateArm(q1,q2);
+    arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected);
 
     testCleanUp();
@@ -145,12 +145,12 @@ bool tst_006()
     // Set the elbow at a 90 degree angle and then rotate in Z axis (global frame)
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
     Quaternion_fromXRotation(PI/2, &q2);
-    arm = rotateArm(q1,q2);
+    arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected1);
 
     Quaternion_fromZRotation(PI/2, &q1);
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q2);
-    arm = rotateArm(q1,q2);
+    arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected2);
 
     testCleanUp();
@@ -173,7 +173,7 @@ bool tst_007()
     // Get the Arm Joints positions with identity quaternion rotation for elbow and 90 degrees rotation in Y axis (global frame) for shoulder
     Quaternion_fromYRotation(PI/2, &q1);
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q2);
-    arm = rotateArm(q1,q2);
+    arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected);
 
     testCleanUp();
@@ -197,7 +197,7 @@ bool tst_008()
     // Rotate shoulder for a set of ZYX euler angles (45,90,0)
     Quaternion_fromEulerZYX(eulerAngles, &q1);
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q2);
-    arm = rotateArm(q1,q2);
+    arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected);
 
     testCleanUp();

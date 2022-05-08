@@ -28,14 +28,13 @@ static ERROR_CODE initialize() {
         .wristPosition    = {0.0, 0.0, -15.0},
     };
     
-    // Initialize logging files
     status = log_file_initalize();
+
     if (RET_OK == status) {
         status = db_initialize();
     }
     if (RET_OK == status) {
-        // Initialize Arm
-        initializeArm(initialArmPose);
+        arm_joint_positions_set(initialArmPose);
     }
 
     return status;
@@ -43,35 +42,36 @@ static ERROR_CODE initialize() {
 
 int main(int argc, char **argv) {
     ERROR_CODE status = RET_OK;
-    DB_FIELD_IDENTIFIER fields[] = {
+    DB_FIELD_IDENTIFIER fields_monitored[] = {
         DB_IMU_TIMESTAMP,
-        DB_IMU_ACCELEROMETER,
-        DB_IMU_MAGNETOMETER
+        DB_CALIB_OMEGA,
+        DB_CALIB_OMEGA_NORM,
+        DB_CALIB_ERROR,
+        DB_CALIB_ROT_VECTOR,
+        DB_CALIB_SPHERICAL_ALTERNATIVE,
+        DB_CALIB_SPHERICAL_COORDS,
+        DB_CALIB_COST_DERIVATIVE
     };
-    int num_fields = sizeof(fields)/sizeof(DB_FIELD_IDENTIFIER);
+    int num_fields = sizeof(fields_monitored)/sizeof(DB_FIELD_IDENTIFIER);
     COM_PORTS discoveredPorts;
     ImuData data;
     double startTime = -1.0;
     double currentTime = -1.0;
+    double rotVector[3]    = {0.5,0.5,0.5};
 
     /* Initialize all packages */
     log_str("Initialize");
     status = initialize();
     STATUS_EVAL(status);
 
-    /* Set the csv logging of the database */
+    /* Set the csv logging from the database */
     if (RET_OK == status) {
         log_str("Set the database fields to track into the csv");
-        status = db_csv_setup(fields,num_fields);
+        status = db_csv_setup(fields_monitored,num_fields);
         STATUS_EVAL(status);
-/*         if (RET_OK == status) {
-            log_str("Dump the current values of the configured fields");
-            status = db_csv_dump();
-            STATUS_EVAL(status);
-        } */
     }
 
-    /* Look for com ports avalilable in the system */
+    /* Look for COM ports avalilable in the system */
     if (RET_OK == status) {
         log_str("Retrieve available COM ports");
         status = com_ports_list(&discoveredPorts);
@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
     }
 
     if (RET_OK == status) {
-        log_str("Loop reading IMU data and logging it to the CSV file");
+        log_str("Loop reading IMU data to calibrate ");
         do {
             millis_sleep(20);
             if (RET_OK == status) {
@@ -103,18 +103,29 @@ int main(int argc, char **argv) {
                 currentTime = data.timeStamp - startTime;
             }
             if (RET_OK == status) {
-                // Update imu data to database
-                status = imu_database_update(data);
+                // Execute the calibration 
+                double gyr[] = {(float)data.g[0], (float)data.g[1], (float)data.g[2]};
+                status = arm_calibrate_rotation_axis(gyr,rotVector);
+                STATUS_EVAL(status);
             }
             if (RET_OK == status) {
                 // Write csv file
                 status = db_csv_dump();
+                STATUS_EVAL(status);
             }
-            
+
         } while ((RET_OK == status || RET_NO_EXEC == status) && 20 > currentTime);
     } 
 
-    return status;
+    log_str("Rotation vector obtained: [%f, %f, %f]", rotVector[0], rotVector[1], rotVector[2]);
+
+    log_str("Terminate all IMU connections");
+    imu_batch_terminate();
+
+    log_str("Clean memory and environment");
+    status += db_terminate();
+
+    return (RET_OK == status)? RET_OK:RET_ERROR;
 }
 
 int main_bkp(int argc, char **argv) {
@@ -125,7 +136,6 @@ int main_bkp(int argc, char **argv) {
     double startTime = -1.0;
     double currentTime = -1.0;
     double rotVector[3]    = {0.5,0.5,0.5};
-    double newRotVector[3] = {0.5,0.5,0.5};
     double error = 0.0;
 
     double csvBuff[CSV_FILE_VALUES_NUMBER] = {0.0};
@@ -200,9 +210,8 @@ int main_bkp(int argc, char **argv) {
             }
             if (RET_OK == status) {
                 // Execute the calibration 
-                memcpy(rotVector,newRotVector,sizeof(newRotVector));
                 double gyr[] = {(float)data.gRaw[0], (float)data.gRaw[1], (float)data.gRaw[2]};
-                status = calibrateRotationAxis(rotVector,gyr,newRotVector, &error);
+                status = arm_calibrate_rotation_axis(gyr,rotVector);
                 STATUS_EVAL(status);
             }
             if (RET_OK == status) {
@@ -210,25 +219,25 @@ int main_bkp(int argc, char **argv) {
                 int i = 0;
                 csvBuff[i++] = currentTime;
                 csvBuff[i++] = data.g[0]; csvBuff[i++] = data.g[1]; csvBuff[i++] = data.g[2]; 
-                csvBuff[i++] = newRotVector[0]; csvBuff[i++] = newRotVector[1]; csvBuff[i++] = newRotVector[2]; 
+                csvBuff[i++] = rotVector[0]; csvBuff[i++] = rotVector[1]; csvBuff[i++] = rotVector[2]; 
                 csvBuff[i++] = error;
                 csv_log(csvBuff);
-                dbg_str("Time: %f | omegaR: [%f, %f, %f] | newRotVector: [%f, %f, %f] | error: %f",
+                dbg_str("Time: %f | omegaR: [%f, %f, %f] | rotVector: [%f, %f, %f] | error: %f",
                     currentTime,
                     data.gRaw[0],data.gRaw[1],data.gRaw[2],
-                    newRotVector[0],newRotVector[1],newRotVector[2],
+                    rotVector[0],rotVector[1],rotVector[2],
                     error);
             }
             
         } while ((RET_OK == status || RET_NO_EXEC == status) && -20 > currentTime);
     } 
     if (RET_OK == status) {
-        log_str("The obtained rotation axis: [%f, %f, %f]",newRotVector[0],newRotVector[1],newRotVector[2]);
+        log_str("The obtained rotation axis: [%f, %f, %f]",rotVector[0],rotVector[1],rotVector[2]);
     }
 
-    log_str("Write Timestamp %f to the database",newRotVector[0]);
+    log_str("Write Timestamp %f to the database",rotVector[0]);
     if (RET_OK == status) {
-        status = db_index_write(DB_IMU_ACCELEROMETER, 0, (void*)&(newRotVector[0]));
+        status = db_index_write(DB_IMU_ACCELEROMETER, 0, (void*)&(rotVector[0]));
     }
 
     log_str("Read Timestamp from the database");

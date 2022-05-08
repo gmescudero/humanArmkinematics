@@ -17,7 +17,7 @@ void testReport(const char *name, bool result)
 
 void testCleanUp()
 {
-    terminateArm();
+    
 }
 
 // * PRECONDITIONS ************************************************************
@@ -29,7 +29,7 @@ void preconditions_initArm()
         .elbowPosition    = {0.0, 0.0, -10.0},
         .wristPosition    = {0.0, 0.0, -15.0},
     };
-    initializeArm(currentPose);
+    arm_joint_positions_set(currentPose);
 }
 
 
@@ -62,9 +62,9 @@ bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected)
     {
         printf("\t -> RESULT: %s \n",(true == ok)?"PASSED":"FAILED");
         printf("EXPECTED: \n");
-        printArmPose(expected);
+        arm_pose_print(expected);
         printf("ACTUAL: \n");
-        printArmPose(actual);
+        arm_pose_print(actual);
     }
 
     return ok;

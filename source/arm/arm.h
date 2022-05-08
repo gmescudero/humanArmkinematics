@@ -32,33 +32,29 @@ typedef struct ARM_ROT_AXIS_CALIB_CONFIG_STRUCT
 /* Function Declarations                                                      */
 /******************************************************************************/
 
-void initializeArm(
-    ARM_POSE initialArmPose);
+void arm_joint_positions_set(
+    ARM_POSE initial_arm_pose);
 
-void terminateArm();
-
-void printArmPose(
+void arm_pose_print(
     const ARM_POSE pose);
 
-ARM_POSE rotateArm(
+ARM_POSE arm_rotate(
     Quaternion sh2el_orientation,
     Quaternion el2wr_orientation);
 
-ARM_POSE getArmPositions();
+ARM_POSE arm_pose_get();
 
 /**
  * @brief Calibrate a rotation axis for a 1 DOF joint knowing its angular velocity
  * 
- * @param rotationV (input) Current rotation vector
  * @param omegaR (input) Current angular velocity
- * @param newRotV (output) New rotation vector
- * @param error (output) Current error value
- * @return ERROR_CODE: RET_OK on success
+ * @param rotationV (input/output) Rotation vector
+ * @return ERROR_CODE:
+ *  - RET_OK on success
+ *  - RET_ERROR otherwise
  */
-ERROR_CODE calibrateRotationAxis(
-    double rotationV[3],
+ERROR_CODE arm_calibrate_rotation_axis(
     double omegaR[3],
-    double newRotV[3],
-    double *error);
+    double rotationV[3]);
 
 #endif

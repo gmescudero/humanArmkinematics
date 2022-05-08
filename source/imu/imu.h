@@ -115,14 +115,6 @@ void imu_csv_headers_set(void);
 void imu_csv_log(ImuData d);
 
 /**
- * @brief Update IMU values into database fields
- * 
- * @param d (input) Given IMU data
- * @return ERROR_CODE 
- */
-ERROR_CODE imu_database_update(ImuData d);
-
-/**
  * @brief Read data from an IMU sensor with a given index
  * 
  * @param index (input) Index of the IMU sensor to be read

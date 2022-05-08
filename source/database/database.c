@@ -33,14 +33,21 @@ static DB_FIELD database[DB_NUMBER_OF_ENTRIES] = {
 /*   field_id      , name         , type      , multiplicity, mutex, data_ptr */
     
     /* IMU data */
-    DB_FIELD_INIT(DB_IMU_TIMESTAMP,          "TIMESTAMP",               DB_REAL,1),
+    DB_FIELD_INIT(DB_IMU_TIMESTAMP,          "IMU_TIMESTAMP",           DB_REAL,1),
     DB_FIELD_INIT(DB_IMU_ACCELEROMETER,      "IMU_ACCELEROMETER",       DB_REAL,3),
     DB_FIELD_INIT(DB_IMU_GYROSCOPE,          "IMU_GYROSCOPE",           DB_REAL,3),
     DB_FIELD_INIT(DB_IMU_MAGNETOMETER,       "IMU_MAGNETOMETER",        DB_REAL,3),
     DB_FIELD_INIT(DB_IMU_QUATERNION,         "IMU_QUATERNION",          DB_REAL,4),
     DB_FIELD_INIT(DB_IMU_LINEAR_ACCELERATION,"IMU_LINEAR_ACCELERATION", DB_REAL,3),
-    /**/
-    DB_FIELD_INIT(DB_CALIB_ERROR,"CALIB_ERROR",DB_REAL,1),
+    /* Online rotation axis calibration data */
+    DB_FIELD_INIT(DB_CALIB_ERROR,                "CALIB_ERROR",                 DB_REAL,1),
+    DB_FIELD_INIT(DB_CALIB_ROT_VECTOR,           "CALIB_ROT_VECTOR",            DB_REAL,3),
+    DB_FIELD_INIT(DB_CALIB_OMEGA,                "CALIB_OMEGA",                 DB_REAL,3),
+    DB_FIELD_INIT(DB_CALIB_OMEGA_NORM,           "CALIB_OMEGA_NORM",            DB_REAL,1),
+    DB_FIELD_INIT(DB_CALIB_SPHERICAL_COORDS,     "CALIB_SPHERICAL_COORDS",      DB_REAL,2),
+    DB_FIELD_INIT(DB_CALIB_SPHERICAL_ALTERNATIVE,"CALIB_SPHERICAL_ALTERNATIVE", DB_INTEGER,1),
+    DB_FIELD_INIT(DB_CALIB_COST_DERIVATIVE,      "CALIB_COST_DERIVATIVE",       DB_REAL,2),
+
 /* 
     {.identifier=DB_IMU_TIMESTAMP  , .name="TIMESTAMP"  , .type=DB_REAL, .multiplicity=1, .mutex={{0}}, .data_ptr=NULL},
     {.identifier=DB_CALIB_ERROR, .name="CALIB_ERROR", .type=DB_REAL, .multiplicity=1, .mutex={{0}}, .data_ptr=NULL}, */
