@@ -166,7 +166,7 @@ void imu_data_print (ImuData imu){
 
 
 void imu_csv_headers_set(void) {
-    const char *headers[CSV_FILE_VALUES_NUMBER] = {
+    const char headers[CSV_FILE_VALUES_NUMBER][CSV_HEADER_MAX_LENGTH] = {
         "timestamp",
         "rawAcc0","rawAcc1","rawAcc2",
         "rawGyr0","rawGyr1","rawGyr2",

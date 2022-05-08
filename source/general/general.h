@@ -15,6 +15,10 @@
  * @brief The maximum number of values to log to the csv file
  */
 #define CSV_FILE_VALUES_NUMBER (30)
+/**
+ * @brief The maximum length of a CSV header
+ */
+#define CSV_HEADER_MAX_LENGTH (64)
 
 
 /**
@@ -108,7 +112,8 @@ void err_str(const char *text, ...);
  * @param headers (input) Array of headers
  * @param data_num (input) The number of data instances
  */
-void csv_headers_set(const char *headers[CSV_FILE_VALUES_NUMBER], int data_num);
+void csv_headers_set(const char headers[CSV_FILE_VALUES_NUMBER][CSV_HEADER_MAX_LENGTH], int data_num);
+
 /**
  * @brief Log a set of values to the csv file
  * 

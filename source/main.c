@@ -43,6 +43,34 @@ static ERROR_CODE initialize() {
 
 int main(int argc, char **argv) {
     ERROR_CODE status = RET_OK;
+    DB_FIELD_IDENTIFIER fields[] = {
+        DB_TIMESTAMP,
+        DB_IMU_ACCELEROMETER,
+        DB_IMU_MAGNETOMETER
+    };
+    int num_fields = sizeof(fields)/sizeof(DB_FIELD_IDENTIFIER);
+
+    /* Initialize all packages */
+    log_str("Initialize");
+    status = initialize();
+    STATUS_EVAL(status);
+
+    /* Set the csv logging of the database */
+    if (RET_OK == status) {
+        log_str("Set the database fields to track into the csv");
+        status = db_csv_setup(fields,num_fields);
+        STATUS_EVAL(status);
+        if (RET_OK == status) {
+            log_str("Dump the current values of the configured fields");
+            status = db_csv_dump();
+            STATUS_EVAL(status);
+        }
+    }
+    return status;
+}
+
+int main_bkp(int argc, char **argv) {
+    ERROR_CODE status = RET_OK;
     COM_PORTS discoveredPorts;
     // IMU_NOISE_DATA noiseData;
     ImuData data;
@@ -68,7 +96,7 @@ int main(int argc, char **argv) {
     /* Configure CSV file*/
     if (RET_OK == status) {
         log_str("Set CSV headers");
-        const char *headers[CSV_FILE_VALUES_NUMBER] = {
+        const char headers[CSV_FILE_VALUES_NUMBER][CSV_HEADER_MAX_LENGTH] = {
             "timestamp",
             "omegaR_X","omegaR_Y","omegaR_Z",
             "rotVector_X","rotVector_Y","rotVector_Z",
@@ -150,15 +178,15 @@ int main(int argc, char **argv) {
         log_str("The obtained rotation axis: [%f, %f, %f]",newRotVector[0],newRotVector[1],newRotVector[2]);
     }
 
-    log_str("Write Timestamp %f to the database",data.timeStamp);
+    log_str("Write Timestamp %f to the database",newRotVector[0]);
     if (RET_OK == status) {
-        status = db_write(DB_TIMESTAMP, (void*)&(data.timeStamp));
+        status = db_index_write(DB_IMU_ACCELEROMETER, 0, (void*)&(newRotVector[0]));
     }
 
     log_str("Read Timestamp from the database");
     if (RET_OK == status) {
         double time = 0.0;
-        status = db_read(DB_TIMESTAMP, (void*)&(time));
+        status = db_index_read(DB_IMU_ACCELEROMETER, 1, (void*)&(time));
         if (RET_OK == status) log_str("\t -> retrieved timestamp: %f",time);
     }
 

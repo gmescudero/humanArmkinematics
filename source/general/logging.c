@@ -30,7 +30,7 @@ static void scsv_default_headers_set(void);
 TRACE_LEVEL trace_level = INFO;
 TRACE_LEVEL trace_file_level = DEBUG;
 
-
+int csv_data_num = 0;
 char csv_file_name[CSV_FILE_NAME_LENGTH] = {'\0'};
 char log_file_name[LOG_FILE_NAME_LENGTH] = {'\0'};
 
@@ -133,23 +133,32 @@ static void scsv_default_headers_set(void) {
     }
 }
 
-void csv_headers_set(const char *headers[CSV_FILE_VALUES_NUMBER], int data_num) { // TODO improve robustness
+void csv_headers_set(const char headers[CSV_FILE_VALUES_NUMBER][CSV_HEADER_MAX_LENGTH], int data_num) { // TODO improve robustness
     FILE *fd = NULL;
     if ('\0' != csv_file_name[0]) {
         fd = fopen(csv_file_name, "w");
         if (NULL != fd) {
-            for (int i = 0; i < CSV_FILE_VALUES_NUMBER; i++) {
-                if (i < data_num && 0 < strlen(headers[i])){
+            csv_data_num = data_num;
+            dbg_str("Setting csv headers");
+            for (int i = 0; i < data_num; i++) {
+                dbg_str("\t -> %s",headers[i]);
+                if (0 < strlen(headers[i])){
                     fprintf(fd,"%s",headers[i]);
                 }
                 else {
                     fprintf(fd,"data%d",i);
                 }
-                if (i<CSV_FILE_VALUES_NUMBER-1) fprintf(fd,",");
+                if (i<csv_data_num-1) fprintf(fd,",");
             }
             fprintf(fd,"\n");
             fclose(fd);
         }
+        else {
+            err_str("Failed to create and open csv file");
+        }
+    }
+    else {
+        err_str("Csv file name not set");
     }
 }
 
@@ -158,9 +167,9 @@ void csv_log(const double data[CSV_FILE_VALUES_NUMBER]) {
     if ('\0' != csv_file_name[0]) {
         fd = fopen(csv_file_name, "a");
         if (NULL != fd) {
-            for (int i = 0; i < CSV_FILE_VALUES_NUMBER; i++) {
+            for (int i = 0; i < csv_data_num; i++) {
                 fprintf(fd,"%f",data[i]);
-                if (i<CSV_FILE_VALUES_NUMBER-1) fprintf(fd,",");
+                if (i<csv_data_num-1) fprintf(fd,",");
             }
             fprintf(fd,"\n");
             fclose(fd);

@@ -42,34 +42,34 @@ all: $(OBJS) main.o
 	$(info building target ...)
 	$(LD) $(INC) $(BINARIES_DIR)/*.o $(IMULIB) $(PTHREADSERIAL) -o $(TARGET) -lm -ldl
 
-test: $(OBJS) 
+test: $(OBJS) all
 	cd test && make && cd -
 
-main.o: $(SOURCE_DIR)/main.c bin_dir
+main.o: $(SOURCE_DIR)/main.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/main.c -o $(BINARIES_DIR)/$@
 
-functions.o: $(SOURCE_DIR)/general/functions.c bin_dir
+functions.o: $(SOURCE_DIR)/general/functions.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/general/functions.c -o $(BINARIES_DIR)/$@ 
 
-logging.o: $(SOURCE_DIR)/general/logging.c bin_dir
+logging.o: $(SOURCE_DIR)/general/logging.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/general/logging.c -o $(BINARIES_DIR)/$@ 
 
-quaternion.o: $(SOURCE_DIR)/quat_lib/Quaternion.c bin_dir
+quaternion.o: $(SOURCE_DIR)/quat_lib/Quaternion.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(SOURCE_DIR)/quat_lib/Quaternion.c -o $(BINARIES_DIR)/$@ 
 
-arm.o: $(SOURCE_DIR)/arm/arm.c vector3.o bin_dir
+arm.o: $(SOURCE_DIR)/arm/arm.c vector3.o dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/arm/arm.c -o $(BINARIES_DIR)/$@ 
 
-vector3.o: $(SOURCE_DIR)/math/vector3.c bin_dir
+vector3.o: $(SOURCE_DIR)/math/vector3.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/math/vector3.c -o $(BINARIES_DIR)/$@ 
 
-imu.o: $(SOURCE_DIR)/imu/imu.cpp bin_dir
+imu.o: $(SOURCE_DIR)/imu/imu.cpp dirs_create
 	$(LD) -c $(CCFLAGS) $(INC) $(SOURCE_DIR)/imu/imu.cpp -o $(BINARIES_DIR)/$@ 
 
-database.o: $(SOURCE_DIR)/database/database.c bin_dir
+database.o: $(SOURCE_DIR)/database/database.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/database/database.c -o $(BINARIES_DIR)/$@ 
 
-bin_dir:
+dirs_create:
 	mkdir -p $(BINARIES_DIR)
 	mkdir -p $(LOGGING_DIR)
 	mkdir -p $(DATA_DIR)
