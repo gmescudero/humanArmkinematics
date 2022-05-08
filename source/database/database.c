@@ -31,8 +31,9 @@ static size_t sdb_field_size_get(const DB_FIELD_IDENTIFIER field);
     */
 static DB_FIELD database[DB_NUMBER_OF_ENTRIES] = {
 /*   field_id      , name         , type      , multiplicity, mutex, data_ptr */
-    DB_FIELD_INIT(DB_TIMESTAMP, "TIMESTAMP", DB_REAL,1),
+    
     /* IMU data */
+    DB_FIELD_INIT(DB_IMU_TIMESTAMP,          "TIMESTAMP",               DB_REAL,1),
     DB_FIELD_INIT(DB_IMU_ACCELEROMETER,      "IMU_ACCELEROMETER",       DB_REAL,3),
     DB_FIELD_INIT(DB_IMU_GYROSCOPE,          "IMU_GYROSCOPE",           DB_REAL,3),
     DB_FIELD_INIT(DB_IMU_MAGNETOMETER,       "IMU_MAGNETOMETER",        DB_REAL,3),
@@ -41,7 +42,7 @@ static DB_FIELD database[DB_NUMBER_OF_ENTRIES] = {
     /**/
     DB_FIELD_INIT(DB_CALIB_ERROR,"CALIB_ERROR",DB_REAL,1),
 /* 
-    {.identifier=DB_TIMESTAMP  , .name="TIMESTAMP"  , .type=DB_REAL, .multiplicity=1, .mutex={{0}}, .data_ptr=NULL},
+    {.identifier=DB_IMU_TIMESTAMP  , .name="TIMESTAMP"  , .type=DB_REAL, .multiplicity=1, .mutex={{0}}, .data_ptr=NULL},
     {.identifier=DB_CALIB_ERROR, .name="CALIB_ERROR", .type=DB_REAL, .multiplicity=1, .mutex={{0}}, .data_ptr=NULL}, */
 };
 

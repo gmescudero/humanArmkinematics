@@ -210,6 +210,35 @@ void imu_csv_log(ImuData d) {
     csv_log(dat);
 }
 
+ERROR_CODE imu_database_update(ImuData d) {
+    ERROR_CODE status = RET_OK;
+    double timestamp = d.timeStamp;
+    double acc[3]    = {(double)d.a[0],(double)d.a[1],(double)d.a[2]};
+    double gyr[3]    = {(double)d.g[0],(double)d.g[1],(double)d.g[2]};
+    double mag[3]    = {(double)d.b[0],(double)d.b[1],(double)d.b[2]};
+    double linAcc[3] = {(double)d.linAcc[0],(double)d.linAcc[1],(double)d.linAcc[2]};
+    double quat[4]   = {(double)d.q[0],(double)d.q[1],(double)d.q[2],(double)d.q[3]};
+
+    status = db_write(DB_IMU_TIMESTAMP, &timestamp);
+
+    if (RET_OK == status) {
+        status = db_write(DB_IMU_ACCELEROMETER, &acc);
+    }
+    if (RET_OK == status) {
+        status = db_write(DB_IMU_GYROSCOPE, &gyr);
+    }
+    if (RET_OK == status) {
+        status = db_write(DB_IMU_MAGNETOMETER, &mag);
+    }
+    if (RET_OK == status) {
+        status = db_write(DB_IMU_LINEAR_ACCELERATION, &linAcc);
+    }
+    if (RET_OK == status) {
+        status = db_write(DB_IMU_QUATERNION, &quat);
+    }
+    return status;
+}
+
 
 ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOISE_DATA *noise) {
     ERROR_CODE status = RET_OK;

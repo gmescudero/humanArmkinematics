@@ -20,6 +20,7 @@ extern "C" {
 #include <math.h>
 #include "errors.h"
 #include "general.h"
+#include "database.h"
 
 #ifdef __GNUC__
 #include "lpsensor/ImuData.h"
@@ -112,6 +113,14 @@ void imu_csv_headers_set(void);
  * @param d (input) Given IMU data
  */
 void imu_csv_log(ImuData d);
+
+/**
+ * @brief Update IMU values into database fields
+ * 
+ * @param d (input) Given IMU data
+ * @return ERROR_CODE 
+ */
+ERROR_CODE imu_database_update(ImuData d);
 
 /**
  * @brief Read data from an IMU sensor with a given index

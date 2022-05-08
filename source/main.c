@@ -44,11 +44,15 @@ static ERROR_CODE initialize() {
 int main(int argc, char **argv) {
     ERROR_CODE status = RET_OK;
     DB_FIELD_IDENTIFIER fields[] = {
-        DB_TIMESTAMP,
+        DB_IMU_TIMESTAMP,
         DB_IMU_ACCELEROMETER,
         DB_IMU_MAGNETOMETER
     };
     int num_fields = sizeof(fields)/sizeof(DB_FIELD_IDENTIFIER);
+    COM_PORTS discoveredPorts;
+    ImuData data;
+    double startTime = -1.0;
+    double currentTime = -1.0;
 
     /* Initialize all packages */
     log_str("Initialize");
@@ -60,12 +64,56 @@ int main(int argc, char **argv) {
         log_str("Set the database fields to track into the csv");
         status = db_csv_setup(fields,num_fields);
         STATUS_EVAL(status);
-        if (RET_OK == status) {
+/*         if (RET_OK == status) {
             log_str("Dump the current values of the configured fields");
             status = db_csv_dump();
             STATUS_EVAL(status);
-        }
+        } */
     }
+
+    /* Look for com ports avalilable in the system */
+    if (RET_OK == status) {
+        log_str("Retrieve available COM ports");
+        status = com_ports_list(&discoveredPorts);
+        STATUS_EVAL(status);
+    }
+
+    /* Initialize IMU in a given COM port */
+    if (RET_OK == status) {
+        log_str("Initialize the IMU sensor in the first COM port");
+        status = imu_initialize(discoveredPorts.ports_names[0]);
+        STATUS_EVAL(status);
+    }
+
+    if (RET_OK == status) {
+        log_str("Loop reading IMU data and logging it to the CSV file");
+        do {
+            millis_sleep(20);
+            if (RET_OK == status) {
+                // Read IMU data
+                status = imu_read(0, &data);
+                STATUS_EVAL(status);
+            }
+            if (RET_OK == status && -1.0 == startTime){
+                // Initialize start time if required
+                startTime   = data.timeStamp;
+            }
+            if (RET_OK == status) {
+                // Update current time and log to the CSV
+                currentTime = data.timeStamp - startTime;
+            }
+            if (RET_OK == status) {
+                // Update imu data to database
+                status = imu_database_update(data);
+            }
+            if (RET_OK == status) {
+                // Write csv file
+                status = db_csv_dump();
+            }
+            
+        } while ((RET_OK == status || RET_NO_EXEC == status) && 20 > currentTime);
+    } 
+
     return status;
 }
 
