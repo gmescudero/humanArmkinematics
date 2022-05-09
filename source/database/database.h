@@ -45,6 +45,17 @@ ERROR_CODE db_initialize(void);
 ERROR_CODE db_terminate(void);
 
 /**
+ * @brief Get parameters of a given field of the database
+ * 
+ * @param field (input) Field identifier
+ * @param multiplicity (output) Multiplicity of the given field
+ * @param type (output) type of the given field
+ * @param init (output) initialized status of the given field
+ * @return ERROR_CODE 
+ */
+ERROR_CODE db_field_parameters_get(DB_FIELD_IDENTIFIER field, int *multiplicity, DB_FIELD_TYPE *type, int *init);
+
+/**
  * @brief Write values to a database field
  * 
  * @param field (input) Field identifier

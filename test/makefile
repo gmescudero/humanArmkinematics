@@ -1,11 +1,16 @@
 # change application name here (executable output name)
 TARGET = tests
+# current directory
+current_dir = $(shell pwd)
 # compiler
 CC = gcc
 # source code directory
 SOURCE_DIR = ../source
 # binaries directory
 BINARIES_DIR = ../bin
+# log directories
+LOGGING_DIR = $(current_dir)/log
+DATA_DIR    = $(current_dir)/data
 # includes
 INC = \
 	-I$(SOURCE_DIR)/general \
@@ -34,13 +39,17 @@ CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 OBJS = 	$(BINARIES_DIR)/arm.o  $(BINARIES_DIR)/database.o  $(BINARIES_DIR)/functions.o \
 		$(BINARIES_DIR)/imu.o  $(BINARIES_DIR)/logging.o  $(BINARIES_DIR)/quaternion.o  $(BINARIES_DIR)/vector3.o
 
-all: tst_lib.o tests.c $(OBJS)
+all: tst_lib.o tests.c $(OBJS) dirs_create
 	$(info building tests ... )
 	$(CC) $(INC) $(OBJS) $(PTHREADSERIAL) $(IMULIB) tests.c tst_lib/*.o -o $(TARGET) -lm -ldl
 
-tst_lib.o: tst_lib/tst_lib.c
+tst_lib.o: tst_lib/tst_lib.c dirs_create
 	$(CC) $(INC) -c tst_lib/tst_lib.c -o tst_lib/$@ 
 
+dirs_create:
+	mkdir -p $(LOGGING_DIR)
+	mkdir -p $(DATA_DIR)
+
 clean:
-	rm -rf $(TARGET)
+	rm -rf $(TARGET) $(LOGGING_DIR) $(DATA_DIR)
 	rm -rf tst_lib/*.o

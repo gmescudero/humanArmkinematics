@@ -117,6 +117,23 @@ ERROR_CODE db_terminate(void) {
     return (RET_OK == status) ? RET_OK: RET_ERROR;
 }
 
+ERROR_CODE db_field_parameters_get(DB_FIELD_IDENTIFIER field, int *multiplicity, DB_FIELD_TYPE *type, int *init) {
+    // Check arguments
+    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
+    if (NULL == multiplicity && NULL == type && NULL == init) return RET_ARG_ERROR;
+
+    if (NULL != multiplicity) {
+        *multiplicity = database[field].multiplicity;
+    }
+    if (NULL != type) {
+        *type = database[field].type;
+    }
+    if (NULL != init) {
+        *init = database[field].initialized;
+    }
+    return RET_OK;
+}
+
 ERROR_CODE db_write(DB_FIELD_IDENTIFIER field, const void *data) {
     // Check arguments
     if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
