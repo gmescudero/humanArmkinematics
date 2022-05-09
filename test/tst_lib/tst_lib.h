@@ -1,6 +1,8 @@
 #include "arm.h"
 
+#ifndef EPSI
 #define EPSI (1e-6)
+#endif
 
 typedef enum LOG_LEVEL_ENUM{
     ALL_TRACES,
