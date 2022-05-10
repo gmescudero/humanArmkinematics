@@ -242,10 +242,120 @@ bool tst_arm_009()
     double timeInc = 0.02;/*(seconds)*/
     double time = 0.0;
 
+    double omegaR[] = {1000.0,0.0,0.0};
+    double v_expected[3];
+
+    testDescription(__FUNCTION__, "Test one rotation axis calibration over X axis");
+    ok = preconditions_init(); 
+
+    // Test Steps
+    ret = db_csv_setup(fields_monitored,num_fields);
+    ok &= assert_OK(ret);
+
+    while (ok && time<timeout)
+    {
+        // Set timesetamp
+        ret = db_index_write(DB_IMU_TIMESTAMP,0,&time);
+        ok &= assert_OK(ret);
+        time += timeInc;
+        // Execute arm calibration of a single rotation axis
+        ret = arm_calibrate_rotation_axis(omegaR,rotVector);
+        ok &= assert_OK(ret);
+        // Dump database data
+        ret = db_csv_dump();
+        ok &= assert_OK(ret);
+    }
+    ret = vector3_normalize(omegaR,v_expected);
+    ok &= assert_OK(ret);
+    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2);
+
+    // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_arm_010() 
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    DB_FIELD_IDENTIFIER fields_monitored[] = {
+        DB_IMU_TIMESTAMP,
+        DB_CALIB_OMEGA,
+        DB_CALIB_OMEGA_NORM,
+        DB_CALIB_ERROR,
+        DB_CALIB_ROT_VECTOR,
+        DB_CALIB_SPHERICAL_ALTERNATIVE,
+        DB_CALIB_SPHERICAL_COORDS,
+        DB_CALIB_COST_DERIVATIVE
+    };
+    int num_fields = sizeof(fields_monitored)/sizeof(DB_FIELD_IDENTIFIER);  
+
+    double rotVector[3]    = {0.5,0.5,0.5};
+    double timeout = 20.0;/*(seconds)*/
+    double timeInc = 0.02;/*(seconds)*/
+    double time = 0.0;
+
+    double omegaR[] = {0.0,1000.0,0.0};
+    double v_expected[3];
+
+    testDescription(__FUNCTION__, "Test one rotation axis calibration over Y axis");
+    ok = preconditions_init(); 
+
+    // Test Steps
+    ret = db_csv_setup(fields_monitored,num_fields);
+    ok &= assert_OK(ret);
+
+    while (ok && time<timeout)
+    {
+        // Set timesetamp
+        ret = db_index_write(DB_IMU_TIMESTAMP,0,&time);
+        ok &= assert_OK(ret);
+        time += timeInc;
+        // Execute arm calibration of a single rotation axis
+        ret = arm_calibrate_rotation_axis(omegaR,rotVector);
+        ok &= assert_OK(ret);
+        // Dump database data
+        ret = db_csv_dump();
+        ok &= assert_OK(ret);
+    }
+    ret = vector3_normalize(omegaR,v_expected);
+    ok &= assert_OK(ret);
+    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2);
+
+    // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_arm_011() 
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    DB_FIELD_IDENTIFIER fields_monitored[] = {
+        DB_IMU_TIMESTAMP,
+        DB_CALIB_OMEGA,
+        DB_CALIB_OMEGA_NORM,
+        DB_CALIB_ERROR,
+        DB_CALIB_ROT_VECTOR,
+        DB_CALIB_SPHERICAL_ALTERNATIVE,
+        DB_CALIB_SPHERICAL_COORDS,
+        DB_CALIB_COST_DERIVATIVE
+    };
+    int num_fields = sizeof(fields_monitored)/sizeof(DB_FIELD_IDENTIFIER);  
+
+    double rotVector[3]    = {0.5,0.5,0.5};
+    double timeout = 5.0;/*(seconds)*/
+    double timeInc = 0.02;/*(seconds)*/
+    double time = 0.0;
+
     double omegaR[] = {0.0,0.0,1000.0};
     double v_expected[3];
 
-    testDescription(__FUNCTION__, "Test one rotation axis calibration");
+    testDescription(__FUNCTION__, "Test one rotation axis calibration over Z axis");
     ok = preconditions_init(); 
 
     // Test Steps
@@ -581,6 +691,8 @@ bool tst_battery_all()
     ok &= tst_arm_007();
     ok &= tst_arm_008();
     ok &= tst_arm_009();
+    ok &= tst_arm_010();
+    ok &= tst_arm_011();
 
     ok &= tst_math_001();
     ok &= tst_math_002();
@@ -603,9 +715,11 @@ int main(int argc, char **argv)
     bool ok = true;
 
     testSetTraceLevel(SILENT_NO_ERROR);
-    
+
     // ok &= tst_battery_all();
     ok &= tst_arm_009();
+    ok &= tst_arm_010();
+    ok &= tst_arm_011();
 
     return (int)ok;
 }
