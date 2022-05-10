@@ -102,18 +102,23 @@ bool assert_ERROR(ERROR_CODE status) {
     return ok;
 }
 
-bool assert_vector3Equal(const double actual[3], const double expected[3])
+bool assert_vector3EqualThreshold(const double actual[3], const double expected[3], const double threshold)
 {
     bool ok = true;
 
-    ok &= fabs(actual[0] - expected[0]) < EPSI;
-    ok &= fabs(actual[1] - expected[1]) < EPSI;
-    ok &= fabs(actual[2] - expected[2]) < EPSI;
+    ok &= fabs(actual[0] - expected[0]) < threshold;
+    ok &= fabs(actual[1] - expected[1]) < threshold;
+    ok &= fabs(actual[2] - expected[2]) < threshold;
     if WILL_PRINT(ok) {
         printf("\t -> RESULT: %s | EXPECTED: [%f,%f,%f], ACTUAL: [%f,%f,%f] \n",
             (true == ok)?"PASSED":"FAILED",expected[0],expected[1],expected[2],actual[0],actual[1],actual[2]);
     }
     return ok;
+}
+
+bool assert_vector3Equal(const double actual[3], const double expected[3])
+{
+    return assert_vector3EqualThreshold(actual,expected,EPSI);
 }
 
 bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected)
