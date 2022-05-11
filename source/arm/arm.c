@@ -103,7 +103,6 @@ ERROR_CODE arm_calibrate_rotation_axis(
     double lambda   = calibration_config.stepSize;
     double minVel   = calibration_config.minVel;
 
-    int sphericAlternative = 0;
     double t,r;
     double tempV[3], tempV2[3];
 
@@ -125,7 +124,7 @@ ERROR_CODE arm_calibrate_rotation_axis(
 
     double newT,newR;
 
-    double error;
+    double error = 0.0;
 
     // Check arguments
     if (NULL == rotationV) return RET_ARG_ERROR;
@@ -141,29 +140,16 @@ ERROR_CODE arm_calibrate_rotation_axis(
     else {
         // Convert to spheric coordinates
         if (RET_OK == status) {
-            t = atan2(sqrt(1-(rotationV[2]*rotationV[2])),rotationV[2]);
-            if (t < M_PI/4 || t > 3*M_PI/4) {
-                // Near singularity. Apply rotation to avoid it
-                sphericAlternative = 1;
-                status = vector3_rotate90y(rotationV, tempV);
-                if (RET_OK == status) {
-                    t = atan2(sqrt(1-tempV[2]*tempV[2]),tempV[2]);
-                }
-            }
-            else {
-                memcpy(tempV, rotationV, sizeof(tempV));
-            }
-            if (RET_OK == status) {
-                r = atan2(tempV[1],tempV[0]);
-            }
+            t = atan2(sqrt(rotationV[0]*rotationV[0]+rotationV[1]*rotationV[1]) , rotationV[2]);
+            r = atan2(rotationV[1],rotationV[0]);
         }
 
         // Calculate alpha to satisfy given angular speed
         if (RET_OK == status) {
-            status = vector3_dot(tempV,tempV,&aux1);
+            status = vector3_dot(rotationV,rotationV,&aux1);
         }
         if (RET_OK == status) {
-            status = vector3_dot(tempV,omegaR,&aux2);
+            status = vector3_dot(rotationV,omegaR,&aux2);
         }
         if (RET_OK == status) {
             alpha = aux1*aux2;
@@ -171,9 +157,9 @@ ERROR_CODE arm_calibrate_rotation_axis(
 
         // Calculate the error value
         if (RET_OK == status) {
-            err[0] = alpha*tempV[0] - omegaR[0];
-            err[1] = alpha*tempV[1] - omegaR[1];
-            err[2] = alpha*tempV[2] - omegaR[2];
+            err[0] = alpha*rotationV[0] - omegaR[0];
+            err[1] = alpha*rotationV[1] - omegaR[1];
+            err[2] = alpha*rotationV[2] - omegaR[2];
         }
 
         // Calculate partials of each angle
@@ -221,12 +207,7 @@ ERROR_CODE arm_calibrate_rotation_axis(
             tempV[0] = st*cr; tempV[1] = st*sr; tempV[2] = ct;
 
             status = vector3_normalize(tempV, tempV2);
-        }
-        if (RET_OK == status) {
-            if (1 == sphericAlternative) {
-                status = vector3_rotateMinus90y(tempV2,rotationV);
-            }
-            else {
+            if (RET_OK == status) {
                 memcpy(rotationV,tempV2,sizeof(tempV2));
             }
         }
@@ -240,9 +221,6 @@ ERROR_CODE arm_calibrate_rotation_axis(
         }
 
         // Update database  
-        if (RET_OK == status) {
-            status = db_write(DB_CALIB_SPHERICAL_ALTERNATIVE, &sphericAlternative);
-        }
         if (RET_OK == status) {
             double spherical[] = {t,r};
             status = db_write(DB_CALIB_SPHERICAL_COORDS, spherical);

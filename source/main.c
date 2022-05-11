@@ -48,7 +48,6 @@ int main(int argc, char **argv) {
         DB_CALIB_OMEGA_NORM,
         DB_CALIB_ERROR,
         DB_CALIB_ROT_VECTOR,
-        DB_CALIB_SPHERICAL_ALTERNATIVE,
         DB_CALIB_SPHERICAL_COORDS,
         DB_CALIB_COST_DERIVATIVE
     };

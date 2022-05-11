@@ -231,7 +231,6 @@ bool tst_arm_009()
         DB_CALIB_OMEGA_NORM,
         DB_CALIB_ERROR,
         DB_CALIB_ROT_VECTOR,
-        DB_CALIB_SPHERICAL_ALTERNATIVE,
         DB_CALIB_SPHERICAL_COORDS,
         DB_CALIB_COST_DERIVATIVE
     };
@@ -286,7 +285,6 @@ bool tst_arm_010()
         DB_CALIB_OMEGA_NORM,
         DB_CALIB_ERROR,
         DB_CALIB_ROT_VECTOR,
-        DB_CALIB_SPHERICAL_ALTERNATIVE,
         DB_CALIB_SPHERICAL_COORDS,
         DB_CALIB_COST_DERIVATIVE
     };
@@ -341,7 +339,6 @@ bool tst_arm_011()
         DB_CALIB_OMEGA_NORM,
         DB_CALIB_ERROR,
         DB_CALIB_ROT_VECTOR,
-        DB_CALIB_SPHERICAL_ALTERNATIVE,
         DB_CALIB_SPHERICAL_COORDS,
         DB_CALIB_COST_DERIVATIVE
     };
@@ -716,10 +713,7 @@ int main(int argc, char **argv)
 
     testSetTraceLevel(SILENT_NO_ERROR);
 
-    // ok &= tst_battery_all();
-    ok &= tst_arm_009();
-    ok &= tst_arm_010();
-    ok &= tst_arm_011();
+    ok &= tst_battery_all();
 
     return (int)ok;
 }
