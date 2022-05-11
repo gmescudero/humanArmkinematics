@@ -383,6 +383,45 @@ bool tst_arm_011()
     return ok;
 }
 
+bool tst_arm_012()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    
+    double timeout = 5.0;/*(seconds)*/
+    double timeInc = 0.02;/*(seconds)*/
+    double time = 0.0;
+
+    Quaternion q1, q2, q1_, q21;
+    double omega1[] = {500.0,0.0,0.0};
+    double omega2[] = {500.0,0.0,1000.0};
+    Quaternion w1,w1_, w2, aux1, aux2;
+    
+    testDescription(__FUNCTION__, "Emulate 2 different IMU sensors rotating");
+    ok = preconditions_init(); 
+
+    // Test Steps
+    Quaternion_set(1,0,0,0,&q1);
+    Quaternion_set(1,0,0,0,&q2);
+    Quaternion_set(0,omega1[0],omega1[1],omega1[2],&w1);
+    Quaternion_set(0,omega2[0],omega2[1],omega2[2],&w2);
+
+    Quaternion_conjugate(&q1,&q1_);
+    Quaternion_multiply(&q1_,&q2,&q21);
+
+    Quaternion_conjugate(&w1,&w1_);
+    Quaternion_multiply(&q1,&w1_,&aux1);
+    Quaternion_multiply(&w1,&aux1,&aux2);
+
+    // exp(q) = e^w(cos(|v|) + (v/|v|)*sin(|v|))
+    // qtp1 = qt * exp(T/2*w)
+    printf("aux: %f, %f, %f, %f\n",aux2.w,aux2.v[0],aux2.v[1],aux2.v[2]);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
 bool tst_math_001() 
 {
     bool ok = true;
@@ -713,7 +752,8 @@ int main(int argc, char **argv)
 
     testSetTraceLevel(SILENT_NO_ERROR);
 
-    ok &= tst_battery_all();
+    // ok &= tst_battery_all();
+    ok &= tst_arm_012();
 
     return (int)ok;
 }
