@@ -14,107 +14,121 @@
 #include "constants.h"
 #include <stddef.h>
 
+
+ERROR_CODE vector3_copy(double a[3], double output[3]) {
+    // Check arguments
+    if (NULL == a)      return RET_ARG_ERROR;
+    if (NULL == output) return RET_ARG_ERROR;
+
+    output[0]=a[0]; output[1]=a[1]; output[2]=a[2];
+
+    return RET_OK;
+}
+
 ERROR_CODE vector3_add(double a[3], double b[3], double output[3]) {
+    double result[3];
     // Check arguments
     if (NULL == a)      return RET_ARG_ERROR;
     if (NULL == b)      return RET_ARG_ERROR;
     if (NULL == output) return RET_ARG_ERROR;
 
-    output[0] = a[0] + b[0];
-    output[1] = a[1] + b[1];
-    output[2] = a[2] + b[2];
+    result[0] = a[0] + b[0];
+    result[1] = a[1] + b[1];
+    result[2] = a[2] + b[2];
 
-    return RET_OK;
+    return vector3_copy(result,output);
 }
 
 ERROR_CODE vector3_substract(double a[3], double b[3], double output[3]) {
+    double result[3];
     // Check arguments
     if (NULL == a)      return RET_ARG_ERROR;
     if (NULL == b)      return RET_ARG_ERROR;
     if (NULL == output) return RET_ARG_ERROR;
 
-    output[0] = a[0] - b[0];
-    output[1] = a[1] - b[1];
-    output[2] = a[2] - b[2];
+    result[0] = a[0] - b[0];
+    result[1] = a[1] - b[1];
+    result[2] = a[2] - b[2];
 
-    return RET_OK;
+    return vector3_copy(result,output);
 }
 
 ERROR_CODE vector3_rotate90y(double a[3], double output[3]) {
-    double v[3];
+    double result[3];
     // Check arguments
     if (NULL == a)      return RET_ARG_ERROR;
     if (NULL == output) return RET_ARG_ERROR;
 
-    v[0] = a[0]; v[1] = a[1]; v[2] = a[2];
+    result[0] = -a[2];
+    result[1] =  a[1];
+    result[2] =  a[0];
 
-    output[0] = -v[2];
-    output[1] =  v[1];
-    output[2] =  v[0];
-
-    return RET_OK;
+    return vector3_copy(result,output);
 }
 
 ERROR_CODE vector3_rotateMinus90y(double a[3], double output[3]) {
-    double v[3];
+    double result[3];
     // Check arguments
     if (NULL == a)      return RET_ARG_ERROR;
     if (NULL == output) return RET_ARG_ERROR;
 
-    v[0] = a[0]; v[1] = a[1]; v[2] = a[2];
+    result[0] =  a[2];
+    result[1] =  a[1];
+    result[2] = -a[0];
 
-    output[0] =  v[2];
-    output[1] =  v[1];
-    output[2] = -v[0];
-
-    return RET_OK;
+    return vector3_copy(result,output);
 }
 
 ERROR_CODE vector3_dot(double a[3], double b[3], double *output) {
+    double result;
     // Check arguments
     if (NULL == a)      return RET_ARG_ERROR;
     if (NULL == b)      return RET_ARG_ERROR;
     if (NULL == output) return RET_ARG_ERROR;
 
-    *output = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    result = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+
+    *output = result;
 
     return RET_OK;
 }
 
 ERROR_CODE vector3_norm(double a[3], double *output) {
-    double v[3];
+    double result;
     // Check arguments
     if (NULL == a)      return RET_ARG_ERROR;
     if (NULL == output) return RET_ARG_ERROR;
 
-    v[0] = a[0]; v[1] = a[1]; v[2] = a[2];
+    result = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
 
-    *output = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    *output = result;
 
     return RET_OK;
 }
 
 ERROR_CODE vector3_normalize(double a[3], double output[3]) {
     ERROR_CODE status;
-    double v[3];
+    double result[3];
     double norm;
     // Check arguments
     if (NULL == a)      return RET_ARG_ERROR;
     if (NULL == output) return RET_ARG_ERROR;
 
-    v[0] = a[0]; v[1] = a[1]; v[2] = a[2];
-
-    status = vector3_norm(v, &norm);
+    status = vector3_norm(a, &norm);
     if (RET_OK == status) {
         if (EPSI > norm) {
+            // A vector of zeros cannot be normalized
             status = RET_ERROR;
         }
         else {
-            output[0] = v[0]/norm;
-            output[1] = v[1]/norm;
-            output[2] = v[2]/norm;
+            result[0] = a[0]/norm;
+            result[1] = a[1]/norm;
+            result[2] = a[2]/norm;
         }
     }
-    
+    if (RET_OK == status) {
+        status = vector3_copy(result,output);
+    }
+
     return status;
 }

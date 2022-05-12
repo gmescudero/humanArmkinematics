@@ -104,7 +104,7 @@ ERROR_CODE arm_calibrate_rotation_axis(
     double minVel   = calibration_config.minVel;
 
     double t,r;
-    double tempV[3], tempV2[3];
+    double tempV[3];
 
     double alpha;
     double aux1,aux2;
@@ -206,10 +206,7 @@ ERROR_CODE arm_calibrate_rotation_axis(
             ct = cos(newT); st = sin(newT); cr = cos(newR); sr = sin(newR);
             tempV[0] = st*cr; tempV[1] = st*sr; tempV[2] = ct;
 
-            status = vector3_normalize(tempV, tempV2);
-            if (RET_OK == status) {
-                memcpy(rotationV,tempV2,sizeof(tempV2));
-            }
+            status = vector3_normalize(tempV, rotationV);
         }
 
         // Compute the error

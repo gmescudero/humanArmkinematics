@@ -14,7 +14,15 @@
 #include "errors.h"
 
 /**
- * @brief Add two 3x1 vectors
+ * @brief Copy a 3x1 vector
+ * 
+ * @param a (input) Vector to copy
+ * @param output (output) Copied vector
+ * @return ERROR_CODE 
+ */
+ERROR_CODE vector3_copy(double a[3], double output[3]);
+/**
+ * @brief Add two 3x1 vectors. a+b
  * 
  * @param a (input) First vector
  * @param b (input) Second vector
@@ -23,7 +31,7 @@
  */
 ERROR_CODE vector3_add(double a[3], double b[3], double output[3]);
 /**
- * @brief Substract two 3x1 vectors
+ * @brief Substract two 3x1 vectors. a-b
  * 
  * @param a (input) First vector
  * @param b (input) Second vector
@@ -48,7 +56,7 @@ ERROR_CODE vector3_rotate90y(double a[3], double output[3]);
  */
 ERROR_CODE vector3_rotateMinus90y(double a[3], double output[3]);
 /**
- * @brief Compute the dot product between two
+ * @brief Compute the dot product between two. a*b
  * 
  * @param a (input) First vector
  * @param b (input) Second vector
