@@ -225,16 +225,6 @@ bool tst_arm_009()
 {
     bool ok = true;
     ERROR_CODE ret;
-    DB_FIELD_IDENTIFIER fields_monitored[] = {
-        DB_IMU_TIMESTAMP,
-        DB_CALIB_OMEGA,
-        DB_CALIB_OMEGA_NORM,
-        DB_CALIB_ERROR,
-        DB_CALIB_ROT_VECTOR,
-        DB_CALIB_SPHERICAL_COORDS,
-        DB_CALIB_COST_DERIVATIVE
-    };
-    int num_fields = sizeof(fields_monitored)/sizeof(DB_FIELD_IDENTIFIER);  
 
     double rotVector[3]    = {0.5,0.5,0.5};
     double timeout = 20.0;/*(seconds)*/
@@ -248,13 +238,19 @@ bool tst_arm_009()
     ok = preconditions_init(); 
 
     // Test Steps
-    ret = db_csv_setup(fields_monitored,num_fields);
+    ret += db_csv_add_field(DB_IMU_TIMESTAMP,0);
+    ret += db_csv_add_field(DB_CALIB_OMEGA,0);
+    ret += db_csv_add_field(DB_CALIB_OMEGA_NORM,0);
+    ret += db_csv_add_field(DB_CALIB_ERROR,0);
+    ret += db_csv_add_field(DB_CALIB_ROT_VECTOR,0);
+    ret += db_csv_add_field(DB_CALIB_SPHERICAL_COORDS,0);
+    ret += db_csv_add_field(DB_CALIB_COST_DERIVATIVE,0);
     ok &= assert_OK(ret);
 
     while (ok && time<timeout)
     {
         // Set timesetamp
-        ret = db_index_write(DB_IMU_TIMESTAMP,0,&time);
+        ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
         ok &= assert_OK(ret);
         time += timeInc;
         // Execute arm calibration of a single rotation axis
@@ -279,16 +275,6 @@ bool tst_arm_010()
 {
     bool ok = true;
     ERROR_CODE ret;
-    DB_FIELD_IDENTIFIER fields_monitored[] = {
-        DB_IMU_TIMESTAMP,
-        DB_CALIB_OMEGA,
-        DB_CALIB_OMEGA_NORM,
-        DB_CALIB_ERROR,
-        DB_CALIB_ROT_VECTOR,
-        DB_CALIB_SPHERICAL_COORDS,
-        DB_CALIB_COST_DERIVATIVE
-    };
-    int num_fields = sizeof(fields_monitored)/sizeof(DB_FIELD_IDENTIFIER);  
 
     double rotVector[3]    = {0.5,0.5,0.5};
     double timeout = 20.0;/*(seconds)*/
@@ -302,13 +288,19 @@ bool tst_arm_010()
     ok = preconditions_init(); 
 
     // Test Steps
-    ret = db_csv_setup(fields_monitored,num_fields);
+    ret += db_csv_add_field(DB_IMU_TIMESTAMP,0);
+    ret += db_csv_add_field(DB_CALIB_OMEGA,0);
+    ret += db_csv_add_field(DB_CALIB_OMEGA_NORM,0);
+    ret += db_csv_add_field(DB_CALIB_ERROR,0);
+    ret += db_csv_add_field(DB_CALIB_ROT_VECTOR,0);
+    ret += db_csv_add_field(DB_CALIB_SPHERICAL_COORDS,0);
+    ret += db_csv_add_field(DB_CALIB_COST_DERIVATIVE,0);
     ok &= assert_OK(ret);
 
     while (ok && time<timeout)
     {
         // Set timesetamp
-        ret = db_index_write(DB_IMU_TIMESTAMP,0,&time);
+        ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
         ok &= assert_OK(ret);
         time += timeInc;
         // Execute arm calibration of a single rotation axis
@@ -333,16 +325,6 @@ bool tst_arm_011()
 {
     bool ok = true;
     ERROR_CODE ret;
-    DB_FIELD_IDENTIFIER fields_monitored[] = {
-        DB_IMU_TIMESTAMP,
-        DB_CALIB_OMEGA,
-        DB_CALIB_OMEGA_NORM,
-        DB_CALIB_ERROR,
-        DB_CALIB_ROT_VECTOR,
-        DB_CALIB_SPHERICAL_COORDS,
-        DB_CALIB_COST_DERIVATIVE
-    };
-    int num_fields = sizeof(fields_monitored)/sizeof(DB_FIELD_IDENTIFIER);  
 
     double rotVector[3]    = {0.5,0.5,0.5};
     double timeout = 5.0;/*(seconds)*/
@@ -356,13 +338,19 @@ bool tst_arm_011()
     ok = preconditions_init(); 
 
     // Test Steps
-    ret = db_csv_setup(fields_monitored,num_fields);
+    ret += db_csv_add_field(DB_IMU_TIMESTAMP,0);
+    ret += db_csv_add_field(DB_CALIB_OMEGA,0);
+    ret += db_csv_add_field(DB_CALIB_OMEGA_NORM,0);
+    ret += db_csv_add_field(DB_CALIB_ERROR,0);
+    ret += db_csv_add_field(DB_CALIB_ROT_VECTOR,0);
+    ret += db_csv_add_field(DB_CALIB_SPHERICAL_COORDS,0);
+    ret += db_csv_add_field(DB_CALIB_COST_DERIVATIVE,0);
     ok &= assert_OK(ret);
 
     while (ok && time<timeout)
     {
         // Set timesetamp
-        ret = db_index_write(DB_IMU_TIMESTAMP,0,&time);
+        ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
         ok &= assert_OK(ret);
         time += timeInc;
         // Execute arm calibration of a single rotation axis
@@ -387,17 +375,6 @@ bool tst_arm_012()
 {
     bool ok = true;
     ERROR_CODE ret;
-    
-    DB_FIELD_IDENTIFIER fields_monitored[] = {
-        DB_IMU_TIMESTAMP,
-        DB_CALIB_OMEGA,
-        DB_CALIB_OMEGA_NORM,
-        DB_CALIB_ERROR,
-        DB_CALIB_ROT_VECTOR,
-        DB_CALIB_SPHERICAL_COORDS,
-        DB_CALIB_COST_DERIVATIVE
-    };
-    int num_fields = sizeof(fields_monitored)/sizeof(DB_FIELD_IDENTIFIER);  
 
     double timeout = 5.0;/*(seconds)*/
     double timeInc = 0.02;/*(seconds)*/
@@ -418,7 +395,13 @@ bool tst_arm_012()
     ok = preconditions_init(); 
 
     // Test Steps
-    ret = db_csv_setup(fields_monitored,num_fields);
+    ret += db_csv_add_field(DB_IMU_TIMESTAMP,0);
+    ret += db_csv_add_field(DB_CALIB_OMEGA,0);
+    ret += db_csv_add_field(DB_CALIB_OMEGA_NORM,0);
+    ret += db_csv_add_field(DB_CALIB_ERROR,0);
+    ret += db_csv_add_field(DB_CALIB_ROT_VECTOR,0);
+    ret += db_csv_add_field(DB_CALIB_SPHERICAL_COORDS,0);
+    ret += db_csv_add_field(DB_CALIB_COST_DERIVATIVE,0);
     ok &= assert_OK(ret);
 
     /* Set initial quaternions */
@@ -641,6 +624,7 @@ bool tst_db_003()
     bool ok = true;
     ERROR_CODE ret;
     DB_FIELD_IDENTIFIER field = DB_IMU_ACCELEROMETER;
+    int instance = 0;
     double buff[3];
     double buff_expected[] = {0.0, 0.0, 0.0};
 
@@ -648,14 +632,17 @@ bool tst_db_003()
     ok = preconditions_init(); 
 
     // Test Steps
-    ret = db_read(field,buff);
+    ret = db_read(field,instance,buff);
     ok &= assert_OK(ret);
     ok &= assert_vector3Equal(buff, buff_expected);
 
-    ret = db_read(DB_NUMBER_OF_ENTRIES,buff);
+    ret = db_read(DB_NUMBER_OF_ENTRIES,instance,buff);
     ok &= assert_ERROR(ret);
 
-    ret = db_read(field,NULL);
+    ret = db_read(field,10000,buff);
+    ok &= assert_ERROR(ret);
+
+    ret = db_read(field,instance,NULL);
     ok &= assert_ERROR(ret);
 
     // testCleanUp();
@@ -668,6 +655,7 @@ bool tst_db_004()
     bool ok = true;
     ERROR_CODE ret;
     DB_FIELD_IDENTIFIER field = DB_IMU_QUATERNION;
+    int instance = 0;
     double buff[4] = {1.0, 2.0, 3.0, 4.0};
     double buff_expected[] = {1.0, 2.0, 3.0, 4.0};
 
@@ -675,14 +663,17 @@ bool tst_db_004()
     ok = preconditions_init(); 
 
     // Test Steps
-    ret = db_write(field,buff);
+    ret = db_write(field,instance,buff);
     ok &= assert_OK(ret);
-    ok &= assert_dbFieldDouble(field, buff_expected);
+    ok &= assert_dbFieldDouble(field, instance, buff_expected);
 
-    ret = db_write(DB_NUMBER_OF_ENTRIES,buff);
+    ret = db_write(DB_NUMBER_OF_ENTRIES, instance, buff);
     ok &= assert_ERROR(ret);
 
-    ret = db_write(field,NULL);
+    ret = db_write(field, 10000, buff);
+    ok &= assert_ERROR(ret);
+
+    ret = db_write(field, instance, NULL);
     ok &= assert_ERROR(ret);
 
     // testCleanUp();
@@ -696,6 +687,7 @@ bool tst_db_005()
     bool ok = true;
     ERROR_CODE ret;
     DB_FIELD_IDENTIFIER field = DB_IMU_QUATERNION;
+    int instance = 0;
     double buff[4] = {1.0, 2.0, 3.0, 4.0};
     double value;
     int ind;
@@ -705,23 +697,26 @@ bool tst_db_005()
     ok = preconditions_init(); 
 
     // Test Steps
-    ret = db_write(field, buff);
+    ret = db_write(field, instance, buff);
     ok &= assert_OK(ret);
-    ok &= assert_dbFieldDouble(field, buff_expected);
+    ok &= assert_dbFieldDouble(field, instance, buff_expected);
 
     for(ind = 0; ind < 4; ind++) {
-        ret = db_index_read(field, ind, &value);
+        ret = db_index_read(field, instance, ind, &value);
         ok &= assert_OK(ret);
         ok &= (EPSI > fabs(buff_expected[ind]-value));
     }
 
-    ret = db_index_read(DB_NUMBER_OF_ENTRIES,ind,buff);
+    ret = db_index_read(DB_NUMBER_OF_ENTRIES,instance,ind,buff);
     ok &= assert_ERROR(ret);
 
-    ret = db_index_read(field,100,buff);
+    ret = db_index_read(field,10000,ind,buff);
     ok &= assert_ERROR(ret);
 
-    ret = db_index_read(field,ind,NULL);
+    ret = db_index_read(field,instance,100,buff);
+    ok &= assert_ERROR(ret);
+
+    ret = db_index_read(field,instance,ind,NULL);
     ok &= assert_ERROR(ret);
 
     // testCleanUp();
@@ -734,6 +729,7 @@ bool tst_db_006()
     bool ok = true;
     ERROR_CODE ret;
     DB_FIELD_IDENTIFIER field = DB_IMU_QUATERNION;
+    int instance = 0;
     double buff[4] = {1.0, 2.0, 3.0, 4.0};
     double value;
     int ind;
@@ -751,25 +747,28 @@ bool tst_db_006()
     ok = preconditions_init(); 
 
     // Test Steps
-    ok &= assert_dbFieldDouble(field, buff_expected1);
+    ok &= assert_dbFieldDouble(field, instance, buff_expected1);
     for(ind = 0; ind < 4; ind++) {
         value = buff[ind];
-        ret = db_index_write(field, ind, &value);
+        ret = db_index_write(field, instance, ind, &value);
         ok &= assert_OK(ret);
-        ok &= assert_dbFieldDouble(field, buff_expected2[ind]);
+        ok &= assert_dbFieldDouble(field, instance, buff_expected2[ind]);
     }
     value = 5.0;
-    ret = db_index_write(field, 2, &value);
+    ret = db_index_write(field, instance, 2, &value);
     ok &= assert_OK(ret);
-    ok &= assert_dbFieldDouble(field, buff_expected3);
+    ok &= assert_dbFieldDouble(field, instance, buff_expected3);
 
-    ret = db_index_write(DB_NUMBER_OF_ENTRIES,ind,&value);
+    ret = db_index_write(DB_NUMBER_OF_ENTRIES,instance,ind,&value);
     ok &= assert_ERROR(ret);
 
-    ret = db_index_write(field,100,buff);
+    ret = db_index_write(field,10000,ind,&value);
     ok &= assert_ERROR(ret);
 
-    ret = db_index_write(field,ind,NULL);
+    ret = db_index_write(field,instance,100,buff);
+    ok &= assert_ERROR(ret);
+
+    ret = db_index_write(field,instance,ind,NULL);
     ok &= assert_ERROR(ret);
 
     // testCleanUp();
@@ -815,8 +814,8 @@ int main(int argc, char **argv)
 
     testSetTraceLevel(SILENT_NO_ERROR);
 
-    // ok &= tst_battery_all();
-    ok &= tst_arm_012();
+    ok &= tst_battery_all();
+    // ok &= tst_arm_012();
 
     return (int)ok;
 }

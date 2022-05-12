@@ -19,14 +19,14 @@ void testDescription(const char *name, const char *description) {
 
 void testReport(bool result)
 {
-    printf("\t -> Result: %s \n",(true == result)?"PASSED":"FAILED");
+    printf("\t -> RESULT: %s \n",(true == result)?"PASSED":"FAILED");
 }
 
 void testBatteryReport(const char *name, const char *description, bool result)
 {
     printf("\n");
     printf("******************************************************************************** \n");
-    printf("***** Test battery %s: %s -> Result: %s \n", name, description, (true == result)?"PASSED":"FAILED");
+    printf("***** Test battery %s: %s -> RESULT: %s \n", name, description, (true == result)?"PASSED":"FAILED");
     printf("******************************************************************************** \n");
 }
 
@@ -140,7 +140,7 @@ bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected)
     return ok;
 }
 
-bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, double expected[]){
+bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, double expected[]){
     bool ok = true;
     ERROR_CODE ret;
     int size;
@@ -150,7 +150,7 @@ bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, double expected[]){
     ret = db_field_parameters_get(field, &size, NULL, NULL);
     ok &= assert_OK(ret);
 
-    ret = db_read(field, buff);
+    ret = db_read(field, instance, buff);
     ok &= assert_OK(ret);
     
     for (int i = 0; i < size; i++) {

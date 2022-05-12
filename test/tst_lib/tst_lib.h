@@ -31,7 +31,7 @@ bool assert_ERROR(ERROR_CODE status);
 bool assert_vector3EqualThreshold(const double actual[3], const double expected[3], const double threshold);
 bool assert_vector3Equal(const double actual[3], const double expected[3]);
 bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected);
-bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, double expected[]);
+bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, double expected[]);
 
 
 #endif

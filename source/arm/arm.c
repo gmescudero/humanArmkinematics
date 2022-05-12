@@ -220,26 +220,26 @@ ERROR_CODE arm_calibrate_rotation_axis(
         // Update database  
         if (RET_OK == status) {
             double spherical[] = {t,r};
-            status = db_write(DB_CALIB_SPHERICAL_COORDS, spherical);
+            status = db_write(DB_CALIB_SPHERICAL_COORDS, 0, spherical);
         }
         if (RET_OK == status) {
             double d_cost[]    = {dJk_t_current,dJk_r_current};
-            status = db_write(DB_CALIB_COST_DERIVATIVE, d_cost);
+            status = db_write(DB_CALIB_COST_DERIVATIVE, 0, d_cost);
         }
     }
 
     // Update database
     if (RET_OK == status) {
-        status = db_write(DB_CALIB_ERROR, &error);
+        status = db_write(DB_CALIB_ERROR, 0, &error);
     }
     if (RET_OK == status) {
-        status = db_write(DB_CALIB_ROT_VECTOR, rotationV);
+        status = db_write(DB_CALIB_ROT_VECTOR, 0, rotationV);
     }
     if (RET_OK == status) {
-        status = db_write(DB_CALIB_OMEGA, omegaR);
+        status = db_write(DB_CALIB_OMEGA, 0, omegaR);
     }
     if (RET_OK == status) {
-        status = db_write(DB_CALIB_OMEGA_NORM, &omegaRnorm);
+        status = db_write(DB_CALIB_OMEGA_NORM, 0, &omegaRnorm);
     }
 
     return status;

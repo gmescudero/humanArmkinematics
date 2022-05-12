@@ -66,7 +66,9 @@ int main(int argc, char **argv) {
     /* Set the csv logging from the database */
     if (RET_OK == status) {
         log_str("Set the database fields to track into the csv");
-        status = db_csv_setup(fields_monitored,num_fields);
+        for (int i = 0; i<num_fields && RET_OK==status; i++) {
+            status = db_csv_add_field(fields_monitored[i],0);
+        }
         STATUS_EVAL(status);
     }
 
@@ -232,18 +234,6 @@ int main_bkp(int argc, char **argv) {
     } 
     if (RET_OK == status) {
         log_str("The obtained rotation axis: [%f, %f, %f]",rotVector[0],rotVector[1],rotVector[2]);
-    }
-
-    log_str("Write Timestamp %f to the database",rotVector[0]);
-    if (RET_OK == status) {
-        status = db_index_write(DB_IMU_ACCELEROMETER, 0, (void*)&(rotVector[0]));
-    }
-
-    log_str("Read Timestamp from the database");
-    if (RET_OK == status) {
-        double time = 0.0;
-        status = db_index_read(DB_IMU_ACCELEROMETER, 1, (void*)&(time));
-        if (RET_OK == status) log_str("\t -> retrieved timestamp: %f",time);
     }
 
     /* Terminate all imus */

@@ -61,7 +61,7 @@ ERROR_CODE db_field_parameters_get(DB_FIELD_IDENTIFIER field, int *multiplicity,
  * @param data (input) Data to write
  * @return ERROR_CODE 
  */
-ERROR_CODE db_write(DB_FIELD_IDENTIFIER field, const void *data);
+ERROR_CODE db_write(DB_FIELD_IDENTIFIER field, int instance, const void *data);
 /**
  * @brief Write a single value of a database field
  * 
@@ -70,7 +70,7 @@ ERROR_CODE db_write(DB_FIELD_IDENTIFIER field, const void *data);
  * @param data (input) Data to write
  * @return ERROR_CODE 
  */
-ERROR_CODE db_index_write(DB_FIELD_IDENTIFIER field, int index, const void *data);
+ERROR_CODE db_index_write(DB_FIELD_IDENTIFIER field, int instance, int index, const void *data);
 /**
  * @brief Read values from the database
  * 
@@ -78,7 +78,7 @@ ERROR_CODE db_index_write(DB_FIELD_IDENTIFIER field, int index, const void *data
  * @param data (output) Data to retrieve
  * @return ERROR_CODE 
  */
-ERROR_CODE db_read(DB_FIELD_IDENTIFIER field, void *data);
+ERROR_CODE db_read(DB_FIELD_IDENTIFIER field, int instance, void *data);
 /**
  * @brief Read a single value from a field of the database
  * 
@@ -87,16 +87,16 @@ ERROR_CODE db_read(DB_FIELD_IDENTIFIER field, void *data);
  * @param data (output) Data to retrieve
  * @return ERROR_CODE 
  */
-ERROR_CODE db_index_read(DB_FIELD_IDENTIFIER field, int index, void *data);
+ERROR_CODE db_index_read(DB_FIELD_IDENTIFIER field, int instance, int index, void *data);
 
 /**
- * @brief Set up a csv with a set of database fields to monitor
+ * @brief Add a database field to the CSV file
  * 
- * @param fields (input) The array of monitored fields
- * @param fields_num (input) The total number of arrays to monitor
+ * @param field (input) Field identifier
+ * @param instance (input) Field instance
  * @return ERROR_CODE 
  */
-ERROR_CODE db_csv_setup(DB_FIELD_IDENTIFIER fields[], int fields_num);
+ERROR_CODE db_csv_add_field(DB_FIELD_IDENTIFIER field, int instance);
 /**
  * @brief Dump configured data to the csv
  * 

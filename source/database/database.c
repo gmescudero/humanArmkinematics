@@ -1,6 +1,7 @@
 
 #include "database.h"
 #include "general.h"
+#include "imu.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,13 +11,32 @@ typedef struct DB_FIELD_STRUCT {
     DB_FIELD_IDENTIFIER identifier;
     char                name[DB_FIELD_NAME_MAX_LENGTH];
     DB_FIELD_TYPE       type;
+    unsigned int        instances;
     unsigned int        multiplicity;
     sem_t               mutex;
     void                *data_ptr;
     int                 initialized;
 } DB_FIELD;
 
-#define DB_FIELD_INIT(id,n,t,mult) {.identifier=id,.name=n,.type=t,.multiplicity=mult,.mutex={{0}},.data_ptr=NULL,.initialized=0}
+typedef struct DB_CSV_LOG_STRUCT {
+    int first;
+    int fields_num;
+    int csv_coulmns;
+    DB_FIELD_IDENTIFIER fields[CSV_FILE_VALUES_NUMBER];
+    char headers[CSV_FILE_VALUES_NUMBER][CSV_HEADER_MAX_LENGTH];
+    int instances[CSV_FILE_VALUES_NUMBER];
+    int indexes[CSV_FILE_VALUES_NUMBER];
+} DB_CSV_LOG_STRUCT;
+
+#define DB_FIELD_INIT(id,n,t,inst,mult) { \
+    .identifier=id,\
+    .name=n,\
+    .type=t,\
+    .instances=inst,\
+    .multiplicity=mult,\
+    .mutex={{0}},\
+    .data_ptr=NULL,\
+    .initialized=0 }
 
 
 static size_t sdb_field_size_get(const DB_FIELD_IDENTIFIER field);
@@ -33,26 +53,35 @@ static DB_FIELD database[DB_NUMBER_OF_ENTRIES] = {
 /*   field_id      , name         , type      , multiplicity, mutex, data_ptr */
     
     /* IMU data */
-    DB_FIELD_INIT(DB_IMU_TIMESTAMP,          "IMU_TIMESTAMP",           DB_REAL,1),
-    DB_FIELD_INIT(DB_IMU_ACCELEROMETER,      "IMU_ACCELEROMETER",       DB_REAL,3),
-    DB_FIELD_INIT(DB_IMU_GYROSCOPE,          "IMU_GYROSCOPE",           DB_REAL,3),
-    DB_FIELD_INIT(DB_IMU_MAGNETOMETER,       "IMU_MAGNETOMETER",        DB_REAL,3),
-    DB_FIELD_INIT(DB_IMU_QUATERNION,         "IMU_QUATERNION",          DB_REAL,4),
-    DB_FIELD_INIT(DB_IMU_LINEAR_ACCELERATION,"IMU_LINEAR_ACCELERATION", DB_REAL,3),
+    DB_FIELD_INIT(DB_IMU_TIMESTAMP,          "IMU_TIMESTAMP",           DB_REAL,IMU_MAX_NUMBER,1),
+    DB_FIELD_INIT(DB_IMU_ACCELEROMETER,      "IMU_ACCELEROMETER",       DB_REAL,IMU_MAX_NUMBER,3),
+    DB_FIELD_INIT(DB_IMU_GYROSCOPE,          "IMU_GYROSCOPE",           DB_REAL,IMU_MAX_NUMBER,3),
+    DB_FIELD_INIT(DB_IMU_MAGNETOMETER,       "IMU_MAGNETOMETER",        DB_REAL,IMU_MAX_NUMBER,3),
+    DB_FIELD_INIT(DB_IMU_QUATERNION,         "IMU_QUATERNION",          DB_REAL,IMU_MAX_NUMBER,4),
+    DB_FIELD_INIT(DB_IMU_LINEAR_ACCELERATION,"IMU_LINEAR_ACCELERATION", DB_REAL,IMU_MAX_NUMBER,3),
     /* Online rotation axis calibration data */
-    DB_FIELD_INIT(DB_CALIB_ERROR,                "CALIB_ERROR",                 DB_REAL,1),
-    DB_FIELD_INIT(DB_CALIB_ROT_VECTOR,           "CALIB_ROT_VECTOR",            DB_REAL,3),
-    DB_FIELD_INIT(DB_CALIB_OMEGA,                "CALIB_OMEGA",                 DB_REAL,3),
-    DB_FIELD_INIT(DB_CALIB_OMEGA_NORM,           "CALIB_OMEGA_NORM",            DB_REAL,1),
-    DB_FIELD_INIT(DB_CALIB_SPHERICAL_COORDS,     "CALIB_SPHERICAL_COORDS",      DB_REAL,2),
-    DB_FIELD_INIT(DB_CALIB_COST_DERIVATIVE,      "CALIB_COST_DERIVATIVE",       DB_REAL,2),
+    DB_FIELD_INIT(DB_CALIB_ERROR,                "CALIB_ERROR",                 DB_REAL,1,1),
+    DB_FIELD_INIT(DB_CALIB_ROT_VECTOR,           "CALIB_ROT_VECTOR",            DB_REAL,1,3),
+    DB_FIELD_INIT(DB_CALIB_OMEGA,                "CALIB_OMEGA",                 DB_REAL,1,3),
+    DB_FIELD_INIT(DB_CALIB_OMEGA_NORM,           "CALIB_OMEGA_NORM",            DB_REAL,1,1),
+    DB_FIELD_INIT(DB_CALIB_SPHERICAL_COORDS,     "CALIB_SPHERICAL_COORDS",      DB_REAL,1,2),
+    DB_FIELD_INIT(DB_CALIB_COST_DERIVATIVE,      "CALIB_COST_DERIVATIVE",       DB_REAL,1,2),
 
 /* 
     {.identifier=DB_IMU_TIMESTAMP  , .name="TIMESTAMP"  , .type=DB_REAL, .multiplicity=1, .mutex={{0}}, .data_ptr=NULL},
     {.identifier=DB_CALIB_ERROR, .name="CALIB_ERROR", .type=DB_REAL, .multiplicity=1, .mutex={{0}}, .data_ptr=NULL}, */
 };
 
-static DB_FIELD_IDENTIFIER csv_logging_fields[DB_NUMBER_OF_ENTRIES] = {DB_FIELD_IDENTIFIER_INVALID};
+
+static DB_CSV_LOG_STRUCT csv_logging_fields = {
+    .first = 1,
+    .fields_num = 0,
+    .csv_coulmns = 0,
+    .fields = {DB_FIELD_IDENTIFIER_INVALID},
+    .headers = {{'\0'}},
+    .indexes = {0},
+    .instances = {0}
+};
 
 ERROR_CODE db_initialize(void) {
     ERROR_CODE status = RET_OK;
@@ -72,7 +101,10 @@ ERROR_CODE db_initialize(void) {
         // Allocate memory for the database entry
         if (RET_OK == status) {
             database[field_id].data_ptr = malloc(
-                (size_t)database[field_id].multiplicity * field_type_size[database[field_id].type]);
+                (size_t)database[field_id].multiplicity 
+                * (size_t)database[field_id].instances
+                * field_type_size[database[field_id].type]);
+            
             if (NULL == database[field_id].data_ptr) {
                 status = RET_ERROR;
                 err_str("Falied to allocate memory for database entry");
@@ -133,32 +165,11 @@ ERROR_CODE db_field_parameters_get(DB_FIELD_IDENTIFIER field, int *multiplicity,
     return RET_OK;
 }
 
-ERROR_CODE db_write(DB_FIELD_IDENTIFIER field, const void *data) {
+ERROR_CODE db_write(DB_FIELD_IDENTIFIER field, int instance, const void *data) {
     // Check arguments
     if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
     if (NULL == data) return RET_ARG_ERROR;
-    // Check availability
-    if (1 != database[field].initialized) return RET_ERROR;
-
-    if (0 != sem_wait(&(database[field].mutex))) {
-        err_str("Could not retrieve semaphore");
-        return RET_ERROR;
-    }
-    // Copy data
-    memcpy(database[field].data_ptr, data, sdb_field_size_get(field));
-    if (0 != sem_post(&(database[field].mutex))) {
-        err_str("Could not release semaphore");
-        return RET_ERROR;
-    }
-
-    return RET_OK;
-}
-
-ERROR_CODE db_index_write(DB_FIELD_IDENTIFIER field, int index, const void *data) {
-    // Check arguments
-    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
-    if (NULL == data) return RET_ARG_ERROR;
-    if (0 > index || database[field].multiplicity <= index) return RET_ARG_ERROR;
+    if (0 > instance || database[field].instances <= instance) return RET_ARG_ERROR;
     // Check availability
     if (1 != database[field].initialized) return RET_ERROR;
 
@@ -168,11 +179,12 @@ ERROR_CODE db_index_write(DB_FIELD_IDENTIFIER field, int index, const void *data
     }
     // Copy data
     if (DB_INTEGER == database[field].type) {
-        ((int*)(database[field].data_ptr))[index] = *((const int*)data);
+        memcpy((void*)&((int*)(database[field].data_ptr))[instance], data, sdb_field_size_get(field));
     }
     else /* DB_REAL */ { 
-        ((double*)(database[field].data_ptr))[index] = *((const double*)data);
+        memcpy((void*)&((double*)(database[field].data_ptr))[instance], data, sdb_field_size_get(field));
     }
+    // memcpy(&(database[field].data_ptr[instance]), data, sdb_field_size_get(field));
     if (0 != sem_post(&(database[field].mutex))) {
         err_str("Could not release semaphore");
         return RET_ERROR;
@@ -181,32 +193,12 @@ ERROR_CODE db_index_write(DB_FIELD_IDENTIFIER field, int index, const void *data
     return RET_OK;
 }
 
-ERROR_CODE db_read(DB_FIELD_IDENTIFIER field, void *data) {
-    // Check arguments
-    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
-    if (NULL == data) return RET_ARG_ERROR;
-    // Check availability
-    if (1 != database[field].initialized) return RET_ERROR;
-
-    if (0 != sem_wait(&(database[field].mutex))) {
-        err_str("Could not retrieve semaphore");
-        return RET_ERROR;
-    }
-    // Copy data
-    memcpy(data, database[field].data_ptr, sdb_field_size_get(field));
-    if (0 != sem_post(&(database[field].mutex))) {
-        err_str("Could not release semaphore");
-        return RET_ERROR;
-    }
-
-    return RET_OK;
-}
-
-ERROR_CODE db_index_read(DB_FIELD_IDENTIFIER field, int index, void *data) {
+ERROR_CODE db_index_write(DB_FIELD_IDENTIFIER field, int instance, int index, const void *data) {
     // Check arguments
     if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
     if (NULL == data) return RET_ARG_ERROR;
     if (0 > index || database[field].multiplicity <= index) return RET_ARG_ERROR;
+    if (0 > instance || database[field].instances <= instance) return RET_ARG_ERROR;
     // Check availability
     if (1 != database[field].initialized) return RET_ERROR;
 
@@ -216,10 +208,10 @@ ERROR_CODE db_index_read(DB_FIELD_IDENTIFIER field, int index, void *data) {
     }
     // Copy data
     if (DB_INTEGER == database[field].type) {
-        *(int*)data = ((int*)database[field].data_ptr)[index];
+        ((int**)(database[field].data_ptr))[instance][index] = *((const int*)data);
     }
     else /* DB_REAL */ { 
-        *(double*)data = ((double*)database[field].data_ptr)[index];
+        ((double**)(database[field].data_ptr))[instance][index] = *((const double*)data);
     }
     if (0 != sem_post(&(database[field].mutex))) {
         err_str("Could not release semaphore");
@@ -229,41 +221,82 @@ ERROR_CODE db_index_read(DB_FIELD_IDENTIFIER field, int index, void *data) {
     return RET_OK;
 }
 
-ERROR_CODE db_csv_setup(DB_FIELD_IDENTIFIER fields[], int fields_num) {
-    char headers[CSV_FILE_VALUES_NUMBER][CSV_HEADER_MAX_LENGTH] = {{'\0'}};
-    int csv_index = 0;
-    DB_FIELD_IDENTIFIER currentField;
+ERROR_CODE db_read(DB_FIELD_IDENTIFIER field, int instance, void *data) {
     // Check arguments
-    if (NULL == fields) return RET_ARG_ERROR;
-    if (0 >= fields_num || DB_NUMBER_OF_ENTRIES < fields_num) return RET_ARG_ERROR;
+    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
+    if (NULL == data) return RET_ARG_ERROR;
+    if (0 > instance || database[field].instances <= instance) return RET_ARG_ERROR;
+    // Check availability
+    if (1 != database[field].initialized) return RET_ERROR;
 
-    // Set headers
-    dbg_str("Stablish database names as csv headers to track");
-    for (int fields_ind = 0; fields_ind < fields_num && csv_index < CSV_FILE_VALUES_NUMBER; fields_ind++) {
-        currentField = fields[fields_ind];
-        dbg_str("\t -> %s",database[currentField].name);
-        if (1 == database[currentField].multiplicity) {
-            strcpy(headers[csv_index],database[currentField].name);
-            csv_index++;
-        }
-        else {
-            for (int ind = 0; ind < database[currentField].multiplicity && csv_index < CSV_FILE_VALUES_NUMBER; ind++) {
-                sprintf(headers[csv_index],"%s_%d",database[currentField].name,ind);
-                csv_index++;
-            }
-        }
+    if (0 != sem_wait(&(database[field].mutex))) {
+        err_str("Could not retrieve semaphore");
+        return RET_ERROR;
+    }
+    // Copy data
+    if (DB_INTEGER == database[field].type) {
+        memcpy(data, (void*)&((int*)(database[field].data_ptr))[instance], sdb_field_size_get(field));
+    }
+    else /* DB_REAL */ { 
+        memcpy(data, (void*)&((double*)(database[field].data_ptr))[instance], sdb_field_size_get(field));
+    }
+    if (0 != sem_post(&(database[field].mutex))) {
+        err_str("Could not release semaphore");
+        return RET_ERROR;
     }
 
-    if (CSV_FILE_VALUES_NUMBER <= csv_index) {
-        wrn_str("Maximum csv length reached");
+    return RET_OK;
+}
+
+ERROR_CODE db_index_read(DB_FIELD_IDENTIFIER field, int instance, int index, void *data) {
+    // Check arguments
+    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
+    if (NULL == data) return RET_ARG_ERROR;
+    if (0 > index || database[field].multiplicity <= index) return RET_ARG_ERROR;
+    if (0 > instance || database[field].instances <= instance) return RET_ARG_ERROR;
+    // Check availability
+    if (1 != database[field].initialized) return RET_ERROR;
+
+    if (0 != sem_wait(&(database[field].mutex))) {
+        err_str("Could not retrieve semaphore");
+        return RET_ERROR;
+    }
+    // Copy data
+    if (DB_INTEGER == database[field].type) {
+        *(int*)data = ((int**)(database[field].data_ptr))[instance][index];
+    }
+    else /* DB_REAL */ { 
+        *(double*)data = ((double**)(database[field].data_ptr))[instance][index];
     }
 
-    // Set csv headers
-    dbg_str("Set the csv headers");
-    csv_headers_set(headers, csv_index);
-    // Set csv logging fields
-    dbg_str("Store the tracking fields into local database data");
-    memcpy(csv_logging_fields, fields, fields_num*sizeof(DB_FIELD_IDENTIFIER));
+    if (0 != sem_post(&(database[field].mutex))) {
+        err_str("Could not release semaphore");
+        return RET_ERROR;
+    }
+
+    return RET_OK;
+}
+
+ERROR_CODE db_csv_add_field(DB_FIELD_IDENTIFIER field, int instance) {
+    int csv_index = csv_logging_fields.csv_coulmns;
+    // Check arguments
+    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
+    if (0 > instance || database[field].instances <= instance) return RET_ARG_ERROR;
+    // Check availability
+    if (CSV_FILE_VALUES_NUMBER <= csv_index) return RET_ERROR;
+
+    for (int ind = 0; ind < database[field].multiplicity && csv_index < CSV_FILE_VALUES_NUMBER; ind++) {
+        sprintf(csv_logging_fields.headers[csv_index],"%s(%d)_%d",database[field].name, instance, ind);
+        csv_logging_fields.fields[csv_index]    = field;
+        csv_logging_fields.instances[csv_index] = instance;
+        csv_logging_fields.indexes[csv_index]   = ind;
+        csv_index++;
+    }
+
+    // Set csv logging structure
+    csv_logging_fields.first = 1;
+    csv_logging_fields.csv_coulmns = csv_index;
+    csv_logging_fields.fields_num++;
 
     return RET_OK;
 }
@@ -271,17 +304,25 @@ ERROR_CODE db_csv_setup(DB_FIELD_IDENTIFIER fields[], int fields_num) {
 ERROR_CODE db_csv_dump(void) {
     ERROR_CODE status = RET_OK;
     double csv_buff[CSV_FILE_VALUES_NUMBER] = {0.0};
-    int csv_idx = 0;
     DB_FIELD_IDENTIFIER current_field;
+    int instance;
 
-    for (int fld_idx = 0; csv_logging_fields[fld_idx] != DB_FIELD_IDENTIFIER_INVALID 
-        && fld_idx < DB_NUMBER_OF_ENTRIES && RET_OK == status; fld_idx++) 
-    {
-        current_field = csv_logging_fields[fld_idx];
+    if (1 == csv_logging_fields.first) {
+        log_str("Start CSV logging with %d data columns",csv_logging_fields.csv_coulmns);
+        csv_headers_set(csv_logging_fields.headers, csv_logging_fields.csv_coulmns);
+        csv_logging_fields.first = 0;
+    }
+
+    for (int ind = 0; ind < csv_logging_fields.csv_coulmns && RET_OK == status; ind++) {
+        current_field   = csv_logging_fields.fields[ind];
+        instance        = csv_logging_fields.instances[ind];
         for (int i = 0; i<database[current_field].multiplicity && RET_OK == status; i++) {
-            status = db_index_read(current_field, i, &(csv_buff[csv_idx++]));
+            dbg_str("Retrieve data from field %s, instance %d, index %d",database[current_field].name,instance,i);
+            status = db_index_read(current_field, instance, i, &(csv_buff[ind]));
         }
     }
+
+    dbg_str("Write CSV data row");
     csv_log(csv_buff);
     return status;
 }

@@ -30,7 +30,7 @@ static LpmsSensorManagerI* manager = NULL; /* Gets a LpmsSensorManager instance 
 static LpmsSensorI* lpms[IMU_MAX_NUMBER] = {NULL};
 
 
-static ERROR_CODE simu_database_update(ImuData d);
+static ERROR_CODE simu_database_update(ImuData d, int index);
 
 
 ERROR_CODE imu_initialize(const char *com_port){
@@ -109,7 +109,7 @@ ERROR_CODE imu_read(unsigned int index, ImuData *imu) {
     // Retrieve IMU data
     *imu = lpms[index]->getCurrentData();
     // Update database fields
-    status = simu_database_update(*imu);
+    status = simu_database_update(*imu, index);
 
     return status;
 }
@@ -270,7 +270,7 @@ ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOI
  * @param d (input) Given IMU data
  * @return ERROR_CODE 
  */
-static ERROR_CODE simu_database_update(ImuData d) {
+static ERROR_CODE simu_database_update(ImuData d, int index) {
     ERROR_CODE status;
     double timestamp = d.timeStamp;
     double acc[3]    = {(double)d.a[0],(double)d.a[1],(double)d.a[2]};
@@ -279,22 +279,22 @@ static ERROR_CODE simu_database_update(ImuData d) {
     double linAcc[3] = {(double)d.linAcc[0],(double)d.linAcc[1],(double)d.linAcc[2]};
     double quat[4]   = {(double)d.q[0],(double)d.q[1],(double)d.q[2],(double)d.q[3]};
 
-    status = db_write(DB_IMU_TIMESTAMP, &timestamp);
+    status = db_write(DB_IMU_TIMESTAMP, index, &timestamp);
 
     if (RET_OK == status) {
-        status = db_write(DB_IMU_ACCELEROMETER, &acc);
+        status = db_write(DB_IMU_ACCELEROMETER, index, &acc);
     }
     if (RET_OK == status) {
-        status = db_write(DB_IMU_GYROSCOPE, &gyr);
+        status = db_write(DB_IMU_GYROSCOPE, index, &gyr);
     }
     if (RET_OK == status) {
-        status = db_write(DB_IMU_MAGNETOMETER, &mag);
+        status = db_write(DB_IMU_MAGNETOMETER, index, &mag);
     }
     if (RET_OK == status) {
-        status = db_write(DB_IMU_LINEAR_ACCELERATION, &linAcc);
+        status = db_write(DB_IMU_LINEAR_ACCELERATION, index, &linAcc);
     }
     if (RET_OK == status) {
-        status = db_write(DB_IMU_QUATERNION, &quat);
+        status = db_write(DB_IMU_QUATERNION, index, &quat);
     }
     return status;
 }
