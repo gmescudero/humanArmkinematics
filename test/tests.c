@@ -388,34 +388,97 @@ bool tst_arm_012()
     bool ok = true;
     ERROR_CODE ret;
     
+    DB_FIELD_IDENTIFIER fields_monitored[] = {
+        DB_IMU_TIMESTAMP,
+        DB_CALIB_OMEGA,
+        DB_CALIB_OMEGA_NORM,
+        DB_CALIB_ERROR,
+        DB_CALIB_ROT_VECTOR,
+        DB_CALIB_SPHERICAL_COORDS,
+        DB_CALIB_COST_DERIVATIVE
+    };
+    int num_fields = sizeof(fields_monitored)/sizeof(DB_FIELD_IDENTIFIER);  
+
     double timeout = 5.0;/*(seconds)*/
     double timeInc = 0.02;/*(seconds)*/
     double time = 0.0;
 
     Quaternion q1, q2, q1_, q21;
-    double omega1[] = {500.0,0.0,0.0};
-    double omega2[] = {500.0,0.0,1000.0};
-    Quaternion w1,w1_, w2, aux1, aux2;
-    
+    double omega1[] = {100.0,0.0,0.0};
+    double omega2[] = {100.0,0.0,1000.0};
+    Quaternion dq1, dq2;
+    double w1_norm, w2_norm;
+    double et2v1, et2v2;
+    double omega2_1[3];
+    double omegaR[3];
+    double rotVector[3] = {0.5,0.5,0.5};
+    double v_expected[3] = {0.0,0.0,1.0};
+
     testDescription(__FUNCTION__, "Emulate 2 different IMU sensors rotating");
     ok = preconditions_init(); 
 
     // Test Steps
+    ret = db_csv_setup(fields_monitored,num_fields);
+    ok &= assert_OK(ret);
+
+    /* Set initial quaternions */
     Quaternion_set(1,0,0,0,&q1);
     Quaternion_set(1,0,0,0,&q2);
-    Quaternion_set(0,omega1[0],omega1[1],omega1[2],&w1);
-    Quaternion_set(0,omega2[0],omega2[1],omega2[2],&w2);
 
-    Quaternion_conjugate(&q1,&q1_);
-    Quaternion_multiply(&q1_,&q2,&q21);
+    /* Set quaternion derivatives */
+    ret = vector3_norm(omega1,&w1_norm);
+    ok &= assert_OK(ret);
+    if (EPSI < w1_norm) {
+        et2v1 = (timeInc*0.5*sin(w1_norm))/w1_norm;
+        Quaternion_set(0, et2v1*omega1[0], et2v1*omega1[1], et2v1*omega1[2],&dq1);
+    } else {
+        Quaternion_set(1,0,0,0,&dq1);
+    }
+    ret = vector3_norm(omega2,&w2_norm);
+    ok &= assert_OK(ret);
+    if (EPSI < w1_norm) {    
+        et2v2 = (timeInc*0.5*sin(w2_norm))/w2_norm;
+        Quaternion_set(0, et2v2*omega2[0], et2v2*omega2[1], et2v2*omega1[2],&dq2);
+    } else {
+        Quaternion_set(1,0,0,0,&dq2);
+    }
+    printf("dq1: %f, %f, %f, %f\n",dq1.w,dq1.v[0],dq1.v[1],dq1.v[2]);
+    printf("dq2: %f, %f, %f, %f\n",dq2.w,dq2.v[0],dq2.v[1],dq2.v[2]);
 
-    Quaternion_conjugate(&w1,&w1_);
-    Quaternion_multiply(&q1,&w1_,&aux1);
-    Quaternion_multiply(&w1,&aux1,&aux2);
+    do {
+        /* Compute q21 */
+        Quaternion_conjugate(&q1,&q1_);
+        Quaternion_multiply(&q1_,&q2,&q21);
+        /* Compute relative w */
+        Quaternion_rotate(&q21, omega2, omega2_1);
+        ret = vector3_substract(omega2_1, omega1, omegaR);
+        ok &= assert_OK(ret);
+        /* Calibrate rotation axis */
+        ret = arm_calibrate_rotation_axis(omegaR,rotVector);
+        ok &= assert_OK(ret);
+        /* Dump database data */
+        ret = db_csv_dump();
+        ok &= assert_OK(ret);
+        /* Set new quaternion */
+        Quaternion_multiply(&q1,&dq1,&q1);
+        Quaternion_normalize(&q1,&q1);
+        Quaternion_multiply(&q2,&dq2,&q2);
+        Quaternion_normalize(&q2,&q2);
+        /* Set new time */
+        time += timeInc;
+        // printf("omegaR: %f, %f, %f\t| ",omegaR[0],omegaR[1],omegaR[2]);
+        // printf("rotVector: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
+    printf("q1: %f, %f, %f, %f\n",q1.w,q1.v[0],q1.v[1],q1.v[2]);
+    printf("q2: %f, %f, %f, %f\n",q2.w,q2.v[0],q2.v[1],q2.v[2]);
+
+    } while (ok && time<timeout);
+
+    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2);
+    printf("rotVector: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
 
     // exp(q) = e^w(cos(|v|) + (v/|v|)*sin(|v|))
     // qtp1 = qt * exp(T/2*w)
-    printf("aux: %f, %f, %f, %f\n",aux2.w,aux2.v[0],aux2.v[1],aux2.v[2]);
+    // printf("aux: %f, %f, %f, %f\n",aux2.w,aux2.v[0],aux2.v[1],aux2.v[2]);
 
     testCleanUp();
     testReport(ok);
