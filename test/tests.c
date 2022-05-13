@@ -316,6 +316,61 @@ bool tst_db_006()
     return ok;
 }
 
+bool tst_db_007()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    DB_FIELD_IDENTIFIER field = DB_IMU_QUATERNION;
+    int instance = 0;
+    double non_default[4] = {-4.0,-3.0,-2.0,-1.0};
+    double buff[4] = {1.0, 2.0, 3.0, 4.0};
+    double value;
+    int ind;
+    double buff_expected1[4] = {-4.0,-3.0,-2.0,-1.0};
+    double buff_expected2[][4] = {
+        {1.0,-3.0,-2.0,-1.0},
+        {1.0, 2.0,-2.0,-1.0},
+        {1.0, 2.0, 3.0,-1.0},
+        {1.0, 2.0, 3.0, 4.0},
+    };
+    double buff_expected3[4] = {1.0, 2.0, 5.0, 4.0};
+
+
+    testDescription(__FUNCTION__, "Write a single index into a database field starting from non default values");
+    ok = preconditions_init(); 
+
+    // Test Steps
+    ret = db_write(field, instance, non_default);
+    ok &= assert_OK(ret,"db_write");
+    ok &= assert_dbFieldDouble(field, instance, buff_expected1, "default field values");
+    for(ind = 0; ind < 4; ind++) {
+        value = buff[ind];
+        ret = db_index_write(field, instance, ind, &value);
+        ok &= assert_OK(ret,"db_index_write");
+        ok &= assert_dbFieldDouble(field, instance, buff_expected2[ind], "db_index_write result");
+    }
+    value = 5.0;
+    ret = db_index_write(field, instance, 2, &value);
+    ok &= assert_OK(ret,"db_index_write");
+    ok &= assert_dbFieldDouble(field, instance, buff_expected3, "db_index_write result");
+
+    ret = db_index_write(DB_NUMBER_OF_ENTRIES,instance,ind,&value);
+    ok &= assert_ERROR(ret,"db_index_write invalid arg0");
+
+    ret = db_index_write(field,10000,ind,&value);
+    ok &= assert_ERROR(ret,"db_index_write invalid arg1");
+
+    ret = db_index_write(field,instance,100,buff);
+    ok &= assert_ERROR(ret,"db_index_write invalid arg2");
+
+    ret = db_index_write(field,instance,ind,NULL);
+    ok &= assert_ERROR(ret,"db_index_write invalid arg3");
+
+    // testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
 bool tst_arm_001()
 {
     bool ok = true;
@@ -566,7 +621,7 @@ bool tst_arm_009()
 
     while (ok && time<timeout)
     {
-        // Set timesetamp
+        // Set timestamp
         ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
@@ -616,7 +671,7 @@ bool tst_arm_010()
 
     while (ok && time<timeout)
     {
-        // Set timesetamp
+        // Set timestamp
         ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
@@ -666,7 +721,7 @@ bool tst_arm_011()
 
     while (ok && time<timeout)
     {
-        // Set timesetamp
+        // Set timestamp
         ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
@@ -693,20 +748,28 @@ bool tst_arm_012()
     bool ok = true;
     ERROR_CODE ret = RET_OK;
 
-    double timeout = 5.0;/*(seconds)*/
+    double timeout = 100.0;/*(seconds)*/
     double timeInc = 0.02;/*(seconds)*/
     double time = 0.0;
 
-    Quaternion q1, q2, q1_, q21;
-    double omega1[] = {100.0,0.0,0.0};
-    double omega2[] = {100.0,0.0,1000.0};
-    Quaternion dq1, dq2;
-    double w1_norm, w2_norm;
-    double et2v1, et2v2;
-    double omega2_1[3];
-    double omegaR[3];
-    double rotVector[3] = {0.5,0.5,0.5};
-    double v_expected[3] = {0.0,0.0,1.0};
+    Quaternion q1_ini = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
+    // Quaternion q1_end = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
+    Quaternion q1_end = { .w = SQRT_2/2, .v = {SQRT_2/2, 0.0, 0.0} };
+
+    Quaternion q2_ini = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
+    Quaternion q2_end = { .w = 0.5, .v = {0.5,-0.5, 0.5} };
+    // Quaternion q2_end = { .w = SQRT_2/2, .v = {SQRT_2/2, 0.0, 0.0} };
+
+    Quaternion q1,q2;
+    Quaternion q1_,q21;
+
+    double omega1[3] = {M_PI_2, 0.0, 0.0};
+    double omega2[3] = {M_PI_2, 0.0, M_PI_2};
+    double omega2_1[3], omegaR[3];
+
+    double rotVector[3]  = {0.5, 0.5, 0.5};
+    double v_expected[3] = {1.0, 0.0, 0.0};
+    double rotNorm;
 
     testDescription(__FUNCTION__, "Emulate 2 different IMU sensors rotating");
     ok = preconditions_init(); 
@@ -721,29 +784,8 @@ bool tst_arm_012()
     ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
     ok &= assert_OK(ret, "db csv fields add");
 
-    /* Set initial quaternions */
-    Quaternion_set(1,0,0,0,&q1);
-    Quaternion_set(1,0,0,0,&q2);
-
-    /* Set quaternion derivatives */
-    ret = vector3_norm(omega1,&w1_norm);
-    ok &= assert_OK(ret, "vector3_norm");
-    if (EPSI < w1_norm) {
-        et2v1 = (timeInc*0.5*sin(w1_norm))/w1_norm;
-        Quaternion_set(0, et2v1*omega1[0], et2v1*omega1[1], et2v1*omega1[2],&dq1);
-    } else {
-        Quaternion_set(1,0,0,0,&dq1);
-    }
-    ret = vector3_norm(omega2,&w2_norm);
-    ok &= assert_OK(ret, "vector3_norm");
-    if (EPSI < w1_norm) {    
-        et2v2 = (timeInc*0.5*sin(w2_norm))/w2_norm;
-        Quaternion_set(0, et2v2*omega2[0], et2v2*omega2[1], et2v2*omega1[2],&dq2);
-    } else {
-        Quaternion_set(1,0,0,0,&dq2);
-    }
-    printf("dq1: %f, %f, %f, %f\n",dq1.w,dq1.v[0],dq1.v[1],dq1.v[2]);
-    printf("dq2: %f, %f, %f, %f\n",dq2.w,dq2.v[0],dq2.v[1],dq2.v[2]);
+    Quaternion_copy(&q1_ini,&q1);
+    Quaternion_copy(&q2_ini,&q2);
 
     do {
         /* Compute q21 */
@@ -756,39 +798,39 @@ bool tst_arm_012()
         /* Calibrate rotation axis */
         ret = arm_calibrate_rotation_axis(omegaR,rotVector);
         ok &= assert_OK(ret, "arm_calibrate_rotation_axis");
+        /* Set timestamp */
+        ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
+        ok &= assert_OK(ret, "db_index_write timestamp");
         /* Dump database data */
         ret = db_csv_dump();
         ok &= assert_OK(ret, "db_csv_dump");
-        /* Set new quaternion */
-        Quaternion_multiply(&q1,&dq1,&q1);
-        Quaternion_normalize(&q1,&q1);
-        Quaternion_multiply(&q2,&dq2,&q2);
-        Quaternion_normalize(&q2,&q2);
+
+        // printf("q1: %f, %f, %f, %f\n",q1.w,q1.v[0],q1.v[1],q1.v[2]);
+        // printf("q2: %f, %f, %f, %f\n",q2.w,q2.v[0],q2.v[1],q2.v[2]);
+        // printf("q21: %f, %f, %f, %f\n",q21.w,q21.v[0],q21.v[1],q21.v[2]);
+
         /* Set new time */
         time += timeInc;
-        // printf("omegaR: %f, %f, %f\t| ",omegaR[0],omegaR[1],omegaR[2]);
-        // printf("rotVector: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
-    printf("q1: %f, %f, %f, %f\n",q1.w,q1.v[0],q1.v[1],q1.v[2]);
-    printf("q2: %f, %f, %f, %f\n",q2.w,q2.v[0],q2.v[1],q2.v[2]);
-
+        /* Compute next quaternions */
+        Quaternion_slerp(&q1_ini,&q1_end,time,&q1);
+        Quaternion_slerp(&q2_ini,&q2_end,time,&q2);
     } while (ok && time<timeout);
 
-    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"arm_calibrate_rotation_axis result");
+    ret = vector3_norm(rotVector,&rotNorm);
+    ok &= assert_OK(ret, "vector3_norm");
+    ok &= assert_double(rotNorm, 1.0, EPSI, "vector3_norm result");
+    ok &= assert_vector3EqualThreshold(rotVector, v_expected, 1e-1, "arm_calibrate_rotation_axis result");
     printf("rotVector: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
-
-    // exp(q) = e^w(cos(|v|) + (v/|v|)*sin(|v|))
-    // qtp1 = qt * exp(T/2*w)
-    // printf("aux: %f, %f, %f, %f\n",aux2.w,aux2.v[0],aux2.v[1],aux2.v[2]);
 
     testCleanUp();
     testReport(ok);
     return ok;
 }
 
+
 bool tst_battery_all()
 {
     bool ok = true;
-
 
     ok &= tst_math_001();
     ok &= tst_math_002();
@@ -801,7 +843,8 @@ bool tst_battery_all()
     ok &= tst_db_004();
     ok &= tst_db_005();
     ok &= tst_db_006();
-    
+    ok &= tst_db_007();
+
     ok &= tst_arm_001();
     ok &= tst_arm_002();
     ok &= tst_arm_003();
@@ -824,8 +867,8 @@ int main(int argc, char **argv)
 
     testSetTraceLevel(SILENT_NO_ERROR);
 
-    ok &= tst_battery_all();
-    // ok &= tst_arm_012();
+    // ok &= tst_battery_all();
+    ok &= tst_arm_012();
 
     return (int)ok;
 }

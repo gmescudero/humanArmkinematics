@@ -103,13 +103,25 @@ bool assert_ERROR(ERROR_CODE status, const char *description) {
     return ok;
 }
 
+bool assert_double(double actual, double expected, double threshold, const char *description) {
+    bool ok = true;
+    ERROR_CODE ret;
+
+    ok = fabs(actual - expected) < threshold;
+    if WILL_PRINT(ok) {
+        printf("\t -> RESULT: %s (%s) | EXPECTED: %f, ACTUAL: %f\n", 
+            (true == ok)?"PASSED":"FAILED", description, expected, actual);
+    }
+    return ok;
+}
+
 bool assert_vector3EqualThreshold(const double actual[3], const double expected[3], const double threshold, const char *description)
 {
     bool ok = true;
 
-    ok &= fabs(actual[0] - expected[0]) < threshold;
-    ok &= fabs(actual[1] - expected[1]) < threshold;
-    ok &= fabs(actual[2] - expected[2]) < threshold;
+    ok &= assert_double(actual[0],expected[0],threshold,description);
+    ok &= assert_double(actual[1],expected[1],threshold,description);
+    ok &= assert_double(actual[2],expected[2],threshold,description);
     if WILL_PRINT(ok) {
         printf("\t -> RESULT: %s (%s) | EXPECTED: [%f,%f,%f], ACTUAL: [%f,%f,%f] \n",
             (true == ok)?"PASSED":"FAILED", description, expected[0],expected[1],expected[2],actual[0],actual[1],actual[2]);
@@ -146,7 +158,6 @@ bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, double expect
     ERROR_CODE ret;
     int size;
     double buff[100];
-    double diff;
 
     ret = db_field_parameters_get(field, &size, NULL, NULL);
     ok &= assert_OK(ret, "db_field_parameters_get");
@@ -155,8 +166,7 @@ bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, double expect
     ok &= assert_OK(ret, "db_read");
     
     for (int i = 0; i < size; i++) {
-        diff = fabs(buff[0]-expected[0]);
-        ok &= (EPSI > diff);
+        ok &= assert_double(buff[0],expected[0],EPSI/*threshold*/,description);
     }
     if WILL_PRINT(ok) {
         printf("\t -> RESULT: %s (%s) | EXPECTED: [", (true == ok)?"PASSED":"FAILED", description);

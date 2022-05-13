@@ -1,4 +1,5 @@
 *.o
+*.sh
 bin
 .vscode
 app

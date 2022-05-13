@@ -320,6 +320,7 @@ ERROR_CODE db_csv_dump(void) {
     double csv_buff[CSV_FILE_VALUES_NUMBER] = {0.0};
     DB_FIELD_IDENTIFIER current_field;
     int instance;
+    int index;
 
     if (1 == csv_logging_fields.first) {
         log_str("Start CSV logging with %d data columns",csv_logging_fields.csv_coulmns);
@@ -327,13 +328,14 @@ ERROR_CODE db_csv_dump(void) {
         csv_logging_fields.first = 0;
     }
 
+    dbg_str("Retrieve Database configured fields");
     for (int ind = 0; ind < csv_logging_fields.csv_coulmns && RET_OK == status; ind++) {
         current_field   = csv_logging_fields.fields[ind];
         instance        = csv_logging_fields.instances[ind];
-        for (int i = 0; i<database[current_field].multiplicity && RET_OK == status; i++) {
-            dbg_str("Retrieve data from field %s, instance %d, index %d",database[current_field].name,instance,i);
-            status = db_index_read(current_field, instance, i, &(csv_buff[ind]));
-        }
+        index           = csv_logging_fields.indexes[ind];
+        status = db_index_read(current_field, instance, index, &(csv_buff[ind]));
+        dbg_str("\t -> Retrieve data from field %s(%d)_%d -> %f",
+            database[current_field].name, instance, index, csv_buff[ind]);
     }
 
     dbg_str("Write CSV data row");
