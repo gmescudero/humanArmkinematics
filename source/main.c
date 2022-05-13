@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
     if (RET_OK == status) {
         log_str("Set the database fields to track into the csv");
         for (int i = 0; i<num_fields && RET_OK==status; i++) {
-            status = db_csv_add_field(fields_monitored[i],0);
+            status = db_csv_field_add(fields_monitored[i],0);
         }
         STATUS_EVAL(status);
     }

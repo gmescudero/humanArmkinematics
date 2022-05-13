@@ -96,7 +96,7 @@ ERROR_CODE db_index_read(DB_FIELD_IDENTIFIER field, int instance, int index, voi
  * @param instance (input) Field instance
  * @return ERROR_CODE 
  */
-ERROR_CODE db_csv_add_field(DB_FIELD_IDENTIFIER field, int instance);
+ERROR_CODE db_csv_field_add(DB_FIELD_IDENTIFIER field, int instance);
 /**
  * @brief Dump configured data to the csv
  * 

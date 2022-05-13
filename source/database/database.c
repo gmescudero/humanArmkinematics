@@ -208,10 +208,10 @@ ERROR_CODE db_index_write(DB_FIELD_IDENTIFIER field, int instance, int index, co
     }
     // Copy data
     if (DB_INTEGER == database[field].type) {
-        ((int**)(database[field].data_ptr))[instance][index] = *((const int*)data);
+        (&((int*)(database[field].data_ptr))[instance])[index] = *((const int*)data);
     }
     else /* DB_REAL */ { 
-        ((double**)(database[field].data_ptr))[instance][index] = *((const double*)data);
+        (&((double*)(database[field].data_ptr))[instance])[index] = *((const double*)data);
     }
     if (0 != sem_post(&(database[field].mutex))) {
         err_str("Could not release semaphore");
@@ -263,10 +263,10 @@ ERROR_CODE db_index_read(DB_FIELD_IDENTIFIER field, int instance, int index, voi
     }
     // Copy data
     if (DB_INTEGER == database[field].type) {
-        *(int*)data = ((int**)(database[field].data_ptr))[instance][index];
+        *(int*)data = (&((int*)(database[field].data_ptr))[instance])[index];
     }
     else /* DB_REAL */ { 
-        *(double*)data = ((double**)(database[field].data_ptr))[instance][index];
+        *(double*)data = (&((double*)(database[field].data_ptr))[instance])[index];
     }
 
     if (0 != sem_post(&(database[field].mutex))) {
@@ -277,7 +277,7 @@ ERROR_CODE db_index_read(DB_FIELD_IDENTIFIER field, int instance, int index, voi
     return RET_OK;
 }
 
-ERROR_CODE db_csv_add_field(DB_FIELD_IDENTIFIER field, int instance) {
+ERROR_CODE db_csv_field_add(DB_FIELD_IDENTIFIER field, int instance) {
     int csv_index = csv_logging_fields.csv_coulmns;
     // Check arguments
     if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
