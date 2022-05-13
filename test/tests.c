@@ -400,7 +400,7 @@ bool tst_arm_004()
     };
     const ARM_POSE expected2 = {
         .shoulderPosition = {0.0, 0.0,  0.0},
-        .elbowPosition    = {0.0, 5.0,  0.0},
+        .elbowPosition    = {0.0, 10.0,  0.0},
         .wristPosition    = {0.0, 15.0, 0.0},
     };
 
@@ -541,7 +541,7 @@ bool tst_arm_008()
 bool tst_arm_009() 
 {
     bool ok = true;
-    ERROR_CODE ret;
+    ERROR_CODE ret = RET_OK;
 
     double rotVector[3]    = {0.5,0.5,0.5};
     double timeout = 20.0;/*(seconds)*/
@@ -591,7 +591,7 @@ bool tst_arm_009()
 bool tst_arm_010() 
 {
     bool ok = true;
-    ERROR_CODE ret;
+    ERROR_CODE ret = RET_OK;
 
     double rotVector[3]    = {0.5,0.5,0.5};
     double timeout = 20.0;/*(seconds)*/
@@ -641,7 +641,7 @@ bool tst_arm_010()
 bool tst_arm_011() 
 {
     bool ok = true;
-    ERROR_CODE ret;
+    ERROR_CODE ret = RET_OK;
 
     double rotVector[3]    = {0.5,0.5,0.5};
     double timeout = 5.0;/*(seconds)*/
@@ -691,7 +691,7 @@ bool tst_arm_011()
 bool tst_arm_012()
 {
     bool ok = true;
-    ERROR_CODE ret;
+    ERROR_CODE ret = RET_OK;
 
     double timeout = 5.0;/*(seconds)*/
     double timeInc = 0.02;/*(seconds)*/

@@ -33,6 +33,7 @@ void testBatteryReport(const char *name, const char *description, bool result)
 void testCleanUp()
 {
     db_terminate();
+    preconditions_initArm();
 }
 
 // * PRECONDITIONS ************************************************************

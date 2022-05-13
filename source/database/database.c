@@ -134,17 +134,31 @@ ERROR_CODE db_initialize(void) {
 ERROR_CODE db_terminate(void) {
     ERROR_CODE status = RET_OK;
 
-    for (int field_id = 0; field_id < DB_NUMBER_OF_ENTRIES; field_id++) {
-        // Terminate database entry mutex
-        if (0 != sem_destroy(&(database[field_id].mutex))) {
-            status += RET_ERROR;
-            err_str("Falied to destroy semaphore for database entry");
-        };
-        // Free allocated memory
-        free(database[field_id].data_ptr);
-        // Mark the field as not initialized
-        database[field_id].initialized = 0;
+    // Reset csv logging
+    csv_logging_fields.first       = 1;
+    csv_logging_fields.csv_coulmns = 0;
+    csv_logging_fields.fields_num  = 0;
+    for (int ind = 0; ind < CSV_FILE_VALUES_NUMBER; ind++) {
+        csv_logging_fields.fields[ind]    = DB_FIELD_IDENTIFIER_INVALID;
+        csv_logging_fields.instances[ind] = 0;
+        csv_logging_fields.indexes[ind]   = 0;
     }
+
+    // Reset database
+    for (int field_id = 0; field_id < DB_NUMBER_OF_ENTRIES; field_id++) {
+        if (1 == database[field_id].initialized) {
+            // Terminate database entry mutex
+            if (0 != sem_destroy(&(database[field_id].mutex))) {
+                status += RET_ERROR;
+                err_str("Falied to destroy semaphore for database entry");
+            };
+            // Free allocated memory
+            free(database[field_id].data_ptr);
+            // Mark the field as not initialized
+            database[field_id].initialized = 0;
+        }
+    }
+
     return (RET_OK == status) ? RET_OK: RET_ERROR;
 }
 
