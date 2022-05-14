@@ -2,6 +2,7 @@
 #include "Quaternion.h"
 #include "constants.h"
 #include "arm.h"
+#include "imu.h"
 #include "vector3.h"
 #include "database.h"
 
@@ -335,7 +336,6 @@ bool tst_db_007()
     };
     double buff_expected3[4] = {1.0, 2.0, 5.0, 4.0};
 
-
     testDescription(__FUNCTION__, "Write a single index into a database field starting from non default values");
     ok = preconditions_init(); 
 
@@ -366,7 +366,30 @@ bool tst_db_007()
     ret = db_index_write(field,instance,ind,NULL);
     ok &= assert_ERROR(ret,"db_index_write invalid arg3");
 
-    // testCleanUp();
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_db_008()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    DB_FIELD_IDENTIFIER field = DB_IMU_TIMESTAMP;
+    double value;
+
+    testDescription(__FUNCTION__, "Check reading and writing different instances");
+    ok = preconditions_init(); 
+
+    // Test Steps
+    for (int instance = 0; instance < IMU_MAX_NUMBER; instance++) {
+        value = 1.0 + (double)instance;
+        ret = db_write(field, instance, &value);
+        ok &= assert_OK(ret,"db_write");
+        ok &= assert_dbFieldDouble(field,instance,&value,"db_wrtie result");
+    }
+
+    testCleanUp();
     testReport(ok);
     return ok;
 }
@@ -844,6 +867,7 @@ bool tst_battery_all()
     ok &= tst_db_005();
     ok &= tst_db_006();
     ok &= tst_db_007();
+    ok &= tst_db_008();
 
     ok &= tst_arm_001();
     ok &= tst_arm_002();
@@ -867,8 +891,8 @@ int main(int argc, char **argv)
 
     testSetTraceLevel(SILENT_NO_ERROR);
 
-    // ok &= tst_battery_all();
-    ok &= tst_arm_012();
+    ok &= tst_battery_all();
+    // ok &= tst_arm_012();
 
     return (int)ok;
 }
