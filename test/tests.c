@@ -1087,6 +1087,7 @@ bool tst_arm_013()
         /* Set quaternions */
         quaternion_buffer_build(q1, quat_buff);
         ret = db_write(DB_IMU_QUATERNION,0,quat_buff);
+        dbg_str("Q1: %f, %f, %f, %f",quat_buff[0],quat_buff[1],quat_buff[2],quat_buff[3]);
         quaternion_buffer_build(q2, quat_buff);
         ret = db_write(DB_IMU_QUATERNION,1,quat_buff);
         /* Dump database data */

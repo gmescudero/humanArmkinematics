@@ -7,6 +7,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#define DB_INSTANCE_MAX_NUM (10)
+
 typedef struct DB_FIELD_STRUCT {
     DB_FIELD_IDENTIFIER identifier;
     char                name[DB_FIELD_NAME_MAX_LENGTH];
@@ -14,7 +16,7 @@ typedef struct DB_FIELD_STRUCT {
     unsigned int        instances;
     unsigned int        multiplicity;
     sem_t               mutex;
-    void                *data_ptr;
+    void                *data_ptr[DB_INSTANCE_MAX_NUM];
     int                 initialized;
 } DB_FIELD;
 
@@ -35,7 +37,7 @@ typedef struct DB_CSV_LOG_STRUCT {
     .instances=inst,\
     .multiplicity=mult,\
     .mutex={{0}},\
-    .data_ptr=NULL,\
+    .data_ptr={NULL},\
     .initialized=0 }
 
 
@@ -85,10 +87,6 @@ static DB_CSV_LOG_STRUCT csv_logging_fields = {
 
 ERROR_CODE db_initialize(void) {
     ERROR_CODE status = RET_OK;
-    size_t field_type_size[DB_FIELD_TYPES_NUM];
-
-    field_type_size[DB_INTEGER] = sizeof(int);
-    field_type_size[DB_REAL   ] = sizeof(double);
 
     log_str("Initialzing database fields");
     for (int field_id = 0; RET_OK == status && field_id < DB_NUMBER_OF_ENTRIES; field_id++) {
@@ -99,30 +97,28 @@ ERROR_CODE db_initialize(void) {
             err_str("Falied to create semaphore for database entry");
         };
         // Allocate memory for the database entry
-        if (RET_OK == status) {
-            database[field_id].data_ptr = malloc(
-                (size_t)database[field_id].multiplicity 
-                * (size_t)database[field_id].instances
-                * field_type_size[database[field_id].type]);
+        for (int inst = 0; RET_OK == status && inst < database[field_id].instances; inst++) {
+            database[field_id].data_ptr[inst] = malloc( sdb_field_size_get(field_id) );
             
-            if (NULL == database[field_id].data_ptr) {
+            if (NULL == database[field_id].data_ptr[inst]) {
                 status = RET_ERROR;
                 err_str("Falied to allocate memory for database entry");
             }
-        }
-        // Initialize value to 0
-        if (RET_OK == status) {
-            if (DB_INTEGER == database[field_id].type) {
-                for (int i = 0; i < database[field_id].multiplicity; i++) {
-                    ((int*) database[field_id].data_ptr)[i] = 0;
+            else {
+                // Initialize value to 0
+                if (DB_INTEGER == database[field_id].type) {
+                    for (int i = 0; i < database[field_id].multiplicity; i++) {
+                        ((int*) database[field_id].data_ptr[inst])[i] = 0;
+                    }
+                }
+                if (DB_REAL == database[field_id].type) {
+                    for (int i = 0; i < database[field_id].multiplicity; i++) {
+                        ((double*) database[field_id].data_ptr[inst])[i] = 0.0;
+                    }
                 }
             }
-            if (DB_REAL == database[field_id].type) {
-                for (int i = 0; i < database[field_id].multiplicity; i++) {
-                    ((double*) database[field_id].data_ptr)[i] = 0.0;
-                }
-            }
         }
+
         // Mark the field as initialized
         if (RET_OK == status) {
             database[field_id].initialized = 1;
@@ -147,13 +143,15 @@ ERROR_CODE db_terminate(void) {
     // Reset database
     for (int field_id = 0; field_id < DB_NUMBER_OF_ENTRIES; field_id++) {
         if (1 == database[field_id].initialized) {
+            for (int inst = 0; inst < database[field_id].instances; inst++) {
+                // Free allocated memory
+                free(database[field_id].data_ptr[inst]);
+            }
             // Terminate database entry mutex
             if (0 != sem_destroy(&(database[field_id].mutex))) {
                 status += RET_ERROR;
                 err_str("Falied to destroy semaphore for database entry");
             };
-            // Free allocated memory
-            free(database[field_id].data_ptr);
             // Mark the field as not initialized
             database[field_id].initialized = 0;
         }
@@ -192,13 +190,8 @@ ERROR_CODE db_write(DB_FIELD_IDENTIFIER field, int instance, const void *data) {
         return RET_ERROR;
     }
     // Copy data
-    if (DB_INTEGER == database[field].type) {
-        memcpy((void*)&((int*)(database[field].data_ptr))[instance], data, sdb_field_size_get(field));
-    }
-    else /* DB_REAL */ { 
-        memcpy((void*)&((double*)(database[field].data_ptr))[instance], data, sdb_field_size_get(field));
-    }
-    // memcpy(&(database[field].data_ptr[instance]), data, sdb_field_size_get(field));
+    memcpy(database[field].data_ptr[instance], data, sdb_field_size_get(field));
+
     if (0 != sem_post(&(database[field].mutex))) {
         err_str("Could not release semaphore");
         return RET_ERROR;
@@ -222,10 +215,10 @@ ERROR_CODE db_index_write(DB_FIELD_IDENTIFIER field, int instance, int index, co
     }
     // Copy data
     if (DB_INTEGER == database[field].type) {
-        (&((int*)(database[field].data_ptr))[instance])[index] = *((const int*)data);
+        ((int*) database[field].data_ptr[instance])[index] =  *((const int*)data);
     }
     else /* DB_REAL */ { 
-        (&((double*)(database[field].data_ptr))[instance])[index] = *((const double*)data);
+        ((double*) database[field].data_ptr[instance])[index] =  *((const double*)data);
     }
     if (0 != sem_post(&(database[field].mutex))) {
         err_str("Could not release semaphore");
@@ -248,12 +241,8 @@ ERROR_CODE db_read(DB_FIELD_IDENTIFIER field, int instance, void *data) {
         return RET_ERROR;
     }
     // Copy data
-    if (DB_INTEGER == database[field].type) {
-        memcpy(data, (void*)&((int*)(database[field].data_ptr))[instance], sdb_field_size_get(field));
-    }
-    else /* DB_REAL */ { 
-        memcpy(data, (void*)&((double*)(database[field].data_ptr))[instance], sdb_field_size_get(field));
-    }
+    memcpy(data, database[field].data_ptr[instance], sdb_field_size_get(field));
+
     if (0 != sem_post(&(database[field].mutex))) {
         err_str("Could not release semaphore");
         return RET_ERROR;
@@ -277,10 +266,10 @@ ERROR_CODE db_index_read(DB_FIELD_IDENTIFIER field, int instance, int index, voi
     }
     // Copy data
     if (DB_INTEGER == database[field].type) {
-        *(int*)data = (&((int*)(database[field].data_ptr))[instance])[index];
+        *(int*)data = ((int*) database[field].data_ptr[instance])[index];
     }
     else /* DB_REAL */ { 
-        *(double*)data = (&((double*)(database[field].data_ptr))[instance])[index];
+        *(double*)data = ((double*) database[field].data_ptr[instance])[index];
     }
 
     if (0 != sem_post(&(database[field].mutex))) {
