@@ -102,15 +102,10 @@ ERROR_CODE arm_relative_angular_vel_compute(
     /* Compute q21 */
     Quaternion_conjugate(&q1,&q1_conj);
     Quaternion_multiply(&q1_conj,&q2,&q2_to1);
-    printf("q2_to1: %f, %f, %f, %f\n",q2_to1.w,q2_to1.v[0],q2_to1.v[1],q2_to1.v[2]);
-
 
     /* Compute relative w */
     Quaternion_rotate(&q2_to1, angVel2, angVel2_from1);
     status = vector3_substract(angVel2_from1, angVel1, angVelR);
-
-    printf("angVel2_from1: %f, %f, %f\n",angVel2_from1[0],angVel2_from1[1],angVel2_from1[2]);
-    printf("angVelR: %f, %f, %f\n",angVelR[0],angVelR[1],angVelR[2]);
 
     return status;
 }

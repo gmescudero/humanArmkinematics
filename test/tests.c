@@ -1004,26 +1004,22 @@ bool tst_arm_012()
     // Quaternion q1 = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
     // Quaternion q2 = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
 
-    Quaternion q1 = { .w = SQRT_2/2, .v = {SQRT_2/2, 0.0, 0.0} };
+    Quaternion q1 = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
     Quaternion q2 = { .w = 0.5, .v = {0.5,-0.5, 0.5} };
 
-    double omega1[3] = {M_PI_2, 0.0, 0.0};
+    double omega1[3] = {0.0, 0.0, M_PI_2};
     double omega2[3] = {M_PI_2, 0.0, M_PI_2};
     double omegaR[3] = {0.0};
+
+    double omegaR_expected[3] = {0.0,-M_PI_2,0.0};
 
     testDescription(__FUNCTION__, "Compute the angular velocity between two frames");
     ok = preconditions_init(); 
 
     ret = arm_relative_angular_vel_compute(q1, q2, omega1, omega2, omegaR);
     ok &= assert_OK(ret, "arm_relative_angular_vel_compute");
-
-    printf("omegaR: %f, %f, %f\n",omegaR[0],omegaR[1],omegaR[2]);
-    Quaternion q1_conj;
-    double omegaR_R[3] = {0.0};
-    Quaternion_conjugate(&q1,&q1_conj);
-    Quaternion_rotate(&q1_conj,omegaR,omegaR_R);
-    printf("omegaR_R: %f, %f, %f\n",omegaR_R[0],omegaR_R[1],omegaR_R[2]);
-
+    ok &= assert_vector3Equal(omegaR, omegaR_expected, "arm_relative_angular_vel_compute result");
+    // printf("omegaR: %f, %f, %f\n",omegaR[0],omegaR[1],omegaR[2]);
 
     testCleanUp();
     testReport(ok);
@@ -1154,6 +1150,7 @@ bool tst_battery_all()
     ok &= tst_arm_009();
     ok &= tst_arm_010();
     ok &= tst_arm_011();
+    ok &= tst_arm_012();
 
     testBatteryReport(__FUNCTION__, "ALL TESTS", ok);
     return ok;
