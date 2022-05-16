@@ -36,21 +36,12 @@ static ERROR_CODE initialize() {
 
 int main(int argc, char **argv) {
     ERROR_CODE status = RET_OK;
-    DB_FIELD_IDENTIFIER fields_monitored[] = {
-        DB_IMU_TIMESTAMP,
-        DB_CALIB_OMEGA,
-        DB_CALIB_OMEGA_NORM,
-        DB_CALIB_ERROR,
-        DB_CALIB_ROT_VECTOR,
-        DB_CALIB_SPHERICAL_COORDS,
-        DB_CALIB_COST_DERIVATIVE
-    };
-    int num_fields = sizeof(fields_monitored)/sizeof(DB_FIELD_IDENTIFIER);
     COM_PORTS discoveredPorts;
-    ImuData data;
+    ImuData data[2];
     double startTime   = -1.0;
     double currentTime = -1.0;
-    double rotVector[3] = {0.5,0.5,0.5};
+    double lastTime    = -1.0;
+    // double rotVector[3] = {0.5,0.5,0.5};
 
     /* Initialize all packages */
     log_str("Initialize");
@@ -60,9 +51,10 @@ int main(int argc, char **argv) {
     /* Set the csv logging from the database */
     if (RET_OK == status) {
         log_str("Set the database fields to track into the csv");
-        for (int i = 0; i<num_fields && RET_OK==status; i++) {
-            status = db_csv_field_add(fields_monitored[i],0);
-        }
+        status += db_csv_field_add(DB_IMU_TIMESTAMP,0);
+        status += db_csv_field_add(DB_IMU_QUATERNION,0);
+        // status += db_csv_field_add(DB_IMU_TIMESTAMP,1);
+        status += db_csv_field_add(DB_IMU_QUATERNION,1);
         STATUS_EVAL(status);
     }
 
@@ -75,44 +67,41 @@ int main(int argc, char **argv) {
 
     /* Initialize IMU in a given COM port */
     if (RET_OK == status) {
-        log_str("Initialize the IMU sensor in the first COM port");
-        status = imu_initialize(discoveredPorts.ports_names[0]);
+        log_str("Initialize the IMU sensors");
+        // status = imu_initialize(discoveredPorts.ports_names[0]);
+        status = imu_batch_initialize(discoveredPorts, discoveredPorts.ports_number);
         STATUS_EVAL(status);
     }
 
     if (RET_OK == status) {
         log_str("Loop reading IMU data to calibrate ");
         do {
-            millis_sleep(20);
+            millis_sleep(50);
             if (RET_OK == status) {
                 // Read IMU data
-                status = imu_read(0, &data);
+                // status = imu_read(0, &data);
+                status = imu_batch_read(2, data);
                 STATUS_EVAL(status);
             }
             if (RET_OK == status && -1.0 == startTime){
                 // Initialize start time if required
-                startTime   = data.timeStamp;
+                startTime   = data[0].timeStamp;
             }
             if (RET_OK == status) {
-                // Update current time and log to the CSV
-                currentTime = data.timeStamp - startTime;
-            }
-            if (RET_OK == status) {
-                // Execute the calibration 
-                double gyr[] = {(float)data.g[0], (float)data.g[1], (float)data.g[2]};
-                status = arm_calibrate_rotation_axis(gyr,rotVector);
-                STATUS_EVAL(status);
+                // Update current time
+                lastTime    = currentTime;
+                currentTime = data[0].timeStamp - startTime;
             }
             if (RET_OK == status) {
                 // Write csv file
                 status = db_csv_dump();
                 STATUS_EVAL(status);
             }
-
-        } while ((RET_OK == status || RET_NO_EXEC == status) && 20 > currentTime);
+            // dbg_str("time: %f (oldTime: %f)",currentTime,lastTime);
+        } while ((RET_OK == status || RET_NO_EXEC == status) && 20 > currentTime && currentTime - lastTime > EPSI);
     } 
 
-    log_str("Rotation vector obtained: [%f, %f, %f]", rotVector[0], rotVector[1], rotVector[2]);
+    // log_str("Rotation vector obtained: [%f, %f, %f]", rotVector[0], rotVector[1], rotVector[2]);
 
     log_str("Terminate all IMU connections");
     imu_batch_terminate();

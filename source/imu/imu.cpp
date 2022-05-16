@@ -71,7 +71,7 @@ ERROR_CODE imu_initialize(const char *com_port){
 }
 
 ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num){
-    ERROR_CODE status;
+    ERROR_CODE status = RET_OK;
 
     dbg_str("%s -> Connect %d IMUs out of %d",__FUNCTION__, imus_num, com_ports.ports_number);
 
@@ -115,6 +115,7 @@ ERROR_CODE imu_read(unsigned int index, ImuData *imu) {
 }
 
 ERROR_CODE imu_batch_read(unsigned int imus_num, ImuData imus[]) {
+    dbg_str("%s -> Read %d IMUs out of %d",__FUNCTION__, imus_num, num_imus);
     ERROR_CODE status = RET_OK;
     // Check arguments
     if (imus_num > num_imus || imus_num <= 0) return RET_ARG_ERROR;
