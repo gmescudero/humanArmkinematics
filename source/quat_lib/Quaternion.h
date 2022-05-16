@@ -174,3 +174,26 @@ ERROR_CODE quaternion_exponential(Quaternion q, Quaternion *q_exp);
  * @return ERROR_CODE 
  */
 ERROR_CODE quaternion_ang_vel_apply(Quaternion q, double T, double ang_vel[3], Quaternion *q_rot);
+
+/**
+ * @brief Set a quaternion into a 4x1 buffer 
+ * 
+ * @param q (input) Quaternion 
+ * @param buffer (output) Buffer being w,x,y,z
+ */
+void quaternion_buffer_build(Quaternion q, double buffer[4]);
+/**
+ * @brief Set a quaternion structure from a 4x1 buffer
+ * 
+ * @param buffer (input) Buffer being w,x,y,z
+ * @param q (output) Quaternion
+ */
+void quaternion_from_buffer_build(double buffer[4], Quaternion *q);
+
+/**
+ * @brief Print a quaternion structure
+ * 
+ * @param q (input) Quaternion to print
+ * @param name (input) Quaternion name
+ */
+void quaternion_print(Quaternion q, const char *name);

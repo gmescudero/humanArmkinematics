@@ -14,7 +14,7 @@
 /**
  * @brief The maximum number of values to log to the csv file
  */
-#define CSV_FILE_VALUES_NUMBER (30)
+#define CSV_FILE_VALUES_NUMBER (50)
 /**
  * @brief The maximum length of a CSV header
  */

@@ -293,7 +293,7 @@ ERROR_CODE quaternion_exponential(Quaternion q, Quaternion *q_exp) {
     status = vector3_norm(q.v,&norm);
     if (RET_OK == status) {
         if (EPSI > norm) {
-            q_exp->w = exp(1);
+            q_exp->w    = exp(q.w);
             q_exp->v[0] = 0.0;
             q_exp->v[1] = 0.0;
             q_exp->v[2] = 0.0;
@@ -330,10 +330,8 @@ ERROR_CODE quaternion_ang_vel_apply(Quaternion q, double T, double ang_vel[3], Q
         q_w.v[0] = T*ang_vel[0]*0.5;
         q_w.v[1] = T*ang_vel[1]*0.5;
         q_w.v[2] = T*ang_vel[2]*0.5;
-
-        if (RET_OK == status) {
-            status = quaternion_exponential(q_w,&q_exp);
-        }
+    
+        status = quaternion_exponential(q_w,&q_exp);
         if (RET_OK == status) {
             Quaternion_multiply(&q_exp, &q, &q_result);
         }
@@ -342,4 +340,25 @@ ERROR_CODE quaternion_ang_vel_apply(Quaternion q, double T, double ang_vel[3], Q
         }
     }
     return status;
+}
+
+void quaternion_buffer_build(Quaternion q, double buffer[4]) {
+    buffer[0] = q.w;
+    buffer[1] = q.v[0];
+    buffer[2] = q.v[1];
+    buffer[3] = q.v[2];
+}
+
+void quaternion_from_buffer_build(double buffer[4], Quaternion *q) {
+    q->w    = buffer[0];
+    q->v[0] = buffer[1];
+    q->v[1] = buffer[2];
+    q->v[2] = buffer[3];
+}
+
+void quaternion_print(Quaternion q, const char *name) {
+    if (NULL != name)
+        log_str("Quaternion %s: %f, [%f, %f, %f]",name, q.w, q.v[0], q.v[1], q.v[2]);
+    else
+        log_str("Quaternion: %f, [%f, %f, %f]", q.w, q.v[0], q.v[1], q.v[2]);
 }
