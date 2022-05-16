@@ -151,3 +151,26 @@ void Quaternion_rotate(Quaternion* q, double v[3], double output[3]);
  *      0 is equal with q1, 1 is equal with q2, 0.5 is the middle between q1 and q2.
  */
 void Quaternion_slerp(Quaternion* q1, Quaternion* q2, double t, Quaternion* output);
+
+/*********************************************************************************************************************/
+#include "errors.h"
+
+/**
+ * @brief Compute exponential of a quaternion
+ * 
+ * @param q (input) Quaternion to exponentiate
+ * @param q_exp (output) Exponentiated quaternion
+ * @return ERROR_CODE 
+ */
+ERROR_CODE quaternion_exponential(Quaternion q, Quaternion *q_exp);
+
+/**
+ * @brief Compute the quaternion orientation after applying an angular velocity during a given time
+ * 
+ * @param q (input) Starting quaternion
+ * @param T (input) Time period
+ * @param ang_vel (input) Angular velocity
+ * @param q_rot (output) New quaternion orientation
+ * @return ERROR_CODE 
+ */
+ERROR_CODE quaternion_ang_vel_apply(Quaternion q, double T, double ang_vel[3], Quaternion *q_rot);

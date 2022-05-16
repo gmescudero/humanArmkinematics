@@ -84,7 +84,7 @@ bool assert_OK(ERROR_CODE status, const char *description) {
     if (RET_OK != status) {
         ok = false;
     }
-    if WILL_PRINT(ok) {
+    if (WILL_PRINT(ok) && (NULL != description)) {
         printf("\t -> RESULT: %s (%s) | NOT EXPECTED: %d, ACTUAL: %d\n",
             (true == ok)?"PASSED":"FAILED", description, RET_OK, status);
     }
@@ -96,7 +96,7 @@ bool assert_ERROR(ERROR_CODE status, const char *description) {
     if (RET_OK == status) {
         ok = false;
     }
-    if WILL_PRINT(ok) {
+    if (WILL_PRINT(ok) && (NULL != description)) {
         printf("\t -> RESULT: %s (%s) | EXPECTED: %d, ACTUAL: %d\n",
             (true == ok)?"PASSED":"FAILED",description, RET_OK, status);
     }
@@ -108,7 +108,7 @@ bool assert_double(double actual, double expected, double threshold, const char 
     ERROR_CODE ret;
 
     ok = fabs(actual - expected) < threshold;
-    if WILL_PRINT(ok) {
+    if (WILL_PRINT(ok) && (NULL != description)) {
         printf("\t -> RESULT: %s (%s) | EXPECTED: %f, ACTUAL: %f\n", 
             (true == ok)?"PASSED":"FAILED", description, expected, actual);
     }
@@ -119,10 +119,10 @@ bool assert_vector3EqualThreshold(const double actual[3], const double expected[
 {
     bool ok = true;
 
-    ok &= assert_double(actual[0],expected[0],threshold,description);
-    ok &= assert_double(actual[1],expected[1],threshold,description);
-    ok &= assert_double(actual[2],expected[2],threshold,description);
-    if WILL_PRINT(ok) {
+    ok &= assert_double(actual[0],expected[0],threshold,NULL);
+    ok &= assert_double(actual[1],expected[1],threshold,NULL);
+    ok &= assert_double(actual[2],expected[2],threshold,NULL);
+    if (WILL_PRINT(ok) && (NULL != description)) {
         printf("\t -> RESULT: %s (%s) | EXPECTED: [%f,%f,%f], ACTUAL: [%f,%f,%f] \n",
             (true == ok)?"PASSED":"FAILED", description, expected[0],expected[1],expected[2],actual[0],actual[1],actual[2]);
     }
@@ -134,15 +134,35 @@ bool assert_vector3Equal(const double actual[3], const double expected[3], const
     return assert_vector3EqualThreshold(actual,expected,EPSI,description);
 }
 
+bool assert_quaternionThreshold(Quaternion actual, Quaternion expected, double threshold, const char *description){
+    bool ok = true;
+
+    ok &= assert_double(actual.w, expected.w, threshold, NULL);
+    ok &= assert_vector3EqualThreshold(actual.v, expected.v, threshold, NULL);
+
+    if (WILL_PRINT(ok) && (NULL != description)) {
+        printf("\t -> RESULT: %s (%s) | EXPECTED: [%f,%f,%f,%f], ACTUAL: [%f,%f,%f,%f] \n",
+            (true == ok)?"PASSED":"FAILED", description, 
+            expected.w, expected.v[0],expected.v[1],expected.v[2],
+            actual.w, actual.v[0],actual.v[1],actual.v[2]);
+    }
+
+    return ok;
+}
+
+bool assert_quaternion(Quaternion actual, Quaternion expected, const char *description){
+    return assert_quaternionThreshold(actual, expected, EPSI, description);
+}
+
 bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected, const char *description)
 {
     bool ok = true;
 
-    ok &= assert_vector3Equal(actual.shoulderPosition, expected.shoulderPosition, description);
-    ok &= assert_vector3Equal(actual.elbowPosition,    expected.elbowPosition, description);
-    ok &= assert_vector3Equal(actual.wristPosition,    expected.wristPosition, description);
+    ok &= assert_vector3Equal(actual.shoulderPosition, expected.shoulderPosition, NULL);
+    ok &= assert_vector3Equal(actual.elbowPosition,    expected.elbowPosition, NULL);
+    ok &= assert_vector3Equal(actual.wristPosition,    expected.wristPosition, NULL);
 
-    if WILL_PRINT(ok) {
+    if (WILL_PRINT(ok) && (NULL != description)) {
         printf("\t -> RESULT: %s (%s)\n",(true == ok)?"PASSED":"FAILED", description);
         printf("EXPECTED: \n");
         arm_pose_print(expected);
@@ -166,9 +186,9 @@ bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, double expect
     ok &= assert_OK(ret, "db_read");
     
     for (int i = 0; i < size; i++) {
-        ok &= assert_double(buff[0],expected[0],EPSI/*threshold*/,description);
+        ok &= assert_double(buff[0],expected[0],EPSI/*threshold*/,NULL);
     }
-    if WILL_PRINT(ok) {
+    if (WILL_PRINT(ok) && (NULL != description)) {
         printf("\t -> RESULT: %s (%s) | EXPECTED: [", (true == ok)?"PASSED":"FAILED", description);
         for (int i = 0; i < size; i++) {
             printf("%f",expected[i]);

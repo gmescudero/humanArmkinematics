@@ -4,7 +4,6 @@
 #include <time.h>
 #include "general.h"
 
-struct sp_port **ports;
 
 ERROR_CODE millis_sleep(int millis) {
     struct timespec ts;
@@ -23,6 +22,7 @@ ERROR_CODE millis_sleep(int millis) {
 }
 
 ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts) {
+    struct sp_port **ports;
     enum sp_return error;
 
     /* Check arguments */

@@ -275,3 +275,71 @@ void Quaternion_slerp(Quaternion* q1, Quaternion* q2, double t, Quaternion* outp
 
     *output = result;
 }
+
+/*********************************************************************************************************************/
+#include "constants.h"
+#include "vector3.h"
+#include "constants.h"
+#include "general.h"
+
+ERROR_CODE quaternion_exponential(Quaternion q, Quaternion *q_exp) {
+    ERROR_CODE status;
+    double norm;
+    double aux;
+
+    // Check arguments
+    if (NULL == q_exp) return RET_ARG_ERROR;
+
+    status = vector3_norm(q.v,&norm);
+    if (RET_OK == status) {
+        if (EPSI > norm) {
+            q_exp->w = exp(1);
+            q_exp->v[0] = 0.0;
+            q_exp->v[1] = 0.0;
+            q_exp->v[2] = 0.0;
+        }
+        else {
+            aux = exp(q.w)*sin(norm)/norm;
+            q_exp->w = exp(q.w)*cos(norm);
+            q_exp->v[0] = q.v[0]*aux;
+            q_exp->v[1] = q.v[1]*aux;
+            q_exp->v[2] = q.v[2]*aux;
+        }
+    }
+
+    return status;
+}
+
+ERROR_CODE quaternion_ang_vel_apply(Quaternion q, double T, double ang_vel[3], Quaternion *q_rot) {
+    ERROR_CODE status = RET_OK;
+    Quaternion q_w;
+    Quaternion q_exp;
+    Quaternion q_result;
+
+    // Check arguments
+    if (-EPSI > T) return RET_ARG_ERROR;
+    if (NULL == ang_vel) return RET_ARG_ERROR;
+    if (NULL == q_rot) return RET_ARG_ERROR;
+
+    if (EPSI > T) {
+        Quaternion_copy(&q, q_rot);
+        wrn_str("Time period is 0 for quaternion angular velocity apply");
+    }
+    else {
+        q_w.w = 0.0;
+        q_w.v[0] = T*ang_vel[0]*0.5;
+        q_w.v[1] = T*ang_vel[1]*0.5;
+        q_w.v[2] = T*ang_vel[2]*0.5;
+
+        if (RET_OK == status) {
+            status = quaternion_exponential(q_w,&q_exp);
+        }
+        if (RET_OK == status) {
+            Quaternion_multiply(&q_exp, &q, &q_result);
+        }
+        if (RET_OK == status) {
+            Quaternion_copy(&q_result, q_rot);
+        }
+    }
+    return status;
+}

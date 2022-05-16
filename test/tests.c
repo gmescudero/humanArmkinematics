@@ -126,6 +126,100 @@ bool tst_math_004()
     return ok;
 }
 
+bool tst_math_005() 
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    Quaternion q_result;
+
+    Quaternion q1 = {.w = 1.0, .v = {0.0,0.0,0.0}};
+    Quaternion q1_exp_expected = {.w = E, .v = {0.0,0.0,0.0}};
+
+    Quaternion q2 = { .w = SQRT_2/2, .v = {SQRT_2/2, 0.0, 0.0} };
+    Quaternion q2_exp_expected = {.w = 1.541863, .v = {1.317538,0.0,0.0}};
+
+    Quaternion q3 = { .w = 0.0, .v = {0.0, 0.0, M_PI} };
+    Quaternion q3_exp_expected = {.w = -1.0, .v = {0.0,0.0,0.0}};
+
+    testDescription(__FUNCTION__, "Compute the exponential of a quaternion");
+    ok = preconditions_init(); 
+
+    // Test Steps
+    ret = quaternion_exponential(q1, &q_result);
+    ok &= assert_OK(ret, "quaternion_exponential");
+    ok &= assert_quaternion(q_result,q1_exp_expected,"quaternion_exponential result");
+    ok &= assert_double(Quaternion_norm(&q_result), E, EPSI, "quaternion_exponential result norm");
+
+    ret = quaternion_exponential(q2, &q_result);
+    ok &= assert_OK(ret, "quaternion_exponential");
+    ok &= assert_quaternion(q_result,q2_exp_expected,"quaternion_exponential result");
+    ok &= assert_double(Quaternion_norm(&q_result), pow(E,SQRT_2/2), EPSI, "quaternion_exponential result norm");
+
+    ret = quaternion_exponential(q3, &q_result);
+    ok &= assert_OK(ret, "quaternion_exponential");
+    ok &= assert_quaternion(q_result,q3_exp_expected,"quaternion_exponential result");
+    ok &= assert_double(Quaternion_norm(&q_result), 1.0, EPSI, "quaternion_exponential result norm");
+
+    ret = quaternion_exponential(q1, NULL);
+    ok &= assert_ERROR(ret, "quaternion_exponential");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_math_006()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    Quaternion q_result;
+    
+    Quaternion q = {.w = 1.0, .v = {0.0,0.0,0.0}};
+    double w[] = {0.0,0.0,M_PI};
+
+    double T1 = 1.0;
+    Quaternion q1_exp_expected = {.w = 0.0, .v = {0.0,0.0,1.0}};
+
+    double T2 = 0.0;
+    Quaternion q2_exp_expected = {.w = 1.0, .v = {0.0,0.0,0.0}};
+
+    double T3 = 0.5;
+    Quaternion q3_exp_expected = {.w = SQRT_2/2, .v = {0.0,0.0,SQRT_2/2}};
+
+    double T4 = 2.0;
+    Quaternion q4_exp_expected = {.w = -1.0, .v = {0.0,0.0,0.0}};
+
+
+    testDescription(__FUNCTION__, "Apply an angular velocity to a quaternion");
+    ok = preconditions_init();
+
+    // Test Steps
+    ret = quaternion_ang_vel_apply(q, T1, w, &q_result);
+    ok &= assert_quaternion(q_result, q1_exp_expected,"quaternion_ang_vel_apply result");
+
+    ret = quaternion_ang_vel_apply(q, T2, w, &q_result);
+    ok &= assert_quaternion(q_result, q2_exp_expected,"quaternion_ang_vel_apply result");
+
+    ret = quaternion_ang_vel_apply(q, T3, w, &q_result);
+    ok &= assert_quaternion(q_result, q3_exp_expected,"quaternion_ang_vel_apply result");
+
+    ret = quaternion_ang_vel_apply(q, T4, w, &q_result);
+    ok &= assert_quaternion(q_result, q4_exp_expected,"quaternion_ang_vel_apply result");
+
+    ret = quaternion_ang_vel_apply(q, -1.0, w, &q_result);
+    ok &= assert_ERROR(ret, "quaternion_ang_vel_apply");
+
+    ret = quaternion_ang_vel_apply(q, T4, NULL, &q_result);
+    ok &= assert_ERROR(ret, "quaternion_ang_vel_apply");
+
+    ret = quaternion_ang_vel_apply(q, T4, w, NULL);
+    ok &= assert_ERROR(ret, "quaternion_ang_vel_apply");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
 bool tst_db_001()
 {
     bool ok = true;
@@ -771,6 +865,40 @@ bool tst_arm_012()
     bool ok = true;
     ERROR_CODE ret = RET_OK;
 
+    // Quaternion q1 = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
+    // Quaternion q2 = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
+
+    Quaternion q1 = { .w = SQRT_2/2, .v = {SQRT_2/2, 0.0, 0.0} };
+    Quaternion q2 = { .w = 0.5, .v = {0.5,-0.5, 0.5} };
+
+    double omega1[3] = {M_PI_2, 0.0, 0.0};
+    double omega2[3] = {M_PI_2, 0.0, M_PI_2};
+    double omegaR[3] = {0.0};
+
+    testDescription(__FUNCTION__, "Compute the angular velocity between two frames");
+    ok = preconditions_init(); 
+
+    ret = arm_relative_angular_vel_compute(q1, q2, omega1, omega2, omegaR);
+    ok &= assert_OK(ret, "arm_relative_angular_vel_compute");
+
+    printf("omegaR: %f, %f, %f\n",omegaR[0],omegaR[1],omegaR[2]);
+    Quaternion q1_conj;
+    double omegaR_R[3] = {0.0};
+    Quaternion_conjugate(&q1,&q1_conj);
+    Quaternion_rotate(&q1_conj,omegaR,omegaR_R);
+    printf("omegaR_R: %f, %f, %f\n",omegaR_R[0],omegaR_R[1],omegaR_R[2]);
+
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_arm_013()
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+
     double timeout = 100.0;/*(seconds)*/
     double timeInc = 0.02;/*(seconds)*/
     double time = 0.0;
@@ -791,7 +919,7 @@ bool tst_arm_012()
     double omega2_1[3], omegaR[3];
 
     double rotVector[3]  = {0.5, 0.5, 0.5};
-    double v_expected[3] = {1.0, 0.0, 0.0};
+    double v_expected[3] = {0.0, 0.0, 1.0};
     double rotNorm;
 
     testDescription(__FUNCTION__, "Emulate 2 different IMU sensors rotating");
@@ -859,6 +987,8 @@ bool tst_battery_all()
     ok &= tst_math_002();
     ok &= tst_math_003();
     ok &= tst_math_004();
+    ok &= tst_math_005();
+    ok &= tst_math_006();
 
     ok &= tst_db_001();
     ok &= tst_db_002();

@@ -59,7 +59,7 @@ logging.o: $(SOURCE_DIR)/general/logging.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/general/logging.c -o $(BINARIES_DIR)/$@ 
 
 quaternion.o: $(SOURCE_DIR)/quat_lib/Quaternion.c dirs_create
-	$(CC) -c  $(CPPFLAGS) $(SOURCE_DIR)/quat_lib/Quaternion.c -o $(BINARIES_DIR)/$@ 
+	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/quat_lib/Quaternion.c -o $(BINARIES_DIR)/$@
 
 arm.o: $(SOURCE_DIR)/arm/arm.c vector3.o dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/arm/arm.c -o $(BINARIES_DIR)/$@ 

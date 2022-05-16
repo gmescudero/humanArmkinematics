@@ -45,6 +45,20 @@ ARM_POSE arm_rotate(
 ARM_POSE arm_pose_get();
 
 /**
+ * @brief Compute the angular velocity from one frame
+ * 
+ * @param q1 (input) The orientation of the reference frame
+ * @param q2 (input) The orientation of the second frame
+ * @param angVel1 (input) The angular velocity of the reference frame
+ * @param angVel2 (input) The angular velocity of the second frame
+ * @param angVelR (output) The computed angular velocity
+ * @return ERROR_CODE 
+ */
+ERROR_CODE arm_relative_angular_vel_compute(
+    Quaternion q1, Quaternion q2, 
+    double angVel1[3], double angVel2[3], double angVelR[3]);
+
+/**
  * @brief Calibrate a rotation axis for a 1 DOF joint knowing its angular velocity
  * 
  * @param omegaR (input) Current angular velocity

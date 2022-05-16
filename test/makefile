@@ -11,8 +11,8 @@ BINARIES_DIR = ../bin
 # includes
 INC = \
 	-I$(SOURCE_DIR)/general \
-	-I$(SOURCE_DIR)/arm \
 	-I$(SOURCE_DIR)/quat_lib \
+	-I$(SOURCE_DIR)/arm \
 	-I$(SOURCE_DIR)/math \
 	-I$(SOURCE_DIR)/imu \
 	-I$(SOURCE_DIR)/database \
@@ -33,9 +33,8 @@ CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
 # objects
 # OBJS =  $(BINARIES_DIR)/quaternion.o $(BINARIES_DIR)/arm.o $(BINARIES_DIR)/vector3.o
-OBJS = 	$(BINARIES_DIR)/arm.o  $(BINARIES_DIR)/database.o  $(BINARIES_DIR)/functions.o \
-		$(BINARIES_DIR)/imu.o  $(BINARIES_DIR)/logging.o  $(BINARIES_DIR)/quaternion.o  $(BINARIES_DIR)/vector3.o
-
+OBJS = 	$(BINARIES_DIR)/arm.o  $(BINARIES_DIR)/database.o $(BINARIES_DIR)/functions.o \
+		$(BINARIES_DIR)/imu.o  $(BINARIES_DIR)/logging.o  $(BINARIES_DIR)/quaternion.o  $(BINARIES_DIR)/vector3.o 
 all: tst_lib.o tests.c $(OBJS)
 	$(info building tests ... )
 	$(CC) $(INC) $(OBJS) $(PTHREADSERIAL) $(IMULIB) tests.c tst_lib/*.o -o $(TARGET) -lm -ldl
