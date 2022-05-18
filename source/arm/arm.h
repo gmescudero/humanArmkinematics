@@ -55,6 +55,16 @@ void arm_pose_to_string(
 void arm_pose_print(
     const ARM_POSE pose);
 
+/**
+ * @brief Apply homogeneous transformation
+ * 
+ * @param origin (input) Point to rotate
+ * @param transform (input) Transformation to apply
+ * @param output (output) Transformation point
+ * @return ERROR_CODE 
+ */
+ERROR_CODE arm_homogeneous_transform(ARM_FRAME origin, ARM_FRAME transform, ARM_FRAME *output);
+
 ARM_POSE arm_rotate(
     Quaternion sh2el_orientation,
     Quaternion el2wr_orientation);

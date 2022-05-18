@@ -66,6 +66,22 @@ void arm_pose_to_string(const ARM_POSE pose, char pose_str[])
         pose.wrist.position[0],pose.wrist.position[1],pose.wrist.position[2]);
 }
 
+ERROR_CODE arm_homogeneous_transform(ARM_FRAME origin, ARM_FRAME transform, ARM_FRAME *output) {
+    ERROR_CODE status;
+    double translation[3];
+    ARM_FRAME result;
+
+    /* Get the rotated tcp translation vector */
+    Quaternion_rotate(&origin.orientation, transform.position, translation);
+    /* Set the position part of the converted point */
+    status = vector3_add(origin.position, translation, result.position);
+    /* Set the rotation part of the converted point */
+    if (RET_OK == status) {
+        Quaternion_multiply(&origin.orientation, &transform.orientation, &(output->orientation));
+    }
+    return status;
+}
+
 /**
  * Rotate the arm segments by two given quaternions
  */
@@ -77,6 +93,15 @@ ARM_POSE arm_rotate(
     double sh2el_vector_rot[3];
     double el2wr_vector[3];
     double el2wr_vector_rot[3];
+    Quaternion aux;
+
+    // Compute orientations
+    Quaternion_multiply(&sh2el_orientation, &currentPose.shoulder.orientation, &currentPose.shoulder.orientation);
+
+    Quaternion_multiply(&el2wr_orientation, &sh2el_orientation, &aux);
+    Quaternion_multiply(&aux, &currentPose.elbow.orientation, &currentPose.elbow.orientation);
+
+    Quaternion_copy(&currentPose.elbow.orientation,&currentPose.wrist.orientation);
 
     // Compute arm vectors from joints positions positions
     vector3_substract(currentPose.elbow.position, currentPose.shoulder.position, sh2el_vector);
