@@ -28,9 +28,9 @@ static void sarm_buffer_shift_and_insert(double array[], double value, int size)
 static ARM_POSE currentPose = {
     .shoulder.position = {0.0, 0.0, 0.0},
     .elbow.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
-    .elbow.position = {0.0, 0.0, -DEFAULT_SHOULDER_2_ELBOW_LENGTH},
+    .elbow.position    = {0.0, 0.0, -DEFAULT_SHOULDER_2_ELBOW_LENGTH},
     .elbow.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
-    .wrist.position = {0.0, 0.0, -DEFAULT_TOTAL_ARM_LENGTH},
+    .wrist.position    = {0.0, 0.0, -DEFAULT_TOTAL_ARM_LENGTH},
     .wrist.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
 };
 
