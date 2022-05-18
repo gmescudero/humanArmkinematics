@@ -629,9 +629,12 @@ bool tst_arm_001()
     bool ok = true;
     ARM_POSE arm;
     const ARM_POSE expected = {
-        .shoulderPosition = {0.0, 0.0,  0.0 },
-        .elbowPosition    = {0.0, 0.0, -10.0},
-        .wristPosition    = {0.0, 0.0, -15.0},
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .wrist.position       = {0.0, 0.0, -15.0},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
     };
 
     testDescription(__FUNCTION__, "Get the Arm Joints positions");
@@ -652,9 +655,12 @@ bool tst_arm_002()
     ARM_POSE arm;
     Quaternion q1, q2;
     const ARM_POSE expected = {
-        .shoulderPosition = {0.0, 0.0,  0.0 },
-        .elbowPosition    = {0.0, 0.0, -10.0},
-        .wristPosition    = {0.0, 0.0, -15.0},
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .wrist.position       = {0.0, 0.0, -15.0},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
     };
 
     testDescription(__FUNCTION__, "Get the Arm Joints positions with identity quaternion rotations");
@@ -677,9 +683,12 @@ bool tst_arm_003()
     ARM_POSE arm;
     Quaternion q1, q2;
     const ARM_POSE expected = {
-        .shoulderPosition = {0.0, 0.0,  0.0 },
-        .elbowPosition    = {0.0, 0.0, -10.0},
-        .wristPosition    = {0.0, 5.0, -10.0},
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .wrist.position       = {0.0, 5.0, -10.0},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
     };
 
     testDescription(__FUNCTION__, "Get the Arm Joints positions with identity quaternion rotation for shoulder and 90 degrees rotation in X axis (global frame) for elbow");
@@ -702,14 +711,20 @@ bool tst_arm_004()
     ARM_POSE arm;
     Quaternion q1, q2;
     const ARM_POSE expected1 = {
-        .shoulderPosition = {0.0, 0.0, 0.0 },
-        .elbowPosition    = {0.0, 0.0,-10.0},
-        .wristPosition    = {0.0, 0.0,-15.0},
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .wrist.position       = {0.0, 0.0, -15.0},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
     };
     const ARM_POSE expected2 = {
-        .shoulderPosition = {0.0, 0.0,  0.0},
-        .elbowPosition    = {0.0, 10.0,  0.0},
-        .wristPosition    = {0.0, 15.0, 0.0},
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .wrist.orientation    = {.w = 0.5, .v = {0.5, 0.5, -0.5}},
+        .elbow.position       = {0.0, 10.0,  0.0},
+        .elbow.orientation    = {.w = 0.5, .v = {0.5, 0.5, -0.5}},
+        .wrist.position       = {0.0, 15.0, 0.0},
+        .wrist.orientation    = {.w = 0.5, .v = {0.5, 0.5, -0.5}},
     };
 
     testDescription(__FUNCTION__, "Get the Arm Joints positions with identity quaternion rotation for elbow and 90 degrees rotation in X axis (global frame) for shoulder");
@@ -734,10 +749,13 @@ bool tst_arm_005()
     bool ok = true;
     ARM_POSE arm;
     Quaternion q1, q2;
-    const ARM_POSE expected = { // With the arm extended rotations in Z
-        .shoulderPosition = {0.0, 0.0,  0.0 },
-        .elbowPosition    = {0.0, 0.0, -10.0},
-        .wristPosition    = {0.0, 0.0, -15.0},
+    const ARM_POSE expected = {
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .wrist.position       = {0.0, 0.0, -15.0},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
     };
 
     testDescription(__FUNCTION__, "Rotate joints in Z axis (global frame) to see nothing happens");
@@ -765,15 +783,20 @@ bool tst_arm_006()
     ARM_POSE arm;
     Quaternion q1, q2;
     const ARM_POSE expected1 = { // After elbow rotation in X
-        .shoulderPosition = {0.0, 0.0,  0.0 },
-        .elbowPosition    = {0.0, 0.0, -10.0},
-        .wristPosition    = {0.0, 5.0, -10.0},
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = 0.5, .v = {0.5, 0.5, -0.5}},
+        .wrist.position       = {0.0, 5.0, -10.0},
+        .wrist.orientation    = {.w = 0.5, .v = {0.5, 0.5, -0.5}},
     };
-
     const ARM_POSE expected2 = { // Afrer shoulder rotation in Z
-        .shoulderPosition = {0.0, 0.0,  0.0 },
-        .elbowPosition    = {0.0, 0.0, -10.0},
-        .wristPosition    = {-5.0, 0.0, -10.0},
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = 0.5, .v = {0.5, 0.5, 0.5}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = 0.5, .v = {0.5, 0.5, -0.5}},
+        .wrist.position       = {-5.0, 0.0, -10.0},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
     };
 
     testDescription(__FUNCTION__, "Rotate joints in Z axis (global frame) to see nothing happens");
@@ -801,9 +824,12 @@ bool tst_arm_007()
     ARM_POSE arm;
     Quaternion q1, q2;
     const ARM_POSE expected = {
-        .shoulderPosition = {0.0, 0.0,  0.0 },
-        .elbowPosition    = {-10.0, 0.0, 0.0},
-        .wristPosition    = {-15.0, 0.0, 0.0},
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
+        .elbow.position       = {-10.0, 0.0, 0.0},
+        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
+        .wrist.position       = {-15.0, 0.0, 0.0},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
     };
 
     testDescription(__FUNCTION__, "Get the Arm Joints positions with identity quaternion rotation for elbow and 90 degrees rotation in Y axis (global frame) for shoulder");
@@ -827,9 +853,12 @@ bool tst_arm_008()
     Quaternion q1, q2;
     double eulerAngles[3] = {PI/4, PI/2, 0.0};
     const ARM_POSE expected = {
-        .shoulderPosition = {0.0, 0.0,  0.0 },
-        .elbowPosition    = {-10.0*SQRT_2/2, 10.0*SQRT_2/2, 0.0},
-        .wristPosition    = {-15.0*SQRT_2/2, 15.0*SQRT_2/2, 0.0},
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
+        .elbow.position       = {-10.0*M_SQRT1_2, 10.0*M_SQRT1_2, 0.0},
+        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
+        .wrist.position       = {-15.0*M_SQRT1_2, 15.0*M_SQRT1_2, 0.0},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
     };
 
     testDescription(__FUNCTION__, "Rotate shoulder for a set of ZYX euler angles (45,90,0)");

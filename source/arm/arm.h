@@ -14,14 +14,21 @@
 #include "Quaternion.h"
 #include "errors.h"
 
-typedef struct ARM_POSE_STRUCT{
-    double shoulderPosition[3];
-    double elbowPosition[3];
-    double wristPosition[3];
+#define ARM_POSE_STRING_MAX_LENGTH (128)
+
+typedef struct ARM_FRAME_STRUCT {
+    double position[3];
+    Quaternion orientation;
+} ARM_FRAME;
+
+
+typedef struct ARM_POSE_STRUCT {
+    ARM_FRAME shoulder;
+    ARM_FRAME elbow;
+    ARM_FRAME wrist;
 } ARM_POSE;
 
-typedef struct ARM_ROT_AXIS_CALIB_CONFIG_STRUCT
-{
+typedef struct ARM_ROT_AXIS_CALIB_CONFIG_STRUCT {
     int    window;
     double stepSize;
     double minVel;
@@ -34,6 +41,16 @@ typedef struct ARM_ROT_AXIS_CALIB_CONFIG_STRUCT
 
 void arm_joint_positions_set(
     ARM_POSE initial_arm_pose);
+
+/**
+ * @brief Convert arm pose to a string
+ * 
+ * @param pose (input) Given arm pose
+ * @param pose_str (output) Arm pose converted to string
+ */
+void arm_pose_to_string(
+    const ARM_POSE pose, 
+    char pose_str[]);
 
 void arm_pose_print(
     const ARM_POSE pose);

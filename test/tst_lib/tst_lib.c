@@ -41,9 +41,12 @@ void testCleanUp()
 bool preconditions_initArm()
 {
     static ARM_POSE currentPose = {
-        .shoulderPosition = {0.0, 0.0, 0.0},
-        .elbowPosition    = {0.0, 0.0, -10.0},
-        .wristPosition    = {0.0, 0.0, -15.0},
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .wrist.position       = {0.0, 0.0, -15.0},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
     };
     arm_joint_positions_set(currentPose);
 
@@ -156,18 +159,23 @@ bool assert_quaternion(Quaternion actual, Quaternion expected, const char *descr
 
 bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected, const char *description)
 {
+    char pose_str[ARM_POSE_STRING_MAX_LENGTH] = {'\0'};
     bool ok = true;
 
-    ok &= assert_vector3Equal(actual.shoulderPosition, expected.shoulderPosition, NULL);
-    ok &= assert_vector3Equal(actual.elbowPosition,    expected.elbowPosition, NULL);
-    ok &= assert_vector3Equal(actual.wristPosition,    expected.wristPosition, NULL);
+    ok &= assert_vector3Equal(actual.shoulder.position, expected.shoulder.position, NULL);
+    ok &= assert_vector3Equal(actual.elbow.position,    expected.elbow.position, NULL);
+    ok &= assert_vector3Equal(actual.wrist.position,    expected.wrist.position, NULL);
+
+    // ok &= assert_quaternion(actual.shoulder.orientation, expected.shoulder.orientation, NULL);
+    // ok &= assert_quaternion(actual.elbow.orientation,    expected.elbow.orientation, NULL);
+    // ok &= assert_quaternion(actual.wrist.orientation,    expected.wrist.orientation, NULL);
 
     if (WILL_PRINT(ok) && (NULL != description)) {
         printf("\t -> RESULT: %s (%s)\n",(true == ok)?"PASSED":"FAILED", description);
-        printf("EXPECTED: \n");
-        arm_pose_print(expected);
-        printf("ACTUAL: \n");
-        arm_pose_print(actual);
+        arm_pose_to_string(expected,pose_str);
+        printf("EXPECTED: %s\n",pose_str);
+        arm_pose_to_string(actual,pose_str);
+        printf("ACTUAL: %s\n",pose_str);
     }
 
     return ok;

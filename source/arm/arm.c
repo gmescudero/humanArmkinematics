@@ -23,13 +23,15 @@
 #define DEFAULT_ROT_AXIS_CALIB_STEP_SZ (0.3)
 #define DEFAULT_ROT_AXIS_CALIB_MIN_VEL (3e-1)
 
-
 static void sarm_buffer_shift_and_insert(double array[], double value, int size);
 
 static ARM_POSE currentPose = {
-    .shoulderPosition = {0.0, 0.0, 0.0},
-    .elbowPosition    = {0.0, 0.0, -DEFAULT_SHOULDER_2_ELBOW_LENGTH},
-    .wristPosition    = {0.0, 0.0, -DEFAULT_TOTAL_ARM_LENGTH},
+    .shoulder.position = {0.0, 0.0, 0.0},
+    .elbow.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    .elbow.position = {0.0, 0.0, -DEFAULT_SHOULDER_2_ELBOW_LENGTH},
+    .elbow.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    .wrist.position = {0.0, 0.0, -DEFAULT_TOTAL_ARM_LENGTH},
+    .wrist.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
 };
 
 static ARM_ROT_AXIS_CALIB_CONFIG calibration_config = { 
@@ -48,10 +50,20 @@ void arm_joint_positions_set(ARM_POSE initial_arm_pose)
  */
 void arm_pose_print(const ARM_POSE pose)
 {
-    log_str("Arm pose:");
-    log_str("\t sh: \t<%0.4f>\t<%0.4f>\t<%0.4f> ",pose.shoulderPosition[0],pose.shoulderPosition[1],pose.shoulderPosition[2]);
-    log_str("\t el: \t<%0.4f>\t<%0.4f>\t<%0.4f> ",pose.elbowPosition[0],pose.elbowPosition[1],pose.elbowPosition[2]);
-    log_str("\t wr: \t<%0.4f>\t<%0.4f>\t<%0.4f> ",pose.wristPosition[0],pose.wristPosition[1],pose.wristPosition[2]);
+    char pose_str[ARM_POSE_STRING_MAX_LENGTH] = {'\0'};
+    arm_pose_to_string(pose, pose_str);
+    log_str("%s",pose_str);
+}
+
+void arm_pose_to_string(const ARM_POSE pose, char pose_str[])
+{
+    sprintf(pose_str, "Arm pose:\n"
+        "\t sh: \t<%0.4f>\t<%0.4f>\t<%0.4f> \n"
+        "\t sh: \t<%0.4f>\t<%0.4f>\t<%0.4f> \n"
+        "\t sh: \t<%0.4f>\t<%0.4f>\t<%0.4f> \n", 
+        pose.shoulder.position[0],pose.shoulder.position[1],pose.shoulder.position[2],
+        pose.elbow.position[0],pose.elbow.position[1],pose.elbow.position[2],
+        pose.wrist.position[0],pose.wrist.position[1],pose.wrist.position[2]);
 }
 
 /**
@@ -67,8 +79,8 @@ ARM_POSE arm_rotate(
     double el2wr_vector_rot[3];
 
     // Compute arm vectors from joints positions positions
-    vector3_substract(currentPose.elbowPosition, currentPose.shoulderPosition, sh2el_vector);
-    vector3_substract(currentPose.wristPosition, currentPose.elbowPosition, el2wr_vector);
+    vector3_substract(currentPose.elbow.position, currentPose.shoulder.position, sh2el_vector);
+    vector3_substract(currentPose.wrist.position, currentPose.elbow.position, el2wr_vector);
 
     // Rotate the arm vectors, applying the shoulder rotation to both shoulder and elbow
     Quaternion_rotate(&sh2el_orientation, sh2el_vector, sh2el_vector_rot);
@@ -76,8 +88,8 @@ ARM_POSE arm_rotate(
     Quaternion_rotate(&el2wr_orientation, el2wr_vector, el2wr_vector_rot);
 
     // Compute the resulting elbow and wrist position
-    vector3_add(currentPose.shoulderPosition, sh2el_vector_rot, currentPose.elbowPosition);
-    vector3_add(currentPose.elbowPosition, el2wr_vector_rot, currentPose.wristPosition);
+    vector3_add(currentPose.shoulder.position, sh2el_vector_rot, currentPose.elbow.position);
+    vector3_add(currentPose.elbow.position, el2wr_vector_rot, currentPose.wrist.position);
 
     return currentPose;
 }
