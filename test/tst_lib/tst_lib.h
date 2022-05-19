@@ -33,6 +33,7 @@ bool assert_vector3EqualThreshold(const double actual[3], const double expected[
 bool assert_vector3Equal(const double actual[3], const double expected[3], const char *description);
 bool assert_quaternionThreshold(Quaternion actual, Quaternion expected, double threshold, const char *description);
 bool assert_quaternion(Quaternion actual, Quaternion expected, const char *description);
+bool assert_frame(ARM_FRAME actual, ARM_FRAME expected, const char *description);
 bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected, const char *description);
 bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, double expected[], const char *description);
 

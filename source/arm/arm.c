@@ -25,13 +25,18 @@
 
 static void sarm_buffer_shift_and_insert(double array[], double value, int size);
 
-static ARM_POSE currentPose = {
-    .shoulder.position = {0.0, 0.0, 0.0},
-    .elbow.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
-    .elbow.position    = {0.0, 0.0, -DEFAULT_SHOULDER_2_ELBOW_LENGTH},
-    .elbow.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
-    .wrist.position    = {0.0, 0.0, -DEFAULT_TOTAL_ARM_LENGTH},
-    .wrist.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+static ARM_FRAME kinematic_table[ARM_NUMBER_OF_JOINTS] = {
+    {.position = {DEFAULT_SHOULDER_2_ELBOW_LENGTH, 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Shoulder to elbow
+    {.position = {DEFAULT_ELBOW_2_WRIST_LENGTH   , 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Elbow to wrist
+};
+
+static ARM_POSE current_pose = {
+    .shoulder.position    = {0.0, 0.0, 0.0},
+    .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    .elbow.position       = {0.0, 0.0, -DEFAULT_SHOULDER_2_ELBOW_LENGTH},
+    .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    .wrist.position       = {0.0, 0.0, -DEFAULT_TOTAL_ARM_LENGTH},
+    .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
 };
 
 static ARM_ROT_AXIS_CALIB_CONFIG calibration_config = { 
@@ -42,7 +47,7 @@ static ARM_ROT_AXIS_CALIB_CONFIG calibration_config = {
 
 void arm_joint_positions_set(ARM_POSE initial_arm_pose)
 {
-    memcpy(&currentPose, &initial_arm_pose, sizeof(ARM_POSE));
+    memcpy(&current_pose, &initial_arm_pose, sizeof(ARM_POSE));
 }
 
 /**
@@ -58,12 +63,15 @@ void arm_pose_print(const ARM_POSE pose)
 void arm_pose_to_string(const ARM_POSE pose, char pose_str[])
 {
     sprintf(pose_str, "Arm pose:\n"
-        "\t sh: \t<%0.4f>\t<%0.4f>\t<%0.4f> \n"
-        "\t sh: \t<%0.4f>\t<%0.4f>\t<%0.4f> \n"
-        "\t sh: \t<%0.4f>\t<%0.4f>\t<%0.4f> \n", 
+        "\tsh: <%0.4f, %0.4f, %0.4f>\t| <%0.4f, %0.4f, %0.4f, %0.4f> \n"
+        "\tel: <%0.4f, %0.4f, %0.4f>\t| <%0.4f, %0.4f, %0.4f, %0.4f> \n"
+        "\twr: <%0.4f, %0.4f, %0.4f>\t| <%0.4f, %0.4f, %0.4f, %0.4f> \n",
         pose.shoulder.position[0],pose.shoulder.position[1],pose.shoulder.position[2],
+        pose.shoulder.orientation.w, pose.shoulder.orientation.v[0],pose.shoulder.orientation.v[1],pose.shoulder.orientation.v[2],
         pose.elbow.position[0],pose.elbow.position[1],pose.elbow.position[2],
-        pose.wrist.position[0],pose.wrist.position[1],pose.wrist.position[2]);
+        pose.elbow.orientation.w, pose.elbow.orientation.v[0],pose.elbow.orientation.v[1],pose.elbow.orientation.v[2],
+        pose.wrist.position[0],pose.wrist.position[1],pose.wrist.position[2],
+        pose.wrist.orientation.w, pose.wrist.orientation.v[0],pose.wrist.orientation.v[1],pose.wrist.orientation.v[2]);
 }
 
 ERROR_CODE arm_homogeneous_transform(ARM_FRAME origin, ARM_FRAME transform, ARM_FRAME *output) {
@@ -77,7 +85,52 @@ ERROR_CODE arm_homogeneous_transform(ARM_FRAME origin, ARM_FRAME transform, ARM_
     status = vector3_add(origin.position, translation, result.position);
     /* Set the rotation part of the converted point */
     if (RET_OK == status) {
-        Quaternion_multiply(&origin.orientation, &transform.orientation, &(output->orientation));
+        Quaternion_multiply(&origin.orientation, &transform.orientation, &result.orientation);
+    }
+    /* Set output parameter */
+    if (RET_OK == status) {
+        memcpy(output, &result, sizeof(ARM_FRAME));
+    }
+
+    return status;
+}
+
+ERROR_CODE arm_direct_kinematics_compute(Quaternion joints[ARM_NUMBER_OF_JOINTS], ARM_POSE *output) {
+    ERROR_CODE status = RET_OK;
+    ARM_FRAME transform;
+    ARM_FRAME poses[NUMBER_OF_NODES] = {
+        {.position = {0.0, 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
+        {.position = {0.0, 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
+        {.position = {0.0, 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
+    };
+    int i;
+
+    for (i = 0; (RET_OK == status) && (i < ARM_NUMBER_OF_JOINTS); i++) {
+        
+        // Set transform
+        memcpy(&transform, &kinematic_table[i], sizeof(ARM_FRAME));
+        Quaternion_multiply(&(joints[i]),&(transform.orientation), &(transform.orientation));
+        // Compute next node position and base orientation
+        status = arm_homogeneous_transform(poses[i], transform, &(poses[i+1]));
+    }
+
+    // Set current position
+    if (RET_OK == status) {
+        Quaternion_copy(&poses[ELBOW].orientation, &current_pose.shoulder.orientation);
+        status = vector3_copy(poses[SHOULDER].position, current_pose.shoulder.position);
+    }
+    if (RET_OK == status) {
+        Quaternion_copy(&poses[WRIST].orientation, &current_pose.elbow.orientation);
+        status = vector3_copy(poses[ELBOW].position, current_pose.elbow.position);
+    }
+    if (RET_OK == status) {
+        Quaternion_copy(&poses[WRIST].orientation, &current_pose.wrist.orientation);
+        status = vector3_copy(poses[WRIST].position, current_pose.wrist.position);
+    }
+
+    // Set output parameter
+    if (RET_OK == status) {
+        memcpy(output, &current_pose, sizeof(ARM_POSE));
     }
     return status;
 }
@@ -96,16 +149,16 @@ ARM_POSE arm_rotate(
     Quaternion aux;
 
     // Compute orientations
-    Quaternion_multiply(&sh2el_orientation, &currentPose.shoulder.orientation, &currentPose.shoulder.orientation);
+    Quaternion_multiply(&sh2el_orientation, &current_pose.shoulder.orientation, &current_pose.shoulder.orientation);
 
     Quaternion_multiply(&el2wr_orientation, &sh2el_orientation, &aux);
-    Quaternion_multiply(&aux, &currentPose.elbow.orientation, &currentPose.elbow.orientation);
+    Quaternion_multiply(&aux, &current_pose.elbow.orientation, &current_pose.elbow.orientation);
 
-    Quaternion_copy(&currentPose.elbow.orientation,&currentPose.wrist.orientation);
+    Quaternion_copy(&current_pose.elbow.orientation,&current_pose.wrist.orientation);
 
     // Compute arm vectors from joints positions positions
-    vector3_substract(currentPose.elbow.position, currentPose.shoulder.position, sh2el_vector);
-    vector3_substract(currentPose.wrist.position, currentPose.elbow.position, el2wr_vector);
+    vector3_substract(current_pose.elbow.position, current_pose.shoulder.position, sh2el_vector);
+    vector3_substract(current_pose.wrist.position, current_pose.elbow.position, el2wr_vector);
 
     // Rotate the arm vectors, applying the shoulder rotation to both shoulder and elbow
     Quaternion_rotate(&sh2el_orientation, sh2el_vector, sh2el_vector_rot);
@@ -113,10 +166,10 @@ ARM_POSE arm_rotate(
     Quaternion_rotate(&el2wr_orientation, el2wr_vector, el2wr_vector_rot);
 
     // Compute the resulting elbow and wrist position
-    vector3_add(currentPose.shoulder.position, sh2el_vector_rot, currentPose.elbow.position);
-    vector3_add(currentPose.elbow.position, el2wr_vector_rot, currentPose.wrist.position);
+    vector3_add(current_pose.shoulder.position, sh2el_vector_rot, current_pose.elbow.position);
+    vector3_add(current_pose.elbow.position, el2wr_vector_rot, current_pose.wrist.position);
 
-    return currentPose;
+    return current_pose;
 }
 
 /**
@@ -124,7 +177,7 @@ ARM_POSE arm_rotate(
  */
 ARM_POSE arm_pose_get()
 {
-    return currentPose;
+    return current_pose;
 }
 
 ERROR_CODE arm_relative_angular_vel_compute(

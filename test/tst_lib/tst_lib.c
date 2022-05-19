@@ -157,6 +157,20 @@ bool assert_quaternion(Quaternion actual, Quaternion expected, const char *descr
     return assert_quaternionThreshold(actual, expected, EPSI, description);
 }
 
+bool assert_frame(ARM_FRAME actual, ARM_FRAME expected, const char *description){
+    bool ok = true;
+
+    ok &= assert_vector3Equal(actual.position, expected.position, "arm frame -> pos");
+    ok &= assert_quaternion(actual.orientation, expected.orientation, "arm frame -> ori");
+
+    if (WILL_PRINT(ok) && (NULL != description)) {
+        printf("\t -> RESULT: %s (%s) | ",(true == ok)?"PASSED":"FAILED", description);
+        printf("EXPECTED: EQUAL, ACTUAL: %s\n",(ok)?"EQUAL":"NOT EQUAL");
+    }
+
+    return ok;
+}
+
 bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected, const char *description)
 {
     bool ok = true;

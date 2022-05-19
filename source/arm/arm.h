@@ -16,6 +16,16 @@
 
 #define ARM_POSE_STRING_MAX_LENGTH (128)
 
+#define ARM_NUMBER_OF_JOINTS (2)
+
+enum ARM_KINEMATIC_NODE_ENUM {
+    SHOULDER,
+    ELBOW,
+    WRIST,
+    NUMBER_OF_NODES
+} ARM_KINEMATIC_NODE;
+
+
 typedef struct ARM_FRAME_STRUCT {
     double position[3];
     Quaternion orientation;
@@ -64,6 +74,14 @@ void arm_pose_print(
  * @return ERROR_CODE 
  */
 ERROR_CODE arm_homogeneous_transform(ARM_FRAME origin, ARM_FRAME transform, ARM_FRAME *output);
+/**
+ * @brief Direct kinematics of an arm
+ * 
+ * @param joints (input) Quaternion of each joints
+ * @param output (output) Computed arm pose
+ * @return ERROR_CODE 
+ */
+ERROR_CODE arm_direct_kinematics_compute(Quaternion joints[ARM_NUMBER_OF_JOINTS], ARM_POSE *output);
 
 ARM_POSE arm_rotate(
     Quaternion sh2el_orientation,

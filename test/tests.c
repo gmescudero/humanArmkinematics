@@ -19,7 +19,7 @@ bool tst_math_001()
     double v_expected[] = {1.0+4.0, 2.0+5.0, 3.0+6.0};
 
     testDescription(__FUNCTION__, "Add two vectors ");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret = vector3_add(v1, v2, v_result);
@@ -51,7 +51,7 @@ bool tst_math_002()
     double v_expected[] = {1.0-4.0, 2.0-5.0, 3.0-6.0};
 
     testDescription(__FUNCTION__, "Substract two vectors ");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret = vector3_substract(v1, v2, v_result);
@@ -81,7 +81,7 @@ bool tst_math_003()
     double v_expected[] = {-3.0, 2.0, 1.0};
 
     testDescription(__FUNCTION__, "Rotate a vector 90 degrees in Y axis");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret = vector3_rotate90y(v, v_result);
@@ -108,7 +108,7 @@ bool tst_math_004()
     double v_expected[] = {3.0, 2.0, -1.0};
 
     testDescription(__FUNCTION__, "Rotate a vector -90 degrees in Y axis");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret = vector3_rotateMinus90y(v, v_result);
@@ -145,7 +145,7 @@ bool tst_math_005()
     Quaternion q4_exp_expected = {.w = 1.0, .v = {0.0,0.0,0.0}};
 
     testDescription(__FUNCTION__, "Compute the exponential of a quaternion");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret = quaternion_exponential(q1, &q_result);
@@ -199,7 +199,7 @@ bool tst_math_006()
 
 
     testDescription(__FUNCTION__, "Apply an angular velocity in Z axis to a quaternion");
-    ok = ok = preconditions_init();
+    ok = preconditions_init();
 
     // Test Steps
     ret = quaternion_ang_vel_apply(q, T1, w, &q_result);
@@ -252,7 +252,7 @@ bool tst_math_007()
 
 
     testDescription(__FUNCTION__, "Apply an angular velocity in Y axis to a quaternion");
-    ok = ok = preconditions_init();
+    ok = preconditions_init();
 
     // Test Steps
     ret = quaternion_ang_vel_apply(q, T1, w, &q_result);
@@ -296,7 +296,7 @@ bool tst_math_008()
 
 
     testDescription(__FUNCTION__, "Apply an angular velocity in X axis to a quaternion");
-    ok = ok = preconditions_init();
+    ok = preconditions_init();
 
     // Test Steps
     ret = quaternion_ang_vel_apply(q, T1, w, &q_result);
@@ -331,7 +331,7 @@ bool tst_math_009()
 
 
     testDescription(__FUNCTION__, "Check extreme cases of angular velocity aplication for quaternions");
-    ok = ok = preconditions_init();
+    ok = preconditions_init();
 
     // Test Steps
     ret = quaternion_ang_vel_apply(q, T, w, &q_result);
@@ -362,7 +362,7 @@ bool tst_db_001()
     ERROR_CODE ret;
 
     testDescription(__FUNCTION__, "Initialize database");
-    ok = ok = preconditions_initTraces(); 
+    ok = preconditions_initTraces(); 
 
     // Test Steps
     ret = db_initialize();
@@ -379,7 +379,7 @@ bool tst_db_002()
     ERROR_CODE ret;
 
     testDescription(__FUNCTION__, "Terminate database");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret = db_terminate();
@@ -400,7 +400,7 @@ bool tst_db_003()
     double buff_expected[] = {0.0, 0.0, 0.0};
 
     testDescription(__FUNCTION__, "Read default value from the database");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret = db_read(field,instance,buff);
@@ -431,7 +431,7 @@ bool tst_db_004()
     double buff_expected[] = {1.0, 2.0, 3.0, 4.0};
 
     testDescription(__FUNCTION__, "Write values to a field of the database");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret = db_write(field,instance,buff);
@@ -465,7 +465,7 @@ bool tst_db_005()
     double buff_expected[] = {1.0, 2.0, 3.0, 4.0};
 
     testDescription(__FUNCTION__, "Read a single index of a database field");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret = db_write(field, instance, buff);
@@ -515,7 +515,7 @@ bool tst_db_006()
 
 
     testDescription(__FUNCTION__, "Write a single index into a database field");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ok &= assert_dbFieldDouble(field, instance, buff_expected1, "default field values");
@@ -567,7 +567,7 @@ bool tst_db_007()
     double buff_expected3[4] = {1.0, 2.0, 5.0, 4.0};
 
     testDescription(__FUNCTION__, "Write a single index into a database field starting from non default values");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret = db_write(field, instance, non_default);
@@ -609,7 +609,7 @@ bool tst_db_008()
     double value;
 
     testDescription(__FUNCTION__, "Check reading and writing different instances");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     for (int instance = 0; instance < IMU_MAX_NUMBER; instance++) {
@@ -908,7 +908,7 @@ bool tst_arm_009()
     double v_expected[3];
 
     testDescription(__FUNCTION__, "Test one rotation axis calibration over X axis");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
@@ -958,7 +958,7 @@ bool tst_arm_010()
     double v_expected[3];
 
     testDescription(__FUNCTION__, "Test one rotation axis calibration over Y axis");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
@@ -1008,7 +1008,7 @@ bool tst_arm_011()
     double v_expected[3];
 
     testDescription(__FUNCTION__, "Test one rotation axis calibration over Z axis");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
@@ -1062,7 +1062,7 @@ bool tst_arm_012()
     double omegaR_expected[3] = {0.0,-M_PI_2,0.0};
 
     testDescription(__FUNCTION__, "Compute the angular velocity between two frames");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     ret = arm_relative_angular_vel_compute(q1, q2, omega1, omega2, omegaR);
     ok &= assert_OK(ret, "arm_relative_angular_vel_compute");
@@ -1074,7 +1074,133 @@ bool tst_arm_012()
     return ok;
 }
 
+
 bool tst_arm_013()
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    ARM_FRAME frame = {
+        .position    = {0.0, 0.0, 0.0},
+        .orientation = {.w = 1.0, .v = {0.0,0.0,0.0}},
+    };
+    ARM_FRAME transform = {
+        .position    = {10.0, 0.0, 0.0},
+        .orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    };
+    ARM_FRAME expected1 = {
+        .position    = {10.0, 0.0, 0.0},
+        .orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    };
+    ARM_FRAME expected2 = {
+        .position    = {10.0, 0.0,-10.0},
+        .orientation = {.w = 0.0, .v = {0.0, 1.0, 0.0}},
+    };
+    ARM_FRAME expected3 = {
+        .position    = {0.0, 0.0, -10.0},
+        .orientation = {.w = -M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    };
+    ARM_FRAME expected4 = {
+        .position    = {0.0, 0.0, 0.0},
+        .orientation = {.w =-1.0, .v = {0.0, 0.0, 0.0}},
+    };
+
+    testDescription(__FUNCTION__, "Perform consecutive rotations in the Y axis and translations");
+    ok = preconditions_init(); 
+
+    // Test Steps
+    ret = arm_homogeneous_transform(frame, transform, &frame);
+    ok &= assert_OK(ret, "arm_homogeneous_transform 1");
+    ok &= assert_frame(frame, expected1, "arm_homogeneous_transform result 1");
+
+    ret = arm_homogeneous_transform(frame, transform, &frame);
+    ok &= assert_OK(ret, "arm_homogeneous_transform 2");
+    ok &= assert_frame(frame, expected2, "arm_homogeneous_transform result 2");
+
+    ret = arm_homogeneous_transform(frame, transform, &frame);
+    ok &= assert_OK(ret, "arm_homogeneous_transform 3");
+    ok &= assert_frame(frame, expected3, "arm_homogeneous_transform result 3");
+
+    ret = arm_homogeneous_transform(frame, transform, &frame);
+    ok &= assert_OK(ret, "arm_homogeneous_transform 4");
+    ok &= assert_frame(frame, expected4, "arm_homogeneous_transform result 4");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_arm_014()
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    Quaternion joints[ARM_NUMBER_OF_JOINTS] = {
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+    };
+    ARM_POSE result;
+    const ARM_POSE expected = {
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        .elbow.position       = {10.0, 0.0, 0.0},
+        .elbow.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        .wrist.position       = {15.0, 0.0, 0.0},
+        .wrist.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+    };
+
+    testDescription(__FUNCTION__, "Set the zero position of the arm (T-pose)");
+    ok = preconditions_init(); 
+
+    // Test Steps
+    ret = arm_direct_kinematics_compute(joints, &result);
+    ok &= assert_OK(ret, "arm_direct_kinematics_compute");
+    ok &= assert_armEqual(result, expected, "arm_direct_kinematics_compute result");
+
+    result = arm_pose_get();
+    ok &= assert_armEqual(result, expected, "arm_pose_get result");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+
+bool tst_arm_015()
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    Quaternion joints[ARM_NUMBER_OF_JOINTS] = {
+        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+    };
+    ARM_POSE result;
+    const ARM_POSE expected = {
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .wrist.position       = {0.0, 0.0, -15.0},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    };
+
+    testDescription(__FUNCTION__, "");
+    ok = preconditions_init(); 
+
+    // Test Steps
+    ret = arm_direct_kinematics_compute(joints, &result);
+    ok &= assert_OK(ret, "arm_direct_kinematics_compute");
+    ok &= assert_armEqual(result, expected, "arm_direct_kinematics_compute result");
+
+    result = arm_pose_get();
+    ok &= assert_armEqual(result, expected, "arm_pose_get result");
+
+    arm_pose_print(result);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_arm_xxx()
 {
     bool ok = true;
     ERROR_CODE ret = RET_OK;
@@ -1097,7 +1223,7 @@ bool tst_arm_013()
     double rotNorm;
 
     testDescription(__FUNCTION__, "Emulate 2 different IMU sensors rotating");
-    ok = ok = preconditions_init(); 
+    ok = preconditions_init(); 
 
     // Test Steps
     ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
@@ -1163,7 +1289,6 @@ bool tst_arm_013()
     return ok;
 }
 
-
 bool tst_battery_all()
 {
     bool ok = true;
@@ -1199,6 +1324,9 @@ bool tst_battery_all()
     ok &= tst_arm_010();
     ok &= tst_arm_011();
     ok &= tst_arm_012();
+    ok &= tst_arm_013();
+    ok &= tst_arm_014();
+    ok &= tst_arm_015();
 
     testBatteryReport(__FUNCTION__, "ALL TESTS", ok);
     return ok;
@@ -1211,7 +1339,8 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
 
     ok &= tst_battery_all();
-    ok &= tst_arm_013();
+    // ok &= tst_arm_013();
+    // ok &= tst_arm_xxx();
 
-    return (int)ok;
+    return (ok)? RET_OK : RET_ERROR;
 }

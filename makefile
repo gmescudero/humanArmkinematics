@@ -10,8 +10,6 @@ BINARIES_DIR = $(current_dir)/bin
 # log directories
 LOGGING_DIR = $(current_dir)/log
 DATA_DIR    = $(current_dir)/data
-# test launch script
-RUN_TESTS_SH = $(current_dir)/run_test.sh
 # compiler
 CC = gcc
 LD = g++
@@ -46,8 +44,7 @@ all: $(OBJS) main.o
 
 test: $(OBJS) all
 	cd test && make && cd -
-	echo "#!/bin/sh \n./test/tests" > $(RUN_TESTS_SH)
-	chmod +x $(RUN_TESTS_SH)
+	./test/tests
 
 main.o: $(SOURCE_DIR)/main.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/main.c -o $(BINARIES_DIR)/$@
@@ -80,5 +77,5 @@ dirs_create:
 
 clean:
 	$(info cleaning up workspace ...)
-	rm -rf $(BINARIES_DIR) $(LOGGING_DIR) $(DATA_DIR) $(TARGET) $(RUN_TESTS_SH)
+	rm -rf $(BINARIES_DIR) $(LOGGING_DIR) $(DATA_DIR) $(TARGET)
 	cd test && make clean && cd -
