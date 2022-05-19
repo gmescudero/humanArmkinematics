@@ -19,7 +19,7 @@ bool tst_math_001()
     double v_expected[] = {1.0+4.0, 2.0+5.0, 3.0+6.0};
 
     testDescription(__FUNCTION__, "Add two vectors ");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret = vector3_add(v1, v2, v_result);
@@ -51,7 +51,7 @@ bool tst_math_002()
     double v_expected[] = {1.0-4.0, 2.0-5.0, 3.0-6.0};
 
     testDescription(__FUNCTION__, "Substract two vectors ");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret = vector3_substract(v1, v2, v_result);
@@ -81,7 +81,7 @@ bool tst_math_003()
     double v_expected[] = {-3.0, 2.0, 1.0};
 
     testDescription(__FUNCTION__, "Rotate a vector 90 degrees in Y axis");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret = vector3_rotate90y(v, v_result);
@@ -108,7 +108,7 @@ bool tst_math_004()
     double v_expected[] = {3.0, 2.0, -1.0};
 
     testDescription(__FUNCTION__, "Rotate a vector -90 degrees in Y axis");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret = vector3_rotateMinus90y(v, v_result);
@@ -145,7 +145,7 @@ bool tst_math_005()
     Quaternion q4_exp_expected = {.w = 1.0, .v = {0.0,0.0,0.0}};
 
     testDescription(__FUNCTION__, "Compute the exponential of a quaternion");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret = quaternion_exponential(q1, &q_result);
@@ -199,7 +199,7 @@ bool tst_math_006()
 
 
     testDescription(__FUNCTION__, "Apply an angular velocity in Z axis to a quaternion");
-    ok = preconditions_init();
+    ok = ok = preconditions_init();
 
     // Test Steps
     ret = quaternion_ang_vel_apply(q, T1, w, &q_result);
@@ -252,7 +252,7 @@ bool tst_math_007()
 
 
     testDescription(__FUNCTION__, "Apply an angular velocity in Y axis to a quaternion");
-    ok = preconditions_init();
+    ok = ok = preconditions_init();
 
     // Test Steps
     ret = quaternion_ang_vel_apply(q, T1, w, &q_result);
@@ -296,7 +296,7 @@ bool tst_math_008()
 
 
     testDescription(__FUNCTION__, "Apply an angular velocity in X axis to a quaternion");
-    ok = preconditions_init();
+    ok = ok = preconditions_init();
 
     // Test Steps
     ret = quaternion_ang_vel_apply(q, T1, w, &q_result);
@@ -331,7 +331,7 @@ bool tst_math_009()
 
 
     testDescription(__FUNCTION__, "Check extreme cases of angular velocity aplication for quaternions");
-    ok = preconditions_init();
+    ok = ok = preconditions_init();
 
     // Test Steps
     ret = quaternion_ang_vel_apply(q, T, w, &q_result);
@@ -362,7 +362,7 @@ bool tst_db_001()
     ERROR_CODE ret;
 
     testDescription(__FUNCTION__, "Initialize database");
-    ok = preconditions_initTraces(); 
+    ok = ok = preconditions_initTraces(); 
 
     // Test Steps
     ret = db_initialize();
@@ -379,7 +379,7 @@ bool tst_db_002()
     ERROR_CODE ret;
 
     testDescription(__FUNCTION__, "Terminate database");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret = db_terminate();
@@ -400,7 +400,7 @@ bool tst_db_003()
     double buff_expected[] = {0.0, 0.0, 0.0};
 
     testDescription(__FUNCTION__, "Read default value from the database");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret = db_read(field,instance,buff);
@@ -431,7 +431,7 @@ bool tst_db_004()
     double buff_expected[] = {1.0, 2.0, 3.0, 4.0};
 
     testDescription(__FUNCTION__, "Write values to a field of the database");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret = db_write(field,instance,buff);
@@ -465,7 +465,7 @@ bool tst_db_005()
     double buff_expected[] = {1.0, 2.0, 3.0, 4.0};
 
     testDescription(__FUNCTION__, "Read a single index of a database field");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret = db_write(field, instance, buff);
@@ -515,7 +515,7 @@ bool tst_db_006()
 
 
     testDescription(__FUNCTION__, "Write a single index into a database field");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ok &= assert_dbFieldDouble(field, instance, buff_expected1, "default field values");
@@ -567,7 +567,7 @@ bool tst_db_007()
     double buff_expected3[4] = {1.0, 2.0, 5.0, 4.0};
 
     testDescription(__FUNCTION__, "Write a single index into a database field starting from non default values");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret = db_write(field, instance, non_default);
@@ -609,7 +609,7 @@ bool tst_db_008()
     double value;
 
     testDescription(__FUNCTION__, "Check reading and writing different instances");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     for (int instance = 0; instance < IMU_MAX_NUMBER; instance++) {
@@ -638,7 +638,7 @@ bool tst_arm_001()
     };
 
     testDescription(__FUNCTION__, "Get the Arm Joints positions");
-    preconditions_init();
+    ok = preconditions_init();
 
     // Test Steps
     arm = arm_pose_get();
@@ -664,7 +664,7 @@ bool tst_arm_002()
     };
 
     testDescription(__FUNCTION__, "Get the Arm Joints positions with identity quaternion rotations");
-    preconditions_init();
+    ok = preconditions_init();
 
     // Test Steps
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
@@ -692,7 +692,7 @@ bool tst_arm_003()
     };
 
     testDescription(__FUNCTION__, "Get the Arm Joints positions with identity quaternion rotation for shoulder and 90 degrees rotation in X axis (global frame) for elbow");
-    preconditions_init();
+    ok = preconditions_init();
 
     // Test Steps
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
@@ -728,7 +728,7 @@ bool tst_arm_004()
     };
 
     testDescription(__FUNCTION__, "Get the Arm Joints positions with identity quaternion rotation for elbow and 90 degrees rotation in X axis (global frame) for shoulder");
-    preconditions_init();
+    ok = preconditions_init();
 
     // Test Steps
     arm = arm_pose_get();
@@ -749,7 +749,7 @@ bool tst_arm_005()
     bool ok = true;
     ARM_POSE arm;
     Quaternion q1, q2;
-    const ARM_POSE expected = {
+    const ARM_POSE expected1 = {
         .shoulder.position    = {0.0, 0.0, 0.0},
         .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
         .elbow.position       = {0.0, 0.0, -10.0},
@@ -757,20 +757,39 @@ bool tst_arm_005()
         .wrist.position       = {0.0, 0.0, -15.0},
         .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
     };
+    const ARM_POSE expected2 = {
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = 0.5, .v = {-0.5, 0.5, 0.5}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = 0.5, .v = {-0.5, 0.5, 0.5}},
+        .wrist.position       = {0.0, 0.0, -15.0},
+        .wrist.orientation    = {.w = 0.5, .v = {-0.5, 0.5, 0.5}},
+    };
+    const ARM_POSE expected3 = {
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = 0.5, .v = {-0.5, 0.5, 0.5}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = 0.0, .v = {-M_SQRT1_2, 0.0, M_SQRT1_2}},
+        .wrist.position       = {0.0, 0.0, -15.0},
+        .wrist.orientation    = {.w = 0.0, .v = {-M_SQRT1_2, 0.0, M_SQRT1_2}},
+    };
 
     testDescription(__FUNCTION__, "Rotate joints in Z axis (global frame) to see nothing happens");
-    preconditions_init();
+    ok = preconditions_init();
 
     // Test Steps
+    arm = arm_pose_get();
+    ok &= assert_armEqual(arm, expected1, "arm position before first rot");
+
     Quaternion_fromZRotation(PI/2, &q1);
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q2);
     arm = arm_rotate(q1,q2);
-    ok &= assert_armEqual(arm, expected, "arm position after first rot");
+    ok &= assert_armEqual(arm, expected2, "arm position after first rot");
 
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
     Quaternion_fromZRotation(PI/2, &q2);
     arm = arm_rotate(q1,q2);
-    ok &= assert_armEqual(arm, expected, "arm position after second rot");
+    ok &= assert_armEqual(arm, expected3, "arm position after second rot");
 
     testCleanUp();
     testReport(ok);
@@ -786,21 +805,21 @@ bool tst_arm_006()
         .shoulder.position    = {0.0, 0.0, 0.0},
         .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
         .elbow.position       = {0.0, 0.0, -10.0},
-        .elbow.orientation    = {.w = 0.5, .v = {0.5, 0.5, -0.5}},
+        .elbow.orientation    = {.w = 0.5, .v = {0.5, 0.5, 0.5}},
         .wrist.position       = {0.0, 5.0, -10.0},
-        .wrist.orientation    = {.w = 0.5, .v = {0.5, 0.5, -0.5}},
+        .wrist.orientation    = {.w = 0.5, .v = {0.5, 0.5, 0.5}},
     };
     const ARM_POSE expected2 = { // Afrer shoulder rotation in Z
         .shoulder.position    = {0.0, 0.0, 0.0},
-        .shoulder.orientation = {.w = 0.5, .v = {0.5, 0.5, 0.5}},
+        .shoulder.orientation = {.w = 0.5, .v = {-0.5, 0.5, 0.5}},
         .elbow.position       = {0.0, 0.0, -10.0},
-        .elbow.orientation    = {.w = 0.5, .v = {0.5, 0.5, -0.5}},
+        .elbow.orientation    = {.w = 0.0, .v = {0.0, M_SQRT1_2, M_SQRT1_2}},
         .wrist.position       = {-5.0, 0.0, -10.0},
-        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
+        .wrist.orientation    = {.w = 0.0, .v = {0.0, M_SQRT1_2, M_SQRT1_2}},
     };
 
     testDescription(__FUNCTION__, "Rotate joints in Z axis (global frame) to see nothing happens");
-    preconditions_init();
+    ok = preconditions_init();
 
     // Test Steps
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
@@ -825,15 +844,15 @@ bool tst_arm_007()
     Quaternion q1, q2;
     const ARM_POSE expected = {
         .shoulder.position    = {0.0, 0.0, 0.0},
-        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
+        .shoulder.orientation = {.w = 0.0, .v = {0.0, 1.0, 0.0}},
         .elbow.position       = {-10.0, 0.0, 0.0},
-        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
+        .elbow.orientation    = {.w = 0.0, .v = {0.0, 1.0, 0.0}},
         .wrist.position       = {-15.0, 0.0, 0.0},
-        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
+        .wrist.orientation    = {.w = 0.0, .v = {0.0, 1.0, 0.0}},
     };
 
     testDescription(__FUNCTION__, "Get the Arm Joints positions with identity quaternion rotation for elbow and 90 degrees rotation in Y axis (global frame) for shoulder");
-    preconditions_init();
+    ok = preconditions_init();
 
     // Test Steps
     Quaternion_fromYRotation(PI/2, &q1);
@@ -854,15 +873,15 @@ bool tst_arm_008()
     double eulerAngles[3] = {PI/4, PI/2, 0.0};
     const ARM_POSE expected = {
         .shoulder.position    = {0.0, 0.0, 0.0},
-        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
+        .shoulder.orientation = {.w = 0.0, .v = {0.382683, 0.923880, 0.0}},
         .elbow.position       = {-10.0*M_SQRT1_2, 10.0*M_SQRT1_2, 0.0},
-        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
+        .elbow.orientation    = {.w = 0.0, .v = {0.382683, 0.923880, 0.0}},
         .wrist.position       = {-15.0*M_SQRT1_2, 15.0*M_SQRT1_2, 0.0},
-        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}},
+        .wrist.orientation    = {.w = 0.0, .v = {0.382683, 0.923880, 0.0}},
     };
 
     testDescription(__FUNCTION__, "Rotate shoulder for a set of ZYX euler angles (45,90,0)");
-    preconditions_init();
+    ok = preconditions_init();
 
     // Test Steps
     Quaternion_fromEulerZYX(eulerAngles, &q1);
@@ -889,7 +908,7 @@ bool tst_arm_009()
     double v_expected[3];
 
     testDescription(__FUNCTION__, "Test one rotation axis calibration over X axis");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
@@ -939,7 +958,7 @@ bool tst_arm_010()
     double v_expected[3];
 
     testDescription(__FUNCTION__, "Test one rotation axis calibration over Y axis");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
@@ -989,7 +1008,7 @@ bool tst_arm_011()
     double v_expected[3];
 
     testDescription(__FUNCTION__, "Test one rotation axis calibration over Z axis");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
@@ -1043,7 +1062,7 @@ bool tst_arm_012()
     double omegaR_expected[3] = {0.0,-M_PI_2,0.0};
 
     testDescription(__FUNCTION__, "Compute the angular velocity between two frames");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     ret = arm_relative_angular_vel_compute(q1, q2, omega1, omega2, omegaR);
     ok &= assert_OK(ret, "arm_relative_angular_vel_compute");
@@ -1078,7 +1097,7 @@ bool tst_arm_013()
     double rotNorm;
 
     testDescription(__FUNCTION__, "Emulate 2 different IMU sensors rotating");
-    ok = preconditions_init(); 
+    ok = ok = preconditions_init(); 
 
     // Test Steps
     ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
