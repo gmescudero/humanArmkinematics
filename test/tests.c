@@ -1182,7 +1182,7 @@ bool tst_arm_015()
         .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
     };
 
-    testDescription(__FUNCTION__, "");
+    testDescription(__FUNCTION__, "Apply direct kinematics for a rotation of 90 in Y axis");
     ok = preconditions_init(); 
 
     // Test Steps
@@ -1193,7 +1193,55 @@ bool tst_arm_015()
     result = arm_pose_get();
     ok &= assert_armEqual(result, expected, "arm_pose_get result");
 
-    arm_pose_print(result);
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_arm_016()
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    Quaternion joints[ARM_NUMBER_OF_JOINTS] = {
+        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+    };
+    ARM_POSE result;
+    double upperarm_len = 11.0;
+    double forearm_len  = 6.0;
+    const ARM_POSE expected1 = {
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        .elbow.position       = {11.0, 0.0, 0.0},
+        .elbow.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        .wrist.position       = {17.0, 0.0, 0.0},
+        .wrist.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+    };
+    const ARM_POSE expected2 = {
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .elbow.position       = {0.0, 0.0, -11.0},
+        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .wrist.position       = {0.0, 0.0, -17.0},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    };
+
+    testDescription(__FUNCTION__, "Set a different set of arm lengths and then apply direct kinematics for a rotation of 90 in Y axis");
+    ok = preconditions_init(); 
+
+    // Test Steps
+    ret = arm_segments_length_set(upperarm_len, forearm_len);
+    ok &= assert_OK(ret, "arm_segments_length_set");
+
+    result = arm_pose_get();
+    ok &= assert_armEqual(result, expected1, "arm_pose_get result1");
+
+    ret = arm_direct_kinematics_compute(joints, &result);
+    ok &= assert_OK(ret, "arm_direct_kinematics_compute");
+    ok &= assert_armEqual(result, expected2, "arm_direct_kinematics_compute result");
+
+    result = arm_pose_get();
+    ok &= assert_armEqual(result, expected2, "arm_pose_get result");
 
     testCleanUp();
     testReport(ok);
@@ -1327,6 +1375,7 @@ bool tst_battery_all()
     ok &= tst_arm_013();
     ok &= tst_arm_014();
     ok &= tst_arm_015();
+    ok &= tst_arm_016();
 
     testBatteryReport(__FUNCTION__, "ALL TESTS", ok);
     return ok;
@@ -1339,7 +1388,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
 
     ok &= tst_battery_all();
-    // ok &= tst_arm_013();
+    // ok &= tst_arm_016();
     // ok &= tst_arm_xxx();
 
     return (ok)? RET_OK : RET_ERROR;

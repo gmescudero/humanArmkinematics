@@ -14,7 +14,7 @@
 #include "Quaternion.h"
 #include "errors.h"
 
-#define ARM_POSE_STRING_MAX_LENGTH (128)
+#define ARM_POSE_STRING_MAX_LENGTH (256)
 
 #define ARM_NUMBER_OF_JOINTS (2)
 
@@ -49,6 +49,15 @@ typedef struct ARM_ROT_AXIS_CALIB_CONFIG_STRUCT {
 /* Function Declarations                                                      */
 /******************************************************************************/
 
+/**
+ * @brief Set the length of upper arm and forearm
+ * 
+ * @param upper_arm (input) Length from shoulder to elbow
+ * @param forearm (input) Length from elbow to wrist
+ * @return ERROR_CODE 
+ */
+ERROR_CODE arm_segments_length_set(double upper_arm, double forearm);
+
 void arm_joint_positions_set(
     ARM_POSE initial_arm_pose);
 
@@ -62,6 +71,11 @@ void arm_pose_to_string(
     const ARM_POSE pose, 
     char pose_str[]);
 
+/**
+ * @brief Print arm pose as INFO
+ * 
+ * @param pose (input) Given arm pose
+ */
 void arm_pose_print(
     const ARM_POSE pose);
 
@@ -83,10 +97,22 @@ ERROR_CODE arm_homogeneous_transform(ARM_FRAME origin, ARM_FRAME transform, ARM_
  */
 ERROR_CODE arm_direct_kinematics_compute(Quaternion joints[ARM_NUMBER_OF_JOINTS], ARM_POSE *output);
 
+/**
+ * @brief Apply an incremental rotation to current arm pose
+ * 
+ * @param sh2el_orientation (input) Rotation of upper arm segment
+ * @param el2wr_orientation (input) Rotation of forearm segment
+ * @return ARM_POSE: resulting position
+ */
 ARM_POSE arm_rotate(
     Quaternion sh2el_orientation,
     Quaternion el2wr_orientation);
 
+/**
+ * @brief Retrieve the current postion 
+ * 
+ * @return ARM_POSE: current position
+ */
 ARM_POSE arm_pose_get();
 
 /**
