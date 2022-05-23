@@ -19,7 +19,14 @@
  * @brief The maximum length of a CSV header
  */
 #define CSV_HEADER_MAX_LENGTH (64)
-
+/**
+ * @brief Length of the log file name
+ */
+#define LOG_FILE_NAME_LENGTH (128)
+/**
+ * @brief Length of the csv file name
+ */
+#define CSV_FILE_NAME_LENGTH (128)
 
 /**
  * @brief COM ports structure
@@ -68,6 +75,20 @@ ERROR_CODE millis_sleep(int millis);
  * @return ERROR_CODE: RET_OK on success
  */
 ERROR_CODE log_file_initalize();
+/**
+ * @brief Set a non default log file name
+ * 
+ * @param name (input) Non default log file name
+ * @return ERROR_CODE 
+ */
+ERROR_CODE log_file_name_set(char name[LOG_FILE_NAME_LENGTH]);
+/**
+ * @brief Set a non default csv file name
+ * 
+ * @param name (input) Non default csv file name
+ * @return ERROR_CODE 
+ */
+ERROR_CODE csv_file_name_set(char name[CSV_FILE_NAME_LENGTH]);
 /**
  * @brief Set the tracing level to moderate the ammount of data print
  * 

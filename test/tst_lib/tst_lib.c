@@ -53,12 +53,22 @@ bool preconditions_initArm()
     return true;
 }
 
-bool preconditions_initTraces() {
+bool preconditions_initTraces(const char *test_name) {
     bool ok = true;
     ERROR_CODE ret;
+    char log_file_name[LOG_FILE_NAME_LENGTH];
+    char csv_file_name[LOG_FILE_NAME_LENGTH];
 
     ret = trace_level_set(NONE,DEBUG);
     ok &= assert_OK(ret,"trace_level_set");
+
+    sprintf(log_file_name, "log/%s.log",test_name);
+    ret = log_file_name_set(log_file_name);
+    ok &= assert_OK(ret,"log_file_name_set");
+
+    sprintf(csv_file_name, "data/%s.csv",test_name);
+    ret = csv_file_name_set(csv_file_name);
+    ok &= assert_OK(ret,"csv_file_name_set");
 
     ret = log_file_initalize();
     ok &= assert_OK(ret,"log_file_initalize");
@@ -66,12 +76,12 @@ bool preconditions_initTraces() {
     return ok;
 }
 
-bool preconditions_init()
+bool preconditions_init(const char *test_name)
 {
     bool ok = true;
     ERROR_CODE ret;
 
-    ok = preconditions_initTraces();
+    ok = preconditions_initTraces(test_name);
 
     ret = db_initialize();
     ok &= assert_OK(ret,"db_initialize");

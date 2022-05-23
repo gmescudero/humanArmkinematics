@@ -23,8 +23,8 @@ void testBatteryReport(const char *name, const char *description, bool result);
 void testCleanUp();
 // * PRECONDITIONS ************************************************************
 bool preconditions_initArm();
-bool preconditions_initTraces();
-bool preconditions_init();
+bool preconditions_initTraces(const char *test_name);
+bool preconditions_init(const char *test_name);
 // * ASSERTS ******************************************************************
 bool assert_OK(ERROR_CODE status, const char *description);
 bool assert_ERROR(ERROR_CODE status, const char *description);

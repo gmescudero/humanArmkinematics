@@ -8,12 +8,10 @@
 #define CSV_FILE_NAME "hak_csv"
 #define CSV_FILE_EXTENSION "csv"
 #define CSV_FILE_DIRECTORY "data"
-#define CSV_FILE_NAME_LENGTH (128)
 
 #define LOG_FILE_NAME "hak"
 #define LOG_FILE_DIRECTORY "log"
 #define LOG_FILE_EXTENSION "log"
-#define LOG_FILE_NAME_LENGTH (128)
 
 #define LOG_FILE_TRACE_ERROR   "[ERROR  ] "
 #define LOG_FILE_TRACE_WARNING "[WARNING] "
@@ -34,19 +32,50 @@ int csv_data_num = 0;
 char csv_file_name[CSV_FILE_NAME_LENGTH] = {'\0'};
 char log_file_name[LOG_FILE_NAME_LENGTH] = {'\0'};
 
+char csv_file_name_forced[CSV_FILE_NAME_LENGTH] = {'\0'};
+char log_file_name_forced[LOG_FILE_NAME_LENGTH] = {'\0'};
+
 ERROR_CODE log_file_initalize(){
     ERROR_CODE status;
 
-    slog_file_name_build(LOG_FILE_DIRECTORY,LOG_FILE_NAME,LOG_FILE_EXTENSION, log_file_name);
-    status = sfile_create(log_file_name);
+    if ('\0' == log_file_name_forced[0]) {
+        slog_file_name_build(LOG_FILE_DIRECTORY,LOG_FILE_NAME,LOG_FILE_EXTENSION, log_file_name);
+        status = sfile_create(log_file_name);
+    }
+    else {
+        status = sfile_create(log_file_name_forced);
+    }
+
     if (RET_OK == status) {
-        slog_file_name_build(CSV_FILE_DIRECTORY,CSV_FILE_NAME,CSV_FILE_EXTENSION, csv_file_name);
-        status = sfile_create(csv_file_name);
+        if ('\0' == csv_file_name_forced[0]) {
+            slog_file_name_build(CSV_FILE_DIRECTORY,CSV_FILE_NAME,CSV_FILE_EXTENSION, csv_file_name);
+            status = sfile_create(csv_file_name);
+        }
+        else {
+            status = sfile_create(csv_file_name_forced);
+        }
+
         if (RET_OK == status) {
             scsv_default_headers_set();
         }
     }
     return status;
+}
+
+ERROR_CODE log_file_name_set(char name[LOG_FILE_NAME_LENGTH]) {
+    if (NULL == name) return RET_ARG_ERROR;
+
+    strcpy(log_file_name_forced, name);
+
+    return RET_OK;
+}
+
+ERROR_CODE csv_file_name_set(char name[LOG_FILE_NAME_LENGTH]) {
+    if (NULL == name) return RET_ARG_ERROR;
+
+    strcpy(csv_file_name_forced, name);
+
+    return RET_OK;
 }
 
 ERROR_CODE trace_level_set(TRACE_LEVEL lvl, TRACE_LEVEL file_lvl) {
