@@ -29,6 +29,8 @@
 
 static void sarm_buffer_shift_and_insert(double array[], double value, int size);
 
+static ERROR_CODE sarm_current_position_update(ARM_POSE pose);
+
 static ARM_FRAME arm_kinematic_table[NUMBER_OF_NODES] = {
     {.position = {0.0, 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Base to Shoulder
     {.position = {DEFAULT_SHOULDER_2_ELBOW_LENGTH, 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Shoulder to elbow
@@ -123,6 +125,7 @@ ERROR_CODE arm_direct_kinematics_compute(Quaternion joints[ARM_NUMBER_OF_JOINTS]
         {.position = {0.0, 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
         {.position = {0.0, 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
     };
+    ARM_POSE result;
     int i;
 
     // Check arguments
@@ -141,21 +144,25 @@ ERROR_CODE arm_direct_kinematics_compute(Quaternion joints[ARM_NUMBER_OF_JOINTS]
 
     // Set current position
     if (RET_OK == status) {
-        Quaternion_copy(&poses[SHOULDER].orientation, &arm_current_pose.shoulder.orientation);
-        status = vector3_copy(poses[SHOULDER].position, arm_current_pose.shoulder.position);
+        Quaternion_copy(&poses[SHOULDER].orientation, &result.shoulder.orientation);
+        status = vector3_copy(poses[SHOULDER].position, result.shoulder.position);
     }
     if (RET_OK == status) {
-        Quaternion_copy(&poses[ELBOW].orientation, &arm_current_pose.elbow.orientation);
-        status = vector3_copy(poses[ELBOW].position, arm_current_pose.elbow.position);
+        Quaternion_copy(&poses[ELBOW].orientation, &result.elbow.orientation);
+        status = vector3_copy(poses[ELBOW].position, result.elbow.position);
     }
     if (RET_OK == status) {
-        Quaternion_copy(&poses[WRIST].orientation, &arm_current_pose.wrist.orientation);
-        status = vector3_copy(poses[WRIST].position, arm_current_pose.wrist.position);
+        Quaternion_copy(&poses[WRIST].orientation, &result.wrist.orientation);
+        status = vector3_copy(poses[WRIST].position, result.wrist.position);
     }
 
+    // Update current position
+    if (RET_OK == status) {
+        status = sarm_current_position_update(result);
+    }
     // Set output parameter
     if (RET_OK == status && NULL != output) {
-        memcpy(output, &arm_current_pose, sizeof(ARM_POSE));
+        memcpy(output, &result, sizeof(ARM_POSE));
     }
     return status;
 }
@@ -395,4 +402,40 @@ static void sarm_buffer_shift_and_insert(double array[], double value, int size)
         }
     }
     array[0] = value;
+}
+
+
+static ERROR_CODE sarm_current_position_update(ARM_POSE pose) {
+    ERROR_CODE status = RET_OK;
+    double quat_ori[4];
+
+    dbg_str("Updating arm pose into database");
+
+    // Update database
+    if (RET_OK == status) {
+        status = db_write(DB_ARM_SHOULDER_POSITION, 0, pose.shoulder.position);
+    }
+    if (RET_OK == status) {
+        quaternion_buffer_build(pose.shoulder.orientation, quat_ori);
+        status = db_write(DB_ARM_SHOULDER_ORIENTATION, 0, quat_ori);
+    }
+    if (RET_OK == status) {
+        status = db_write(DB_ARM_ELBOW_POSITION, 0, pose.elbow.position);
+    }
+    if (RET_OK == status) {
+        quaternion_buffer_build(pose.elbow.orientation, quat_ori);
+        status = db_write(DB_ARM_ELBOW_ORIENTATION, 0, quat_ori);
+    }
+    if (RET_OK == status) {
+        status = db_write(DB_ARM_WRIST_POSITION, 0, pose.wrist.position);
+    }
+    if (RET_OK == status) {
+        quaternion_buffer_build(pose.wrist.orientation, quat_ori);
+        status = db_write(DB_ARM_WRIST_ORIENTATION, 0, quat_ori);
+    }
+    // Set current arm pose
+    if (RET_OK == status) {
+        memcpy(&arm_current_pose, &pose, sizeof(ARM_POSE));
+    }
+    return status;
 }

@@ -35,7 +35,7 @@ bool assert_quaternionThreshold(Quaternion actual, Quaternion expected, double t
 bool assert_quaternion(Quaternion actual, Quaternion expected, const char *description);
 bool assert_frame(ARM_FRAME actual, ARM_FRAME expected, const char *description);
 bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected, const char *description);
-bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, double expected[], const char *description);
+bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, const double expected[], const char *description);
 
 
 #endif

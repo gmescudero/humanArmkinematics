@@ -191,7 +191,7 @@ bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected, const char 
     return ok;
 }
 
-bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, double expected[], const char *description){
+bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, const double expected[], const char *description){
     bool ok = true;
     ERROR_CODE ret;
     int size;

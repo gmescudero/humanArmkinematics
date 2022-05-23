@@ -1146,6 +1146,7 @@ bool tst_arm_014()
         .wrist.position       = {15.0, 0.0, 0.0},
         .wrist.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
     };
+    double expected_quat_buff[4];
 
     testDescription(__FUNCTION__, "Set the zero position of the arm (T-pose)");
     ok = preconditions_init(); 
@@ -1154,6 +1155,18 @@ bool tst_arm_014()
     ret = arm_direct_kinematics_compute(joints, &result);
     ok &= assert_OK(ret, "arm_direct_kinematics_compute");
     ok &= assert_armEqual(result, expected, "arm_direct_kinematics_compute result");
+
+    ok &= assert_dbFieldDouble(DB_ARM_SHOULDER_POSITION, 0, expected.shoulder.position, "arm_direct_kinematics_compute db_sh_pos");
+    quaternion_buffer_build(expected.shoulder.orientation,expected_quat_buff);
+    ok &= assert_dbFieldDouble(DB_ARM_SHOULDER_ORIENTATION, 0, expected_quat_buff, "arm_direct_kinematics_compute db_sh_ori");
+
+    ok &= assert_dbFieldDouble(DB_ARM_ELBOW_POSITION, 0, expected.elbow.position, "arm_direct_kinematics_compute db_el_pos");
+    quaternion_buffer_build(expected.elbow.orientation,expected_quat_buff);
+    ok &= assert_dbFieldDouble(DB_ARM_ELBOW_ORIENTATION, 0, expected_quat_buff, "arm_direct_kinematics_compute db_el_ori");
+
+    ok &= assert_dbFieldDouble(DB_ARM_WRIST_POSITION, 0, expected.wrist.position, "arm_direct_kinematics_compute db_wr_pos");
+    quaternion_buffer_build(expected.wrist.orientation,expected_quat_buff);
+    ok &= assert_dbFieldDouble(DB_ARM_WRIST_ORIENTATION, 0, expected_quat_buff, "arm_direct_kinematics_compute db_wr_ori");
 
     result = arm_pose_get();
     ok &= assert_armEqual(result, expected, "arm_pose_get result");
@@ -1173,7 +1186,7 @@ bool tst_arm_015()
         {.w = 1.0, .v = {0.0, 0.0, 0.0}},
     };
     ARM_POSE result;
-    const ARM_POSE expected = {
+    ARM_POSE expected = {
         .shoulder.position    = {0.0, 0.0, 0.0},
         .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
         .elbow.position       = {0.0, 0.0, -10.0},
@@ -1181,6 +1194,7 @@ bool tst_arm_015()
         .wrist.position       = {0.0, 0.0, -15.0},
         .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
     };
+    double expected_quat_buff[4];
 
     testDescription(__FUNCTION__, "Apply direct kinematics for a rotation of 90 in Y axis");
     ok = preconditions_init(); 
@@ -1189,6 +1203,18 @@ bool tst_arm_015()
     ret = arm_direct_kinematics_compute(joints, &result);
     ok &= assert_OK(ret, "arm_direct_kinematics_compute");
     ok &= assert_armEqual(result, expected, "arm_direct_kinematics_compute result");
+
+    ok &= assert_dbFieldDouble(DB_ARM_SHOULDER_POSITION, 0, expected.shoulder.position, "arm_direct_kinematics_compute db_sh_pos");
+    quaternion_buffer_build(expected.shoulder.orientation,expected_quat_buff);
+    ok &= assert_dbFieldDouble(DB_ARM_SHOULDER_ORIENTATION, 0, expected_quat_buff, "arm_direct_kinematics_compute db_sh_ori");
+
+    ok &= assert_dbFieldDouble(DB_ARM_ELBOW_POSITION, 0, expected.elbow.position, "arm_direct_kinematics_compute db_el_pos");
+    quaternion_buffer_build(expected.elbow.orientation,expected_quat_buff);
+    ok &= assert_dbFieldDouble(DB_ARM_ELBOW_ORIENTATION, 0, expected_quat_buff, "arm_direct_kinematics_compute db_el_ori");
+
+    ok &= assert_dbFieldDouble(DB_ARM_WRIST_POSITION, 0, expected.wrist.position, "arm_direct_kinematics_compute db_wr_pos");
+    quaternion_buffer_build(expected.wrist.orientation,expected_quat_buff);
+    ok &= assert_dbFieldDouble(DB_ARM_WRIST_ORIENTATION, 0, expected_quat_buff, "arm_direct_kinematics_compute db_wr_ori");
 
     result = arm_pose_get();
     ok &= assert_armEqual(result, expected, "arm_pose_get result");
@@ -1209,7 +1235,7 @@ bool tst_arm_016()
     ARM_POSE result;
     double upperarm_len = 11.0;
     double forearm_len  = 6.0;
-    const ARM_POSE expected1 = {
+    ARM_POSE expected1 = {
         .shoulder.position    = {0.0, 0.0, 0.0},
         .shoulder.orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
         .elbow.position       = {11.0, 0.0, 0.0},
@@ -1217,7 +1243,7 @@ bool tst_arm_016()
         .wrist.position       = {17.0, 0.0, 0.0},
         .wrist.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
     };
-    const ARM_POSE expected2 = {
+    ARM_POSE expected2 = {
         .shoulder.position    = {0.0, 0.0, 0.0},
         .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
         .elbow.position       = {0.0, 0.0, -11.0},
@@ -1225,6 +1251,7 @@ bool tst_arm_016()
         .wrist.position       = {0.0, 0.0, -17.0},
         .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
     };
+    double expected_quat_buff[4];
 
     testDescription(__FUNCTION__, "Set a different set of arm lengths and then apply direct kinematics for a rotation of 90 in Y axis");
     ok = preconditions_init(); 
@@ -1239,6 +1266,18 @@ bool tst_arm_016()
     ret = arm_direct_kinematics_compute(joints, &result);
     ok &= assert_OK(ret, "arm_direct_kinematics_compute");
     ok &= assert_armEqual(result, expected2, "arm_direct_kinematics_compute result");
+
+    ok &= assert_dbFieldDouble(DB_ARM_SHOULDER_POSITION, 0, expected2.shoulder.position, "arm_direct_kinematics_compute db_sh_pos");
+    quaternion_buffer_build(expected2.shoulder.orientation,expected_quat_buff);
+    ok &= assert_dbFieldDouble(DB_ARM_SHOULDER_ORIENTATION, 0, expected_quat_buff, "arm_direct_kinematics_compute db_sh_ori");
+
+    ok &= assert_dbFieldDouble(DB_ARM_ELBOW_POSITION, 0, expected2.elbow.position, "arm_direct_kinematics_compute db_el_pos");
+    quaternion_buffer_build(expected2.elbow.orientation,expected_quat_buff);
+    ok &= assert_dbFieldDouble(DB_ARM_ELBOW_ORIENTATION, 0, expected_quat_buff, "arm_direct_kinematics_compute db_el_ori");
+
+    ok &= assert_dbFieldDouble(DB_ARM_WRIST_POSITION, 0, expected2.wrist.position, "arm_direct_kinematics_compute db_wr_pos");
+    quaternion_buffer_build(expected2.wrist.orientation,expected_quat_buff);
+    ok &= assert_dbFieldDouble(DB_ARM_WRIST_ORIENTATION, 0, expected_quat_buff, "arm_direct_kinematics_compute db_wr_ori");
 
     result = arm_pose_get();
     ok &= assert_armEqual(result, expected2, "arm_pose_get result");
@@ -1388,7 +1427,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
 
     ok &= tst_battery_all();
-    // ok &= tst_arm_016();
+    // ok &= tst_arm_014();
     // ok &= tst_arm_xxx();
 
     return (ok)? RET_OK : RET_ERROR;
