@@ -5,6 +5,7 @@
 #include "imu.h"
 #include "vector3.h"
 #include "database.h"
+#include "calib.h"
 
 #include "tst_lib.h"
 
@@ -927,15 +928,15 @@ bool tst_arm_009()
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
         // Execute arm calibration of a single rotation axis
-        ret = arm_calibrate_rotation_axis(omegaR,rotVector);
-        ok &= assert_OK(ret, "arm_calibrate_rotation_axis");
+        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
+        ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
         // Dump database data
         ret = db_csv_dump();
         ok &= assert_OK(ret, "db_csv_dump");
     }
     ret = vector3_normalize(omegaR,v_expected);
     ok &= assert_OK(ret, "vector3_normalize");
-    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"arm_calibrate_rotation_axis result");
+    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
 
     // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
 
@@ -977,15 +978,15 @@ bool tst_arm_010()
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
         // Execute arm calibration of a single rotation axis
-        ret = arm_calibrate_rotation_axis(omegaR,rotVector);
-        ok &= assert_OK(ret, "arm_calibrate_rotation_axis");
+        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
+        ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
         // Dump database data
         ret = db_csv_dump();
         ok &= assert_OK(ret, "db_csv_dump");
     }
     ret = vector3_normalize(omegaR,v_expected);
     ok &= assert_OK(ret, "vector3_normalize");
-    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"arm_calibrate_rotation_axis result");
+    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
 
     // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
 
@@ -1027,15 +1028,15 @@ bool tst_arm_011()
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
         // Execute arm calibration of a single rotation axis
-        ret = arm_calibrate_rotation_axis(omegaR,rotVector);
-        ok &= assert_OK(ret, "arm_calibrate_rotation_axis");
+        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
+        ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
         // Dump database data
         ret = db_csv_dump();
         ok &= assert_OK(ret, "db_csv_dump");
     }
     ret = vector3_normalize(omegaR,v_expected);
     ok &= assert_OK(ret, "vector3_normalize");
-    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"arm_calibrate_rotation_axis result");
+    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
 
     // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
 
@@ -1334,8 +1335,8 @@ bool tst_arm_xxx()
         ret = vector3_substract(omega2_1, omega1, omegaR);
         ok &= assert_OK(ret, "vector3_substract");
         /* Calibrate rotation axis */
-        ret = arm_calibrate_rotation_axis(omegaR,rotVector);
-        ok &= assert_OK(ret, "arm_calibrate_rotation_axis");
+        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
+        ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
         /* Set timestamp */
         ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
         ok &= assert_OK(ret, "db_index_write timestamp");
@@ -1368,7 +1369,7 @@ bool tst_arm_xxx()
     ret = vector3_norm(rotVector,&rotNorm);
     ok &= assert_OK(ret, "vector3_norm");
     ok &= assert_double(rotNorm, 1.0, EPSI, "vector3_norm result");
-    ok &= assert_vector3EqualThreshold(rotVector, v_expected, 1e-1, "arm_calibrate_rotation_axis result");
+    ok &= assert_vector3EqualThreshold(rotVector, v_expected, 1e-1, "cal_automatic_rotation_axis_calibrate result");
     printf("rotVector: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
 
     testCleanUp();

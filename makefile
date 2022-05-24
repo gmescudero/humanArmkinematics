@@ -20,7 +20,8 @@ INC = \
 	-I$(SOURCE_DIR)/quat_lib \
 	-I$(SOURCE_DIR)/math \
 	-I$(SOURCE_DIR)/imu \
-	-I$(SOURCE_DIR)/database
+	-I$(SOURCE_DIR)/database \
+	-I$(SOURCE_DIR)/calibration
 	
 # libraries
 IMULIB= -L$(current_dir)/lib -lLpSensor -lstdc++ -lX11
@@ -36,7 +37,7 @@ WARN = -Wall
 CCFLAGS = $(DEBUG) $(OPT) $(WARN)
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
-OBJS =  quaternion.o arm.o vector3.o imu.o functions.o logging.o database.o
+OBJS =  quaternion.o arm.o vector3.o imu.o functions.o logging.o database.o calib.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
@@ -60,6 +61,9 @@ quaternion.o: $(SOURCE_DIR)/quat_lib/Quaternion.c dirs_create
 
 arm.o: $(SOURCE_DIR)/arm/arm.c vector3.o dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/arm/arm.c -o $(BINARIES_DIR)/$@ 
+
+calib.o: $(SOURCE_DIR)/calibration/calib.c vector3.o dirs_create
+	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/calibration/calib.c -o $(BINARIES_DIR)/$@ 
 
 vector3.o: $(SOURCE_DIR)/math/vector3.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/math/vector3.c -o $(BINARIES_DIR)/$@ 

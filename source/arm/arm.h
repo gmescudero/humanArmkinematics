@@ -38,11 +38,6 @@ typedef struct ARM_POSE_STRUCT {
     ARM_FRAME wrist;
 } ARM_POSE;
 
-typedef struct ARM_ROT_AXIS_CALIB_CONFIG_STRUCT {
-    int    window;
-    double stepSize;
-    double minVel;
-} ARM_ROT_AXIS_CALIB_CONFIG;
 
 
 /******************************************************************************/
@@ -129,17 +124,5 @@ ERROR_CODE arm_relative_angular_vel_compute(
     Quaternion q1, Quaternion q2, 
     double angVel1[3], double angVel2[3], double angVelR[3]);
 
-/**
- * @brief Calibrate a rotation axis for a 1 DOF joint knowing its angular velocity
- * 
- * @param omegaR (input) Current angular velocity
- * @param rotationV (input/output) Rotation vector
- * @return ERROR_CODE:
- *  - RET_OK on success
- *  - RET_ERROR otherwise
- */
-ERROR_CODE arm_calibrate_rotation_axis(
-    double omegaR[3],
-    double rotationV[3]);
 
 #endif
