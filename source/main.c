@@ -41,6 +41,9 @@ int main(int argc, char **argv) {
     ERROR_CODE status = RET_OK;
     COM_PORTS discoveredPorts;
     ImuData data[IMUS_NUM];
+    Quaternion predefined_quats[IMUS_NUM];
+    Quaternion calibrated_quats[IMUS_NUM];
+    Quaternion joints[ARM_NUMBER_OF_JOINTS];
     double startTime   = -1.0;
     double currentTime = -1.0;
     double lastTime    = -1.0;
@@ -55,9 +58,13 @@ int main(int argc, char **argv) {
     if (RET_OK == status) {
         log_str("Set the database fields to track into the csv");
         status += db_csv_field_add(DB_IMU_TIMESTAMP,0);
-        status += db_csv_field_add(DB_IMU_QUATERNION,0);
+        // status += db_csv_field_add(DB_IMU_QUATERNION,0);
         // status += db_csv_field_add(DB_IMU_TIMESTAMP,1);
-        status += db_csv_field_add(DB_IMU_QUATERNION,1);
+        // status += db_csv_field_add(DB_IMU_QUATERNION,1);
+        status += db_csv_field_add(DB_ARM_ELBOW_POSITION,0);
+        status += db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
+        status += db_csv_field_add(DB_ARM_WRIST_POSITION,0);
+        status += db_csv_field_add(DB_ARM_WRIST_ORIENTATION,0);
         STATUS_EVAL(status);
     }
 
@@ -80,6 +87,24 @@ int main(int argc, char **argv) {
         STATUS_EVAL(status);
     }
 
+    /* Calibrate IMU quaternions */
+    if (RET_OK == status) {
+        log_str("Calibrate IMU sensors");
+        log_str("STAND IN T-POSE TO CALIBRATE");
+        millis_sleep(2000);
+        if (RET_OK == status) {
+            status = imu_batch_read(IMUS_NUM, data);
+            STATUS_EVAL(status);
+        }
+        if (RET_OK == status) {
+            for (int i = 0; i < IMUS_NUM; i++) {
+                Quaternion_set(1.0, 0.0, 0.0, 0.0, &predefined_quats[i]);
+            }
+            cal_static_imu_quat_calibration_set(predefined_quats, data, IMUS_NUM);
+        }
+        log_str("CALIBRATION_DONE");
+    }
+
     if (RET_OK == status) {
         log_str("Loop reading IMU data to calibrate ");
         do {
@@ -99,6 +124,22 @@ int main(int argc, char **argv) {
                 lastTime    = currentTime;
                 currentTime = data[0].timeStamp - startTime;
             }
+            if (RET_OK == status) {
+                // Get the calibrated quaternions from IMU data
+                status = cal_static_imu_quat_calibration_apply(data, IMUS_NUM, calibrated_quats);
+            }
+            if (RET_OK == status) {
+                // Compute each joint value
+                Quaternion sh_joint_conj;
+                Quaternion_copy(&calibrated_quats[0], &joints[SHOULDER]);
+                Quaternion_conjugate(&joints[SHOULDER], &sh_joint_conj);
+                Quaternion_multiply(&sh_joint_conj, &calibrated_quats[1], &joints[ELBOW]);
+            }
+            if (RET_OK == status) {
+                // Compute the positions
+                status = arm_direct_kinematics_compute(joints, NULL);
+            }
+
             if (RET_OK == status) {
                 // Write csv file
                 status = db_csv_dump();

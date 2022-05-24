@@ -59,7 +59,9 @@ void cal_static_imu_quat_calibration_set(
         cal_imus_calibration_data[i].calibration_done = true;
         // Update database
         quaternion_buffer_build(cal_imus_calibration_data[i].raw_to_calib, db_quat);
-        db_write(DB_IMU_STATIC_QUATERNION_CALIB, i, db_quat);
+        if (RET_OK != db_write(DB_IMU_STATIC_QUATERNION_CALIB, i, db_quat)) {
+            wrn_str("Failed to update IMU%d quaternion calibration data to the database", i);
+        }
         
         dbg_str("\t -> Calibration quaternion for IMU%d: [%f, %f, %f, %f]",i, db_quat[0],db_quat[1],db_quat[2],db_quat[3]);
     }
