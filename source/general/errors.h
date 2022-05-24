@@ -11,6 +11,8 @@
 #ifndef __errors_h__
 #define __errors_h__
 
+#include <stddef.h>
+
 /**
  * @brief Type for error codes
  */

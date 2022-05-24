@@ -155,14 +155,6 @@ ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOI
 
 unsigned char setOffsetIMUs(int v);
 
-void imus_direct_kinematics(ImuData (*imus), ARM_JOINTS (*data_query), bool twoImus, ARM_MEASUREMENT arm_params, bool show);
-
-void printMatrix(float (Mat)[4][4]);
-
-void DH_A(float a, float alpha, float d, float theta, float (*Mat)[4]);
-
-void MultiplyMatrix4x4(float (*Mat)[4], float Mat1[4][4], float Mat2[4][4]);
-
 #endif /*IMU_H*/
 
 #ifdef __cplusplus

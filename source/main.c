@@ -16,7 +16,10 @@
 #include "errors.h"
 #include "general.h"
 #include "database.h"
+#include "calib.h"
 #include <string.h>
+
+#define IMUS_NUM (2) // Set the expected minimum imu sensors for the program to work
 
 #define STATUS_EVAL(code) {if (RET_OK != code && RET_NO_EXEC != status) err_str("[%d] Failed: %d ",__LINE__, code);}
 
@@ -37,7 +40,7 @@ static ERROR_CODE initialize() {
 int main(int argc, char **argv) {
     ERROR_CODE status = RET_OK;
     COM_PORTS discoveredPorts;
-    ImuData data[2];
+    ImuData data[IMUS_NUM];
     double startTime   = -1.0;
     double currentTime = -1.0;
     double lastTime    = -1.0;
@@ -63,6 +66,10 @@ int main(int argc, char **argv) {
         log_str("Retrieve available COM ports");
         status = com_ports_list(&discoveredPorts);
         STATUS_EVAL(status);
+        if (RET_OK == status && discoveredPorts.ports_number < IMUS_NUM) {
+            err_str("Failed to initialize the 2 required IMU sensors");
+            status = RET_ERROR;
+        }
     }
 
     /* Initialize IMU in a given COM port */
@@ -80,7 +87,7 @@ int main(int argc, char **argv) {
             if (RET_OK == status) {
                 // Read IMU data
                 // status = imu_read(0, &data);
-                status = imu_batch_read(2, data);
+                status = imu_batch_read(IMUS_NUM, data);
                 STATUS_EVAL(status);
             }
             if (RET_OK == status && -1.0 == startTime){
