@@ -356,6 +356,13 @@ void quaternion_from_buffer_build(double buffer[4], Quaternion *q) {
     q->v[2] = buffer[3];
 }
 
+void quaternion_from_float_buffer_build(float buffer[4], Quaternion *q) {
+    q->w    = (double)buffer[0];
+    q->v[0] = (double)buffer[1];
+    q->v[1] = (double)buffer[2];
+    q->v[2] = (double)buffer[3];
+}
+
 void quaternion_print(Quaternion q, const char *name) {
     if (NULL != name)
         log_str("Quaternion %s: %f, [%f, %f, %f]",name, q.w, q.v[0], q.v[1], q.v[2]);

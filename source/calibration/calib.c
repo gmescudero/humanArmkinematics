@@ -4,7 +4,6 @@
 #include "vector3.h"
 #include "general.h"
 #include "constants.h"
-#include "Quaternion.h"
 #include "arm.h"
 
 typedef struct CAL_ROT_AXIS_CALIB_CONFIG_STRUCT {
@@ -13,27 +12,74 @@ typedef struct CAL_ROT_AXIS_CALIB_CONFIG_STRUCT {
     double minVel;
 } CAL_ROT_AXIS_CALIB_CONFIG;
 
+typedef struct CAL_STATIC_CALIBRATION_STRUCT {
+    bool        calibration_done;
+    Quaternion  raw_to_calib;
+} CAL_STATIC_CALIBRATION;
 
 static void scal_buffer_shift_and_insert(double array[], double value, int size);
 
 
-static CAL_ROT_AXIS_CALIB_CONFIG arm_calibration_config = { 
+static CAL_STATIC_CALIBRATION cal_imus_calibration_data[IMU_MAX_NUMBER] = {
+    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
+    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
+    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
+    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
+    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
+    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
+    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
+};
+
+static CAL_ROT_AXIS_CALIB_CONFIG cal_rot_axis_autocalib_config = { 
     .window   = DEFAULT_ROT_AXIS_CALIB_WINDOW,
     .stepSize = DEFAULT_ROT_AXIS_CALIB_STEP_SZ,
     .minVel   = DEFAULT_ROT_AXIS_CALIB_MIN_VEL
 };
 
+void cal_static_imu_quat_calibration_set(
+    Quaternion known_quat[IMU_MAX_NUMBER],
+    ImuData imus_data[IMU_MAX_NUMBER],
+    int number_of_imus)
+{
+    Quaternion imu_quat;
+    Quaternion imu_quat_conj;
+    int i;
+    
+    if (number_of_imus > 0) log_str("Calibrating quaternion data of %d IMU sensors", number_of_imus);
 
-ERROR_CODE cal_static_imu_quat_calibration(
-    ARM_POSE predefined_pose, 
-    Quaternion upper_imu_quat, 
-    Quaternion forearm_imu_quat,
-    Quaternion *upper_imu_calibration,
-    Quaternion *forearm_imu_calibration)
+    for (i = 0; i < number_of_imus; i++) {
+        // Set the quaternion struct from the IMU data
+        quaternion_from_float_buffer_build(imus_data[i].q, &imu_quat);
+        // Conjugate the imu reading
+        Quaternion_conjugate(&imu_quat, &imu_quat_conj);
+        // Compute the raw to calibrated quaternion
+        Quaternion_multiply(&imu_quat_conj, &(known_quat[i]), &(cal_imus_calibration_data[i].raw_to_calib));
+        // Set the imu calibration as "done"
+        cal_imus_calibration_data[i].calibration_done = true;
+    }
+}
+
+ERROR_CODE cal_static_imu_quat_calibration_apply(
+    ImuData imus_data[IMU_MAX_NUMBER],
+    int number_of_imus,
+    Quaternion calibrated_data[IMU_MAX_NUMBER])
 {
     ERROR_CODE status = RET_OK;
+    Quaternion imu_quat;
+    int i;
 
-    /* TODO */
+    for (i = 0; RET_OK == status && i < number_of_imus; i++) {
+        if (false == cal_imus_calibration_data[i].calibration_done) {
+            err_str("Imu %d not calibrated!", i);
+            status = RET_ERROR;
+        }
+        else {
+            // Set the quaternion struct from the IMU data  
+            quaternion_from_float_buffer_build(imus_data[i].q, &imu_quat);
+            // Apply the calibration
+            Quaternion_multiply(&(cal_imus_calibration_data[i].raw_to_calib), &imu_quat, &(calibrated_data[i]));
+        }
+    }
 
     return status;
 }
@@ -48,9 +94,9 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
     static double dJk_t[DEFAULT_ROT_AXIS_CALIB_WINDOW] = {0.0};
     static double dJk_r[DEFAULT_ROT_AXIS_CALIB_WINDOW] = {0.0};
 
-    int m           = arm_calibration_config.window;
-    double lambda   = arm_calibration_config.stepSize;
-    double minVel   = arm_calibration_config.minVel;
+    int m           = cal_rot_axis_autocalib_config.window;
+    double lambda   = cal_rot_axis_autocalib_config.stepSize;
+    double minVel   = cal_rot_axis_autocalib_config.minVel;
 
     double t,r;
     double tempV[3];

@@ -96,6 +96,10 @@ void imu_batch_terminate(){
     num_imus = 0;
 }
 
+unsigned char imu_number_get() {
+    return num_imus;
+}
+
 ERROR_CODE imu_read(unsigned int index, ImuData *imu) {
     // dbg_str("%s -> Read IMU %d out of %d",__FUNCTION__, index, num_imus);
     ERROR_CODE status;

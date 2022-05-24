@@ -895,188 +895,7 @@ bool tst_arm_008()
     return ok;
 }
 
-bool tst_arm_009() 
-{
-    bool ok = true;
-    ERROR_CODE ret = RET_OK;
-
-    double rotVector[3]    = {0.5,0.5,0.5};
-    double timeout = 20.0;/*(seconds)*/
-    double timeInc = 0.02;/*(seconds)*/
-    double time = 0.0;
-
-    double omegaR[] = {1000.0,0.0,0.0};
-    double v_expected[3];
-
-    testDescription(__FUNCTION__, "Test one rotation axis calibration over X axis");
-    ok = preconditions_init(__FUNCTION__); 
-
-    // Test Steps
-    ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
-    ret += db_csv_field_add(DB_CALIB_OMEGA,0);
-    ret += db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
-    ret += db_csv_field_add(DB_CALIB_ERROR,0);
-    ret += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
-    ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,0);
-    ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
-    ok &= assert_OK(ret, "db csv fields add");
-
-    while (ok && time<timeout)
-    {
-        // Set timestamp
-        ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
-        ok &= assert_OK(ret, "db_index_write timestamp");
-        time += timeInc;
-        // Execute arm calibration of a single rotation axis
-        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
-        ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
-        // Dump database data
-        ret = db_csv_dump();
-        ok &= assert_OK(ret, "db_csv_dump");
-    }
-    ret = vector3_normalize(omegaR,v_expected);
-    ok &= assert_OK(ret, "vector3_normalize");
-    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
-
-    // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
-
-    testCleanUp();
-    testReport(ok);
-    return ok;
-}
-
-bool tst_arm_010() 
-{
-    bool ok = true;
-    ERROR_CODE ret = RET_OK;
-
-    double rotVector[3]    = {0.5,0.5,0.5};
-    double timeout = 20.0;/*(seconds)*/
-    double timeInc = 0.02;/*(seconds)*/
-    double time = 0.0;
-
-    double omegaR[] = {0.0,1000.0,0.0};
-    double v_expected[3];
-
-    testDescription(__FUNCTION__, "Test one rotation axis calibration over Y axis");
-    ok = preconditions_init(__FUNCTION__); 
-
-    // Test Steps
-    ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
-    ret += db_csv_field_add(DB_CALIB_OMEGA,0);
-    ret += db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
-    ret += db_csv_field_add(DB_CALIB_ERROR,0);
-    ret += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
-    ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,0);
-    ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
-    ok &= assert_OK(ret, "db csv fields add");
-
-    while (ok && time<timeout)
-    {
-        // Set timestamp
-        ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
-        ok &= assert_OK(ret, "db_index_write timestamp");
-        time += timeInc;
-        // Execute arm calibration of a single rotation axis
-        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
-        ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
-        // Dump database data
-        ret = db_csv_dump();
-        ok &= assert_OK(ret, "db_csv_dump");
-    }
-    ret = vector3_normalize(omegaR,v_expected);
-    ok &= assert_OK(ret, "vector3_normalize");
-    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
-
-    // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
-
-    testCleanUp();
-    testReport(ok);
-    return ok;
-}
-
-bool tst_arm_011() 
-{
-    bool ok = true;
-    ERROR_CODE ret = RET_OK;
-
-    double rotVector[3]    = {0.5,0.5,0.5};
-    double timeout = 5.0;/*(seconds)*/
-    double timeInc = 0.02;/*(seconds)*/
-    double time = 0.0;
-
-    double omegaR[] = {0.0,0.0,1000.0};
-    double v_expected[3];
-
-    testDescription(__FUNCTION__, "Test one rotation axis calibration over Z axis");
-    ok = preconditions_init(__FUNCTION__); 
-
-    // Test Steps
-    ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
-    ret += db_csv_field_add(DB_CALIB_OMEGA,0);
-    ret += db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
-    ret += db_csv_field_add(DB_CALIB_ERROR,0);
-    ret += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
-    ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,0);
-    ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
-    ok &= assert_OK(ret, "db csv fields add");
-
-    while (ok && time<timeout)
-    {
-        // Set timestamp
-        ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
-        ok &= assert_OK(ret, "db_index_write timestamp");
-        time += timeInc;
-        // Execute arm calibration of a single rotation axis
-        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
-        ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
-        // Dump database data
-        ret = db_csv_dump();
-        ok &= assert_OK(ret, "db_csv_dump");
-    }
-    ret = vector3_normalize(omegaR,v_expected);
-    ok &= assert_OK(ret, "vector3_normalize");
-    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
-
-    // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
-
-    testCleanUp();
-    testReport(ok);
-    return ok;
-}
-
-bool tst_arm_012()
-{
-    bool ok = true;
-    ERROR_CODE ret = RET_OK;
-
-    // Quaternion q1 = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
-    // Quaternion q2 = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
-
-    Quaternion q1 = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
-    Quaternion q2 = { .w = 0.5, .v = {0.5,-0.5, 0.5} };
-
-    double omega1[3] = {0.0, 0.0, M_PI_2};
-    double omega2[3] = {M_PI_2, 0.0, M_PI_2};
-    double omegaR[3] = {0.0};
-
-    double omegaR_expected[3] = {0.0,-M_PI_2,0.0};
-
-    testDescription(__FUNCTION__, "Compute the angular velocity between two frames");
-    ok = preconditions_init(__FUNCTION__); 
-
-    ret = arm_relative_angular_vel_compute(q1, q2, omega1, omega2, omegaR);
-    ok &= assert_OK(ret, "arm_relative_angular_vel_compute");
-    ok &= assert_vector3Equal(omegaR, omegaR_expected, "arm_relative_angular_vel_compute result");
-    // printf("omegaR: %f, %f, %f\n",omegaR[0],omegaR[1],omegaR[2]);
-
-    testCleanUp();
-    testReport(ok);
-    return ok;
-}
-
-
-bool tst_arm_013()
+bool tst_arm_009()
 {
     bool ok = true;
     ERROR_CODE ret = RET_OK;
@@ -1130,7 +949,7 @@ bool tst_arm_013()
     return ok;
 }
 
-bool tst_arm_014()
+bool tst_arm_010()
 {
     bool ok = true;
     ERROR_CODE ret = RET_OK;
@@ -1178,7 +997,7 @@ bool tst_arm_014()
 }
 
 
-bool tst_arm_015()
+bool tst_arm_011()
 {
     bool ok = true;
     ERROR_CODE ret = RET_OK;
@@ -1225,7 +1044,7 @@ bool tst_arm_015()
     return ok;
 }
 
-bool tst_arm_016()
+bool tst_arm_012()
 {
     bool ok = true;
     ERROR_CODE ret = RET_OK;
@@ -1288,7 +1107,248 @@ bool tst_arm_016()
     return ok;
 }
 
-bool tst_arm_xxx()
+bool tst_arm_013()
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+
+    // Quaternion q1 = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
+    // Quaternion q2 = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
+
+    Quaternion q1 = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
+    Quaternion q2 = { .w = 0.5, .v = {0.5,-0.5, 0.5} };
+
+    double omega1[3] = {0.0, 0.0, M_PI_2};
+    double omega2[3] = {M_PI_2, 0.0, M_PI_2};
+    double omegaR[3] = {0.0};
+
+    double omegaR_expected[3] = {0.0,-M_PI_2,0.0};
+
+    testDescription(__FUNCTION__, "Compute the angular velocity between two frames");
+    ok = preconditions_init(__FUNCTION__); 
+
+    ret = arm_relative_angular_vel_compute(q1, q2, omega1, omega2, omegaR);
+    ok &= assert_OK(ret, "arm_relative_angular_vel_compute");
+    ok &= assert_vector3Equal(omegaR, omegaR_expected, "arm_relative_angular_vel_compute result");
+    // printf("omegaR: %f, %f, %f\n",omegaR[0],omegaR[1],omegaR[2]);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_cal_001() 
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+
+    double rotVector[3]    = {0.5,0.5,0.5};
+    double timeout = 20.0;/*(seconds)*/
+    double timeInc = 0.02;/*(seconds)*/
+    double time = 0.0;
+
+    double omegaR[] = {1000.0,0.0,0.0};
+    double v_expected[3];
+
+    testDescription(__FUNCTION__, "Test one rotation axis calibration over X axis");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
+    ret += db_csv_field_add(DB_CALIB_OMEGA,0);
+    ret += db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
+    ret += db_csv_field_add(DB_CALIB_ERROR,0);
+    ret += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
+    ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,0);
+    ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
+    ok &= assert_OK(ret, "db csv fields add");
+
+    while (ok && time<timeout)
+    {
+        // Set timestamp
+        ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
+        ok &= assert_OK(ret, "db_index_write timestamp");
+        time += timeInc;
+        // Execute arm calibration of a single rotation axis
+        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
+        ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
+        // Dump database data
+        ret = db_csv_dump();
+        ok &= assert_OK(ret, "db_csv_dump");
+    }
+    ret = vector3_normalize(omegaR,v_expected);
+    ok &= assert_OK(ret, "vector3_normalize");
+    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
+
+    // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_cal_002() 
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+
+    double rotVector[3]    = {0.5,0.5,0.5};
+    double timeout = 20.0;/*(seconds)*/
+    double timeInc = 0.02;/*(seconds)*/
+    double time = 0.0;
+
+    double omegaR[] = {0.0,1000.0,0.0};
+    double v_expected[3];
+
+    testDescription(__FUNCTION__, "Test one rotation axis calibration over Y axis");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
+    ret += db_csv_field_add(DB_CALIB_OMEGA,0);
+    ret += db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
+    ret += db_csv_field_add(DB_CALIB_ERROR,0);
+    ret += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
+    ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,0);
+    ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
+    ok &= assert_OK(ret, "db csv fields add");
+
+    while (ok && time<timeout)
+    {
+        // Set timestamp
+        ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
+        ok &= assert_OK(ret, "db_index_write timestamp");
+        time += timeInc;
+        // Execute arm calibration of a single rotation axis
+        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
+        ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
+        // Dump database data
+        ret = db_csv_dump();
+        ok &= assert_OK(ret, "db_csv_dump");
+    }
+    ret = vector3_normalize(omegaR,v_expected);
+    ok &= assert_OK(ret, "vector3_normalize");
+    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
+
+    // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_cal_003() 
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+
+    double rotVector[3]    = {0.5,0.5,0.5};
+    double timeout = 5.0;/*(seconds)*/
+    double timeInc = 0.02;/*(seconds)*/
+    double time = 0.0;
+
+    double omegaR[] = {0.0,0.0,1000.0};
+    double v_expected[3];
+
+    testDescription(__FUNCTION__, "Test one rotation axis calibration over Z axis");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
+    ret += db_csv_field_add(DB_CALIB_OMEGA,0);
+    ret += db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
+    ret += db_csv_field_add(DB_CALIB_ERROR,0);
+    ret += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
+    ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,0);
+    ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
+    ok &= assert_OK(ret, "db csv fields add");
+
+    while (ok && time<timeout)
+    {
+        // Set timestamp
+        ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
+        ok &= assert_OK(ret, "db_index_write timestamp");
+        time += timeInc;
+        // Execute arm calibration of a single rotation axis
+        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
+        ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
+        // Dump database data
+        ret = db_csv_dump();
+        ok &= assert_OK(ret, "db_csv_dump");
+    }
+    ret = vector3_normalize(omegaR,v_expected);
+    ok &= assert_OK(ret, "vector3_normalize");
+    ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
+
+    // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+
+bool tst_cal_004() 
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    int number_of_imus = IMU_MAX_NUMBER;
+    ImuData imu_readings[IMU_MAX_NUMBER] = {
+        {.q = {1.0, 0.0, 0.0, 0.0}},
+        {.q = {1.0, 0.0, 0.0, 0.0}},
+        {.q = {1.0, 0.0, 0.0, 0.0}},
+        {.q = {1.0, 0.0, 0.0, 0.0}},
+        {.q = {1.0, 0.0, 0.0, 0.0}},
+        {.q = {1.0, 0.0, 0.0, 0.0}},
+        {.q = {1.0, 0.0, 0.0, 0.0}},
+    };
+    Quaternion predef_quats[IMU_MAX_NUMBER] = {
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+    };
+    Quaternion calibrated_quats[IMU_MAX_NUMBER];
+    int i;
+    double eulerZYX[3];
+
+    testDescription(__FUNCTION__, "Check static calibration for a set of emulated IMU sensors. Check the predefined pose and calibrated pose match for the same set of IMU readings");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    i = 0;
+    Quaternion_fromXRotation(90, &(predef_quats[i++]));
+    Quaternion_fromYRotation(90, &(predef_quats[i++]));
+    Quaternion_fromZRotation(90, &(predef_quats[i++]));
+    eulerZYX[0] = 90; eulerZYX[1] = 90; eulerZYX[2] = 0;
+    Quaternion_fromEulerZYX(eulerZYX, &(predef_quats[i++]));
+    eulerZYX[0] = -90; eulerZYX[1] = 0; eulerZYX[2] = 90;
+    Quaternion_fromEulerZYX(eulerZYX, &(predef_quats[i++]));
+    eulerZYX[0] = -30; eulerZYX[1] = 15; eulerZYX[2] = 45;
+    Quaternion_fromEulerZYX(eulerZYX, &(predef_quats[i++]));
+    eulerZYX[0] = 135; eulerZYX[1] = 0; eulerZYX[2] = -15;
+    Quaternion_fromEulerZYX(eulerZYX, &(predef_quats[i++]));
+
+    cal_static_imu_quat_calibration_set(predef_quats, imu_readings, number_of_imus);
+
+    ret = cal_static_imu_quat_calibration_apply(imu_readings,number_of_imus,calibrated_quats);
+    ok &= assert_OK(ret, "cal_static_imu_quat_calibration_apply");
+
+    for (i = 0; true == ok && i < number_of_imus; i++) {
+        ok &= assert_quaternion(calibrated_quats[i], predef_quats[i], "cal_static_imu_quat_calibration_apply result");
+    }
+
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+
+bool tst_cal_xxx()
 {
     bool ok = true;
     ERROR_CODE ret = RET_OK;
@@ -1413,9 +1473,11 @@ bool tst_battery_all()
     ok &= tst_arm_011();
     ok &= tst_arm_012();
     ok &= tst_arm_013();
-    ok &= tst_arm_014();
-    ok &= tst_arm_015();
-    ok &= tst_arm_016();
+
+    ok &= tst_cal_001();
+    ok &= tst_cal_002();
+    ok &= tst_cal_003();
+    ok &= tst_cal_004();
 
     testBatteryReport(__FUNCTION__, "ALL TESTS", ok);
     return ok;
@@ -1426,10 +1488,11 @@ int main(int argc, char **argv)
     bool ok = true;
 
     testSetTraceLevel(SILENT_NO_ERROR);
+    // testSetTraceLevel(ALL_TRACES);
 
     ok &= tst_battery_all();
     // ok &= tst_arm_014();
-    // ok &= tst_arm_xxx();
+    // ok &= tst_cal_xxx();
 
     return (ok)? RET_OK : RET_ERROR;
 }
