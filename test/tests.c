@@ -1319,12 +1319,15 @@ bool tst_cal_004()
     ok = preconditions_init(__FUNCTION__); 
 
     // Test Steps
+    ret += db_csv_field_add(DB_IMU_STATIC_QUATERNION_CALIB,0);
+    ret += db_csv_field_add(DB_IMU_STATIC_QUATERNION_CALIB,1);
+    ok &= assert_OK(ret, "db csv fields add");
+
     i = 0;
+    Quaternion_set(1.0, 0.0, 0.0, 0.0, &(predef_quats[i++]));
     Quaternion_fromXRotation(90, &(predef_quats[i++]));
     Quaternion_fromYRotation(90, &(predef_quats[i++]));
     Quaternion_fromZRotation(90, &(predef_quats[i++]));
-    eulerZYX[0] = 90; eulerZYX[1] = 90; eulerZYX[2] = 0;
-    Quaternion_fromEulerZYX(eulerZYX, &(predef_quats[i++]));
     eulerZYX[0] = -90; eulerZYX[1] = 0; eulerZYX[2] = 90;
     Quaternion_fromEulerZYX(eulerZYX, &(predef_quats[i++]));
     eulerZYX[0] = -30; eulerZYX[1] = 15; eulerZYX[2] = 45;
@@ -1332,15 +1335,27 @@ bool tst_cal_004()
     eulerZYX[0] = 135; eulerZYX[1] = 0; eulerZYX[2] = -15;
     Quaternion_fromEulerZYX(eulerZYX, &(predef_quats[i++]));
 
+    ret = cal_static_imu_quat_calibration_apply(imu_readings,number_of_imus,calibrated_quats);
+    ok &= assert_ERROR(ret, "cal_static_imu_quat_calibration_apply before calibration");
+
+    /* Dump database data */
+    ret = db_csv_dump();
+    ok &= assert_OK(ret, "db_csv_dump");
+
+    /* Perform calibration */
     cal_static_imu_quat_calibration_set(predef_quats, imu_readings, number_of_imus);
 
+    /* Dump database data */
+    ret = db_csv_dump();
+    ok &= assert_OK(ret, "db_csv_dump");
+
+    /* Apply calibration to the same imu readings */
     ret = cal_static_imu_quat_calibration_apply(imu_readings,number_of_imus,calibrated_quats);
     ok &= assert_OK(ret, "cal_static_imu_quat_calibration_apply");
 
     for (i = 0; true == ok && i < number_of_imus; i++) {
         ok &= assert_quaternion(calibrated_quats[i], predef_quats[i], "cal_static_imu_quat_calibration_apply result");
     }
-
 
     testCleanUp();
     testReport(ok);

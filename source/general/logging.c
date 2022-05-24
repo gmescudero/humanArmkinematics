@@ -40,21 +40,20 @@ ERROR_CODE log_file_initalize(){
 
     if ('\0' == log_file_name_forced[0]) {
         slog_file_name_build(LOG_FILE_DIRECTORY,LOG_FILE_NAME,LOG_FILE_EXTENSION, log_file_name);
-        status = sfile_create(log_file_name);
     }
     else {
-        status = sfile_create(log_file_name_forced);
+        strcpy(log_file_name, log_file_name_forced);
     }
+    status = sfile_create(log_file_name);
 
     if (RET_OK == status) {
         if ('\0' == csv_file_name_forced[0]) {
             slog_file_name_build(CSV_FILE_DIRECTORY,CSV_FILE_NAME,CSV_FILE_EXTENSION, csv_file_name);
-            status = sfile_create(csv_file_name);
         }
         else {
-            status = sfile_create(csv_file_name_forced);
+            strcpy(csv_file_name, csv_file_name_forced);
         }
-
+        status = sfile_create(csv_file_name);
         if (RET_OK == status) {
             scsv_default_headers_set();
         }
