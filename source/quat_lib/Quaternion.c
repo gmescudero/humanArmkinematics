@@ -292,7 +292,7 @@ ERROR_CODE quaternion_exponential(Quaternion q, Quaternion *q_exp) {
 
     status = vector3_norm(q.v,&norm);
     if (RET_OK == status) {
-        if (EPSI > norm) {
+        if (QUATERNION_EPS > norm) {
             q_exp->w    = exp(q.w);
             q_exp->v[0] = 0.0;
             q_exp->v[1] = 0.0;
@@ -317,11 +317,11 @@ ERROR_CODE quaternion_ang_vel_apply(Quaternion q, double T, double ang_vel[3], Q
     Quaternion q_result;
 
     // Check arguments
-    if (-EPSI > T) return RET_ARG_ERROR;
+    if (-QUATERNION_EPS > T) return RET_ARG_ERROR;
     if (NULL == ang_vel) return RET_ARG_ERROR;
     if (NULL == q_rot) return RET_ARG_ERROR;
 
-    if (EPSI > T) {
+    if (QUATERNION_EPS > T) {
         Quaternion_copy(&q, q_rot);
         wrn_str("Time period is 0 for quaternion angular velocity apply");
     }
@@ -347,6 +347,13 @@ void quaternion_buffer_build(Quaternion q, double buffer[4]) {
     buffer[1] = q.v[0];
     buffer[2] = q.v[1];
     buffer[3] = q.v[2];
+}
+
+void quaternion_float_buffer_build(Quaternion q, float buffer[4]) {
+    buffer[0] = (float)q.w;
+    buffer[1] = (float)q.v[0];
+    buffer[2] = (float)q.v[1];
+    buffer[3] = (float)q.v[2];
 }
 
 void quaternion_from_buffer_build(double buffer[4], Quaternion *q) {

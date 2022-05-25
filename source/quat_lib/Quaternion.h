@@ -26,7 +26,7 @@
 /**
  * Maximum floating point difference that is considered as equal.
  */
-#define QUATERNION_EPS (1e-4)
+#define QUATERNION_EPS (1e-9)
 
 /**
  * Data structure to hold a quaternion.
@@ -182,6 +182,13 @@ ERROR_CODE quaternion_ang_vel_apply(Quaternion q, double T, double ang_vel[3], Q
  * @param buffer (output) Buffer being w,x,y,z
  */
 void quaternion_buffer_build(Quaternion q, double buffer[4]);
+/**
+ * @brief Set a quaternion into a 4x1 float buffer 
+ * 
+ * @param q (input) Quaternion 
+ * @param buffer (output) Float buffer being w,x,y,z
+ */
+void quaternion_float_buffer_build(Quaternion q, float buffer[4]);
 /**
  * @brief Set a quaternion structure from a 4x1 buffer
  * 

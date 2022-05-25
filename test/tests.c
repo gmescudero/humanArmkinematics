@@ -1287,7 +1287,6 @@ bool tst_cal_003()
     return ok;
 }
 
-
 bool tst_cal_004() 
 {
     bool ok = true;
@@ -1355,6 +1354,64 @@ bool tst_cal_004()
 
     for (i = 0; true == ok && i < number_of_imus; i++) {
         ok &= assert_quaternion(calibrated_quats[i], predef_quats[i], "cal_static_imu_quat_calibration_apply result");
+    }
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+
+bool tst_cal_005() 
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    int number_of_imus = 1;
+    Quaternion quat;
+
+    ImuData imu_readings_1[1]  = {  {.q = {M_SQRT1_2, 0.0, -M_SQRT1_2, 0.0}}    };// y: -90
+    Quaternion predef_quats[1] = {  {.w = 1.0, .v = {0.0, 0.0, 0.0}} };// expected_quats_1
+
+    ImuData imu_readings_2[1]      = {  {.q = {1.0, 0.0, 0.0, 0.0}} };
+    Quaternion expected_quats_2[1] = {  {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}}  };//y: 90
+
+    ImuData imu_readings_3[1]      = {  {.q = {M_SQRT1_2, 0.0, 0.0, M_SQRT1_2}} }; // z: 90
+    Quaternion expected_quats_3[1] = {  {.w = 0.5, .v = {0.5, 0.5, 0.5}}  }; // x: 90 z: 90
+
+    Quaternion calibrated_quats[1];
+
+    int i;
+
+    testDescription(__FUNCTION__, "Check the static calibration of IMU sensors quaternion data in different positions");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+
+    /* Perform calibration */
+    cal_static_imu_quat_calibration_set(predef_quats, imu_readings_1, number_of_imus);
+
+    /* Apply calibration to the same imu readings */
+    ret = cal_static_imu_quat_calibration_apply(imu_readings_1, number_of_imus, calibrated_quats);
+    ok &= assert_OK(ret, "cal_static_imu_quat_calibration_apply 1");
+
+    for (i = 0; true == ok && i < number_of_imus; i++) {
+        ok &= assert_quaternion(calibrated_quats[i], predef_quats[i], "cal_static_imu_quat_calibration_apply result 1");
+    }
+
+    /* Apply calibration after moving 90 in Y axis */
+    ret = cal_static_imu_quat_calibration_apply(imu_readings_2, number_of_imus, calibrated_quats);
+    ok &= assert_OK(ret, "cal_static_imu_quat_calibration_apply 2");
+
+    for (i = 0; true == ok && i < number_of_imus; i++) {
+        ok &= assert_quaternion(calibrated_quats[i], expected_quats_2[i], "cal_static_imu_quat_calibration_apply result 2");
+    }
+
+    /* Apply calibration after moving 90 in Y axis and 90 in Z axis*/
+    ret = cal_static_imu_quat_calibration_apply(imu_readings_3, number_of_imus, calibrated_quats);
+    ok &= assert_OK(ret, "cal_static_imu_quat_calibration_apply 3");
+
+    for (i = 0; true == ok && i < number_of_imus; i++) {
+        ok &= assert_quaternion(calibrated_quats[i], expected_quats_3[i], "cal_static_imu_quat_calibration_apply result 3");
     }
 
     testCleanUp();
@@ -1493,6 +1550,7 @@ bool tst_battery_all()
     ok &= tst_cal_002();
     ok &= tst_cal_003();
     ok &= tst_cal_004();
+    ok &= tst_cal_005();
 
     testBatteryReport(__FUNCTION__, "ALL TESTS", ok);
     return ok;
@@ -1508,6 +1566,7 @@ int main(int argc, char **argv)
     ok &= tst_battery_all();
     // ok &= tst_arm_014();
     // ok &= tst_cal_xxx();
+    // ok &= tst_cal_005();
 
     return (ok)? RET_OK : RET_ERROR;
 }

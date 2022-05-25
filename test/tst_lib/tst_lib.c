@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "tst_lib.h"
 #include "arm.h"
 #include "vector3.h"
@@ -17,23 +18,37 @@ void testDescription(const char *name, const char *description) {
     printf("Test %s: %s \n", name, description);
 }
 
-void testReport(bool result)
-{
+void testReport(bool result) {
     printf("\t -> RESULT: %s \n",(true == result)?"PASSED":"FAILED");
 }
 
-void testBatteryReport(const char *name, const char *description, bool result)
-{
+void testBatteryReport(const char *name, const char *description, bool result) {
     printf("\n");
     printf("******************************************************************************** \n");
     printf("***** Test battery %s: %s -> RESULT: %s \n", name, description, (true == result)?"PASSED":"FAILED");
     printf("******************************************************************************** \n");
 }
 
-void testCleanUp()
-{
+void testCleanUp() {
     db_terminate();
     preconditions_initArm();
+}
+
+double testRandomDoubleGenerate() {
+    return ((double)rand() - 0.5*(double)RAND_MAX);
+}
+
+Quaternion testRandomQuaternionGenerate() {
+    Quaternion gen_quat;
+    double w  = testRandomDoubleGenerate();
+    double v1 = testRandomDoubleGenerate();
+    double v2 = testRandomDoubleGenerate();
+    double v3 = testRandomDoubleGenerate();
+    
+    Quaternion_set(w, v1, v2, v3, &gen_quat);
+    Quaternion_normalize(&gen_quat, &gen_quat);
+
+    return gen_quat;
 }
 
 // * PRECONDITIONS ************************************************************

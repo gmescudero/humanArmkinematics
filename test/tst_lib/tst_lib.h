@@ -21,6 +21,8 @@ void testDescription(const char *name, const char *description);
 void testReport(bool result);
 void testBatteryReport(const char *name, const char *description, bool result);
 void testCleanUp();
+double testRandomDoubleGenerate();
+Quaternion testRandomQuaternionGenerate();
 // * PRECONDITIONS ************************************************************
 bool preconditions_initArm();
 bool preconditions_initTraces(const char *test_name);
