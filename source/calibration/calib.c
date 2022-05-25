@@ -65,7 +65,6 @@ void cal_static_imu_quat_calibration_set(
         
         dbg_str("\t -> Calibration quaternion for IMU%d: [%f, %f, %f, %f]",i, db_quat[0],db_quat[1],db_quat[2],db_quat[3]);
     }
-
 }
 
 ERROR_CODE cal_static_imu_quat_calibration_apply(
@@ -86,7 +85,7 @@ ERROR_CODE cal_static_imu_quat_calibration_apply(
             // Set the quaternion struct from the IMU data  
             quaternion_from_float_buffer_build(imus_data[i].q, &imu_quat);
             // Apply the calibration
-            Quaternion_multiply(&(cal_imus_calibration_data[i].raw_to_calib), &imu_quat, &(calibrated_data[i]));
+            Quaternion_multiply(&imu_quat, &(cal_imus_calibration_data[i].raw_to_calib), &(calibrated_data[i]));
         }
     }
 

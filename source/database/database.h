@@ -3,7 +3,6 @@
 #define __database_h__
 
 #include "errors.h"
-#include <semaphore.h>
 
 #define DB_FIELD_NAME_MAX_LENGTH  (128)
 #define DB_FIELD_IDENTIFIER_INVALID (-1)
@@ -110,5 +109,14 @@ ERROR_CODE db_csv_field_add(DB_FIELD_IDENTIFIER field, int instance);
  * @return ERROR_CODE 
  */
 ERROR_CODE db_csv_dump(void);
+/**
+ * @brief Print a database field throug console
+ * 
+ * @param field (input)
+ * @param instance 
+ * @return ERROR_CODE 
+ */
+ERROR_CODE db_field_print(DB_FIELD_IDENTIFIER field, int instance);
+
 
 #endif /* __database_h__ */

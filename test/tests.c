@@ -1,4 +1,13 @@
-
+/**
+ * @file tests.c
+ * @author German Moreno Escudero
+ * @brief Test file
+ * @version 0.1
+ * @date 2022-05-16
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include "Quaternion.h"
 #include "constants.h"
 #include "arm.h"
@@ -1376,7 +1385,7 @@ bool tst_cal_005()
     Quaternion expected_quats_2[1] = {  {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}}  };//y: 90
 
     ImuData imu_readings_3[1]      = {  {.q = {M_SQRT1_2, 0.0, 0.0, M_SQRT1_2}} }; // z: 90
-    Quaternion expected_quats_3[1] = {  {.w = 0.5, .v = {0.5, 0.5, 0.5}}  }; // x: 90 z: 90
+    Quaternion expected_quats_3[1] = {  {.w = 0.5, .v = {-0.5, 0.5, 0.5}}  }; // x: -90 z: 90
 
     Quaternion calibrated_quats[1];
 

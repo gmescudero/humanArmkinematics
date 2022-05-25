@@ -2,12 +2,15 @@
 #include "database.h"
 #include "general.h"
 #include "imu.h"
+#include <semaphore.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
 #define DB_INSTANCE_MAX_NUM (10)
+
+#define DB_MULTIPLICITY_MAX_NUM (10)
 
 typedef struct DB_FIELD_STRUCT {
     DB_FIELD_IDENTIFIER identifier;
@@ -337,6 +340,29 @@ ERROR_CODE db_csv_dump(void) {
 
     dbg_str("Write CSV data row");
     csv_log(csv_buff);
+    return status;
+}
+
+ERROR_CODE db_field_print(DB_FIELD_IDENTIFIER field, int instance) {
+    ERROR_CODE status = RET_OK;
+    char field_str[256];
+    char partial_str[16];
+    double values[DB_MULTIPLICITY_MAX_NUM];
+    // Check arguments
+    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
+    if (0 > instance || database[field].instances <= instance) return RET_ARG_ERROR;
+
+    status = db_read(field, instance, values);
+    if (RET_OK == status) {
+        sprintf(field_str, "field %s (%d): ", database[field].name, instance);
+    }
+    for (int i = 0; RET_OK == status && i < database[field].multiplicity; i++) {
+        sprintf(partial_str, "%f ",values[i]);
+        strcat(field_str, partial_str);
+    }
+
+    log_str("%s",field_str);
+
     return status;
 }
 

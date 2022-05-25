@@ -127,6 +127,7 @@ int main(int argc, char **argv) {
             if (RET_OK == status) {
                 // Get the calibrated quaternions from IMU data
                 status = cal_static_imu_quat_calibration_apply(data, IMUS_NUM, calibrated_quats);
+                STATUS_EVAL(status);
             }
             if (RET_OK == status) {
                 // Compute each joint value
@@ -138,15 +139,21 @@ int main(int argc, char **argv) {
             if (RET_OK == status) {
                 // Compute the positions
                 status = arm_direct_kinematics_compute(joints, NULL);
+                STATUS_EVAL(status);
             }
 
+            if (RET_OK == status) {
+                // Print the wrist position through console
+                status = db_field_print(DB_ARM_WRIST_POSITION, 0);
+                STATUS_EVAL(status);
+            }
             if (RET_OK == status) {
                 // Write csv file
                 status = db_csv_dump();
                 STATUS_EVAL(status);
             }
             // dbg_str("time: %f (oldTime: %f)",currentTime,lastTime);
-        } while ((RET_OK == status || RET_NO_EXEC == status) && 20 > currentTime && currentTime - lastTime > EPSI);
+        } while ((RET_OK == status || RET_NO_EXEC == status) && 50 > currentTime && currentTime - lastTime > EPSI);
     } 
 
     // log_str("Rotation vector obtained: [%f, %f, %f]", rotVector[0], rotVector[1], rotVector[2]);
