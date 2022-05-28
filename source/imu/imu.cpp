@@ -46,6 +46,7 @@ ERROR_CODE imu_initialize(const char *com_port){
 
     // Initialize LPMS manager if not done already
     if (NULL == manager){
+        dbg_str("%s -> Initializing LPMS sensor manager factory",__FUNCTION__);
         manager = LpmsSensorManagerFactory();   
     }
 
@@ -73,28 +74,35 @@ ERROR_CODE imu_initialize(const char *com_port){
 
 ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num){
     ERROR_CODE status = RET_OK;
+    unsigned int i;
 
     dbg_str("%s -> Connect %d IMUs out of %d",__FUNCTION__, imus_num, com_ports.ports_number);
 
     // Check arguments
     if (imus_num > com_ports.ports_number || imus_num <= 0) return RET_ARG_ERROR;
 
-    for (unsigned int i = 0; i < imus_num && RET_OK == status; i++) {
+    for (i = 0; i < imus_num && RET_OK == status; i++) {
         status = imu_initialize(com_ports.ports_names[i]);
     }
 
     return status;
 }
 
-void imu_batch_terminate(){
+void imu_all_sensors_remove(){
     // Removes the initialized sensor
     for (int i = 0; i < num_imus; i++) {
         manager->removeSensor(lpms[i]);
     }
-    // Deletes LpmsSensorManager object
-    delete manager;
     // Set total number of IMUs to 0
     num_imus = 0;
+    manager = NULL;
+}
+
+void imu_terminate(){
+    // Removes the initialized sensors
+    imu_all_sensors_remove();
+    // Deletes LpmsSensorManager object
+    delete manager;
 }
 
 int imu_number_get() {

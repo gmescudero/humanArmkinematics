@@ -98,9 +98,13 @@ ERROR_CODE imu_initialize(const char *com_port);
 ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num);
 
 /**
+ * @brief Remove initialized sensors from the handler
+ */
+void imu_all_sensors_remove();
+/**
  * @brief Terminate all imu connections and handlers
  */
-void imu_batch_terminate();
+void imu_terminate();
 
 /**
  * @brief Return total number of initialized IMU sensors

@@ -32,7 +32,7 @@ void testBatteryReport(const char *name, const char *description, bool result) {
 }
 
 void testCleanUp() {
-    if (0 != imu_number_get()) imu_batch_terminate();
+    if (0 != imu_number_get()) imu_all_sensors_remove();
     db_terminate();
     preconditions_initArm();
 }
@@ -103,6 +103,25 @@ bool preconditions_init(const char *test_name)
 
     ret = db_initialize();
     ok &= assert_OK(ret,"db_initialize");
+
+    return ok;
+}
+
+bool preconditions_init_imus(const char *test_name)
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    COM_PORTS discoveredPorts;
+
+    ok = preconditions_init(test_name);
+
+    ret = com_ports_list(&discoveredPorts);
+    ok &= assert_OK(ret, "com_ports_list");
+    ok &= assert_int_greater(discoveredPorts.ports_number, 1, "com_ports_list result");
+    ok &= assert_string_not_empty(discoveredPorts.ports_names[0], "com_ports_list result");
+
+    ret = imu_batch_initialize(discoveredPorts, discoveredPorts.ports_number);
+    ok &= assert_OK(ret, "imu_batch_initialize");
 
     return ok;
 }

@@ -27,6 +27,7 @@ Quaternion testRandomQuaternionGenerate();
 bool preconditions_initArm();
 bool preconditions_initTraces(const char *test_name);
 bool preconditions_init(const char *test_name);
+bool preconditions_init_imus(const char *test_name);
 // * ASSERTS ******************************************************************
 bool assert_OK(ERROR_CODE status, const char *description);
 bool assert_ERROR(ERROR_CODE status, const char *description);

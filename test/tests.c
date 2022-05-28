@@ -1540,18 +1540,41 @@ bool tst_imu_single_001()
     ret = imu_initialize(discoveredPorts.ports_names[0]);
     ok &= assert_OK(ret, "imu_initialize");
 
+    ret = imu_initialize(NULL);
+    ok &= assert_ERROR(ret,"imu_initialize NULL arg0");
+
+    ret = imu_initialize("invalid");
+    ok &= assert_ERROR(ret,"imu_initialize invalid arg0");
+
     testCleanUp();
     testReport(ok);
     return ok;
 }
-#endif
 
-#if 1 <= IMUS_CONNECTED
+bool tst_imu_single_002() 
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    ImuData data;
+
+    testDescription(__FUNCTION__, "");
+    ok = preconditions_init_imus(__FUNCTION__); 
+
+    // Test Steps
+    ret = imu_read(0, &data);
+    ok &= assert_OK(ret, "imu_read");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
 bool tst_battery_imu_single()
 {
     bool ok = true;
 
     ok &= tst_imu_single_001();
+    ok &= tst_imu_single_002();
 
     testBatteryReport(__FUNCTION__, "SINGLE IMU", ok);
     return ok;
@@ -1617,7 +1640,9 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    ok &= tst_battery_all();
+    // ok &= tst_battery_all();
+    ok &= tst_battery_imu_single();
+
     // ok &= tst_arm_014();
     // ok &= tst_cal_xxx();
     // ok &= tst_cal_005();

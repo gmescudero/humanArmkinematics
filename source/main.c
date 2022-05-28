@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
     // log_str("Rotation vector obtained: [%f, %f, %f]", rotVector[0], rotVector[1], rotVector[2]);
 
     log_str("Terminate all IMU connections");
-    imu_batch_terminate();
+    imu_terminate();
 
     log_str("Clean memory and environment");
     status += db_terminate();
