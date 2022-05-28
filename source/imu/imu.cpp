@@ -51,6 +51,7 @@ ERROR_CODE imu_initialize(const char *com_port){
 
     // Add a new sensor to the list
     lpms[index] = manager->addSensor(DEVICE_LPMS_U2, com_port);
+    lpms[index]->setVerbose(false);
     if (NULL == lpms[index]) return RET_ERROR;
 
     // Retrieve cthe connection status
@@ -96,8 +97,8 @@ void imu_batch_terminate(){
     num_imus = 0;
 }
 
-unsigned char imu_number_get() {
-    return num_imus;
+int imu_number_get() {
+    return (int)num_imus;
 }
 
 ERROR_CODE imu_read(unsigned int index, ImuData *imu) {

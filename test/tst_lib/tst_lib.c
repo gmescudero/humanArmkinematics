@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "tst_lib.h"
 #include "arm.h"
 #include "vector3.h"
 #include "general.h"
 #include "errors.h"
+#include "imu.h"
 
 LOG_LEVEL testTraceLevel = SILENT;
 
@@ -30,6 +32,7 @@ void testBatteryReport(const char *name, const char *description, bool result) {
 }
 
 void testCleanUp() {
+    if (0 != imu_number_get()) imu_batch_terminate();
     db_terminate();
     preconditions_initArm();
 }
@@ -113,7 +116,7 @@ bool assert_OK(ERROR_CODE status, const char *description) {
         ok = false;
     }
     if (WILL_PRINT(ok) && (NULL != description)) {
-        printf("\t -> RESULT: %s (%s) | NOT EXPECTED: %d, ACTUAL: %d\n",
+        printf("\t -> RESULT: %s (%s) | EXPECTED: %d, ACTUAL: %d\n",
             (true == ok)?"PASSED":"FAILED", description, RET_OK, status);
     }
     return ok;
@@ -131,14 +134,79 @@ bool assert_ERROR(ERROR_CODE status, const char *description) {
     return ok;
 }
 
+bool assert_int(int actual, int expected, const char *description) {
+    bool ok = true;
+
+    ok = (actual == expected);
+    if (WILL_PRINT(ok) && (NULL != description)) {
+        printf("\t -> RESULT: %s (%s) | EXPECTED: %d, ACTUAL: %d\n", 
+            (true == ok)?"PASSED":"FAILED", description, expected, actual);
+    }
+    return ok;
+}
+
+bool assert_int_greater(int actual, int expected, const char *description) {
+    bool ok = true;
+
+    ok = (actual >= expected);
+    if (WILL_PRINT(ok) && (NULL != description)) {
+        printf("\t -> RESULT: %s (%s) | EXPECTED: >=%d, ACTUAL: %d\n", 
+            (true == ok)?"PASSED":"FAILED", description, expected, actual);
+    }
+    return ok;
+}
+
 bool assert_double(double actual, double expected, double threshold, const char *description) {
     bool ok = true;
-    ERROR_CODE ret;
 
     ok = fabs(actual - expected) < threshold;
     if (WILL_PRINT(ok) && (NULL != description)) {
         printf("\t -> RESULT: %s (%s) | EXPECTED: %f, ACTUAL: %f\n", 
             (true == ok)?"PASSED":"FAILED", description, expected, actual);
+    }
+    return ok;
+}
+
+bool assert_string(const char *actual, const char *expected, const char *description) {
+    bool ok = true;
+
+    ok = (0 == strcmp(actual, expected));
+    if (WILL_PRINT(ok) && (NULL != description)) {
+        printf("\t -> RESULT: %s (%s) | EXPECTED: \"%s\", ACTUAL: \"%s\"\n", 
+            (true == ok)?"PASSED":"FAILED", description, expected, actual);
+    }
+    return ok;
+}
+
+bool assert_string_not_equal(const char *actual, const char *expected, const char *description) {
+    bool ok = true;
+
+    ok = (0 != strcmp(actual, expected));
+    if (WILL_PRINT(ok) && (NULL != description)) {
+        printf("\t -> RESULT: %s (%s) | EXPECTED: not \"%s\", ACTUAL: \"%s\"\n", 
+            (true == ok)?"PASSED":"FAILED", description, expected, actual);
+    }
+    return ok;
+}
+
+bool assert_string_empty(const char *actual, const char *description) {
+    bool ok = true;
+
+    ok = (0 == strcmp(actual, ""));
+    if (WILL_PRINT(ok) && (NULL != description)) {
+        printf("\t -> RESULT: %s (%s) | EXPECTED: EMPTY, ACTUAL: %s\n", 
+            (true == ok)?"PASSED":"FAILED", description, (true == ok)?"EMPTY":actual);
+    }
+    return ok;
+}
+
+bool assert_string_not_empty(const char *actual, const char *description) {
+    bool ok = true;
+
+    ok = (0 != strcmp(actual, ""));
+    if (WILL_PRINT(ok) && (NULL != description)) {
+        printf("\t -> RESULT: %s (%s) | EXPECTED: NOT EMPTY, ACTUAL: %s\n", 
+            (true == ok)?"PASSED":"FAILED", description, (true == ok)?"NOT EMPTY":actual);
     }
     return ok;
 }

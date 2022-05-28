@@ -105,9 +105,9 @@ void imu_batch_terminate();
 /**
  * @brief Return total number of initialized IMU sensors
  * 
- * @return unsigned char: number of IMU sensors
+ * @return int: number of IMU sensors
  */
-unsigned char imu_number_get();
+int imu_number_get();
 
 /**
  * @brief Set CSV logging file with IMU related headers

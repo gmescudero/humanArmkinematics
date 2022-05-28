@@ -30,7 +30,13 @@ bool preconditions_init(const char *test_name);
 // * ASSERTS ******************************************************************
 bool assert_OK(ERROR_CODE status, const char *description);
 bool assert_ERROR(ERROR_CODE status, const char *description);
+bool assert_int(int actual, int expected, const char *description);
+bool assert_int_greater(int actual, int expected, const char *description);
 bool assert_double(double actual, double expected, double threshold, const char *description);
+bool assert_string(const char *actual, const char *expected, const char *description);
+bool assert_string_not_equal(const char *actual, const char *expected, const char *description);
+bool assert_string_empty(const char *actual, const char *description);
+bool assert_string_not_empty(const char *actual, const char *description);
 bool assert_vector3EqualThreshold(const double actual[3], const double expected[3], const double threshold, const char *description);
 bool assert_vector3Equal(const double actual[3], const double expected[3], const char *description);
 bool assert_quaternionThreshold(Quaternion actual, Quaternion expected, double threshold, const char *description);

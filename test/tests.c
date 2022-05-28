@@ -19,6 +19,9 @@
 #include "tst_lib.h"
 
 
+#define IMUS_CONNECTED (1)
+
+
 bool tst_math_001() 
 {
     bool ok = true;
@@ -1518,6 +1521,43 @@ bool tst_cal_xxx()
     return ok;
 }
 
+#if 1 <= IMUS_CONNECTED
+bool tst_imu_single_001() 
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    COM_PORTS discoveredPorts;
+
+    testDescription(__FUNCTION__, "Initialize a single IMU sensor");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret = com_ports_list(&discoveredPorts);
+    ok &= assert_OK(ret, "com_ports_list");
+    ok &= assert_int_greater(discoveredPorts.ports_number, 1, "com_ports_list result");
+    ok &= assert_string_not_empty(discoveredPorts.ports_names[0], "com_ports_list result");
+
+    ret = imu_initialize(discoveredPorts.ports_names[0]);
+    ok &= assert_OK(ret, "imu_initialize");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+#endif
+
+#if 1 <= IMUS_CONNECTED
+bool tst_battery_imu_single()
+{
+    bool ok = true;
+
+    ok &= tst_imu_single_001();
+
+    testBatteryReport(__FUNCTION__, "SINGLE IMU", ok);
+    return ok;
+}
+#endif
+
 bool tst_battery_all()
 {
     bool ok = true;
@@ -1561,9 +1601,14 @@ bool tst_battery_all()
     ok &= tst_cal_004();
     ok &= tst_cal_005();
 
+#if 1 <= IMUS_CONNECTED
+    ok &= tst_battery_imu_single();
+#endif
+
     testBatteryReport(__FUNCTION__, "ALL TESTS", ok);
     return ok;
 }
+
 
 int main(int argc, char **argv)
 {
