@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include "tst_lib.h"
 #include "arm.h"
@@ -35,6 +36,18 @@ void testCleanUp() {
     if (0 != imu_number_get()) imu_all_sensors_remove();
     db_terminate();
     preconditions_initArm();
+}
+
+void tst_str(const char *text, ...) {
+    va_list args;
+
+    if (SILENT != testTraceLevel) {
+        va_start(args, text);
+        printf("[TEST   ] ");
+        vprintf(text, args);
+        printf("\n");
+        va_end(args);
+    }
 }
 
 double testRandomDoubleGenerate() {

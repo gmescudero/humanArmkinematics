@@ -163,8 +163,8 @@ ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOI
 
 
 
-
-unsigned char setOffsetIMUs(int v);
+ERROR_CODE imu_orientatin_offset_set(int v);
+ERROR_CODE imu_orientation_offset_reset();
 
 #endif /*IMU_H*/
 

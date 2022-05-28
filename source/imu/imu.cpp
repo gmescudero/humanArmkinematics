@@ -317,13 +317,32 @@ static ERROR_CODE simu_database_update(ImuData d, int index) {
 
 
 /* TODO: this has to be reviewed to see in which way it affects */
-unsigned char setOffsetIMUs(int v){
+ERROR_CODE imu_orientatin_offset_set(int v){
     // Check status
     if (num_imus <= 0) return RET_ERROR;
 
+    dbg_str("%s -> set IMU offset to %d",__FUNCTION__,v);
+
     for (int i = 0; i < num_imus; i++) {
-        if (lpms[i]->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED && lpms[i]->hasImuData() ) { 
+        if (lpms[i]->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED) { 
             lpms[i]->setOrientationOffset(v);
+        }
+        else {
+            return RET_ERROR;
+        }
+    }
+    return RET_OK;
+}
+
+ERROR_CODE imu_orientation_offset_reset(){
+    // Check status
+    if (num_imus <= 0) return RET_ERROR;
+
+    dbg_str("%s -> reset IMU offset", __FUNCTION__);
+
+    for (int i = 0; i < num_imus; i++) {
+        if (lpms[i]->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED) { 
+            lpms[i]->resetOrientationOffset();
         }
         else {
             return RET_ERROR;

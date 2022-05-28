@@ -1540,11 +1540,11 @@ bool tst_imu_single_001()
     ret = imu_initialize(discoveredPorts.ports_names[0]);
     ok &= assert_OK(ret, "imu_initialize");
 
-    ret = imu_initialize(NULL);
-    ok &= assert_ERROR(ret,"imu_initialize NULL arg0");
+    // ret = imu_initialize(NULL);
+    // ok &= assert_ERROR(ret,"imu_initialize NULL arg0");
 
-    ret = imu_initialize("invalid");
-    ok &= assert_ERROR(ret,"imu_initialize invalid arg0");
+    // ret = imu_initialize("invalid");
+    // ok &= assert_ERROR(ret,"imu_initialize invalid arg0");
 
     testCleanUp();
     testReport(ok);
@@ -1554,15 +1554,36 @@ bool tst_imu_single_001()
 bool tst_imu_single_002() 
 {
     bool ok = true;
-    ERROR_CODE ret;
+    ERROR_CODE ret = RET_OK;
     ImuData data;
 
     testDescription(__FUNCTION__, "");
     ok = preconditions_init_imus(__FUNCTION__); 
 
     // Test Steps
-    ret = imu_read(0, &data);
-    ok &= assert_OK(ret, "imu_read");
+    ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
+    ret += db_csv_field_add(DB_IMU_QUATERNION,0);
+    ret += db_csv_field_add(DB_IMU_GYROSCOPE,0);
+    ok &= assert_OK(ret, "db_csv_field_add");
+
+    for (int i = 0; ok && i < 100; i++) {
+        tst_str("Try orientation offset set to %d",i);
+        millis_sleep(400);
+        ret = imu_orientatin_offset_set(1);
+        ok &= assert_OK(ret, "imu_orientatin_offset_set");
+        ret = imu_read(0, &data);
+        ok &= assert_OK(ret, "imu_read");
+        ret = db_csv_dump();
+        ok &= assert_OK(ret, "db_csv_dump");
+
+        millis_sleep(400);
+        ret = imu_orientation_offset_reset();
+        ok &= assert_OK(ret, "imu_orientation_offset_reset");
+        ret = imu_read(0, &data);
+        ok &= assert_OK(ret, "imu_read");
+        ret = db_csv_dump();
+        ok &= assert_OK(ret, "db_csv_dump");
+    }
 
     testCleanUp();
     testReport(ok);
