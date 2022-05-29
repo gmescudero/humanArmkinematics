@@ -629,7 +629,7 @@ bool tst_db_008()
         value = 1.0 + (double)instance;
         ret = db_write(field, instance, &value);
         ok &= assert_OK(ret,"db_write");
-        ok &= assert_dbFieldDouble(field,instance,&value,"db_wrtie result");
+        ok &= assert_dbFieldDouble(field,instance,&value,"db_write result");
     }
 
     testCleanUp();
@@ -1304,14 +1304,14 @@ bool tst_cal_004()
     bool ok = true;
     ERROR_CODE ret = RET_OK;
     int number_of_imus = IMU_MAX_NUMBER;
-    ImuData imu_readings[IMU_MAX_NUMBER] = {
-        {.q = {1.0, 0.0, 0.0, 0.0}},
-        {.q = {1.0, 0.0, 0.0, 0.0}},
-        {.q = {1.0, 0.0, 0.0, 0.0}},
-        {.q = {1.0, 0.0, 0.0, 0.0}},
-        {.q = {1.0, 0.0, 0.0, 0.0}},
-        {.q = {1.0, 0.0, 0.0, 0.0}},
-        {.q = {1.0, 0.0, 0.0, 0.0}},
+    Quaternion imu_readings[IMU_MAX_NUMBER] = {
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
     };
     Quaternion predef_quats[IMU_MAX_NUMBER] = {
         {.w = 1.0, .v = {0.0, 0.0, 0.0}},
@@ -1381,13 +1381,13 @@ bool tst_cal_005()
     int number_of_imus = 1;
     Quaternion quat;
 
-    ImuData imu_readings_1[1]  = {  {.q = {M_SQRT1_2, 0.0, -M_SQRT1_2, 0.0}}    };// y: -90
-    Quaternion predef_quats[1] = {  {.w = 1.0, .v = {0.0, 0.0, 0.0}} };// expected_quats_1
+    Quaternion imu_readings_1[1] = {  {.w = M_SQRT1_2, .v = {0.0,-M_SQRT1_2, 0.0}}    };// y: -90
+    Quaternion predef_quats[1]   = {  {.w = 1.0, .v = {0.0, 0.0, 0.0}} };// expected_quats_1
 
-    ImuData imu_readings_2[1]      = {  {.q = {1.0, 0.0, 0.0, 0.0}} };
+    Quaternion imu_readings_2[1]   = {  {.w = 1.0, .v = {0.0, 0.0, 0.0}} };
     Quaternion expected_quats_2[1] = {  {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}}  };//y: 90
 
-    ImuData imu_readings_3[1]      = {  {.q = {M_SQRT1_2, 0.0, 0.0, M_SQRT1_2}} }; // z: 90
+    Quaternion imu_readings_3[1]   = {  {.w = M_SQRT1_2, .v = {0.0, 0.0, M_SQRT1_2}} }; // z: 90
     Quaternion expected_quats_3[1] = {  {.w = 0.5, .v = {-0.5, 0.5, 0.5}}  }; // x: -90 z: 90
 
     Quaternion calibrated_quats[1];

@@ -38,10 +38,9 @@ static CAL_ROT_AXIS_CALIB_CONFIG cal_rot_axis_autocalib_config = {
 
 void cal_static_imu_quat_calibration_set(
     Quaternion known_quat[IMU_MAX_NUMBER],
-    ImuData imus_data[IMU_MAX_NUMBER],
+    Quaternion imus_quat[IMU_MAX_NUMBER],
     int number_of_imus)
 {
-    Quaternion imu_quat;
     Quaternion imu_quat_conj;
     double db_quat[4];
     int i;
@@ -49,10 +48,8 @@ void cal_static_imu_quat_calibration_set(
     if (number_of_imus > 0) log_str("Calibrating quaternion data of %d IMU sensors", number_of_imus);
 
     for (i = 0; i < number_of_imus; i++) {
-        // Set the quaternion struct from the IMU data
-        quaternion_from_float_buffer_build(imus_data[i].q, &imu_quat);
         // Conjugate the imu reading
-        Quaternion_conjugate(&imu_quat, &imu_quat_conj);
+        Quaternion_conjugate(&imus_quat[i], &imu_quat_conj);
         // Compute the raw to calibrated quaternion
         Quaternion_multiply(&imu_quat_conj, &(known_quat[i]), &(cal_imus_calibration_data[i].raw_to_calib));
         // Set the imu calibration as "done"
@@ -68,12 +65,11 @@ void cal_static_imu_quat_calibration_set(
 }
 
 ERROR_CODE cal_static_imu_quat_calibration_apply(
-    ImuData imus_data[IMU_MAX_NUMBER],
+    Quaternion imus_quat[IMU_MAX_NUMBER],
     int number_of_imus,
     Quaternion calibrated_data[IMU_MAX_NUMBER])
 {
     ERROR_CODE status = RET_OK;
-    Quaternion imu_quat;
     int i;
 
     for (i = 0; RET_OK == status && i < number_of_imus; i++) {
@@ -82,10 +78,8 @@ ERROR_CODE cal_static_imu_quat_calibration_apply(
             status = RET_ERROR;
         }
         else {
-            // Set the quaternion struct from the IMU data  
-            quaternion_from_float_buffer_build(imus_data[i].q, &imu_quat);
             // Apply the calibration
-            Quaternion_multiply(&imu_quat, &(cal_imus_calibration_data[i].raw_to_calib), &(calibrated_data[i]));
+            Quaternion_multiply(&imus_quat[i], &(cal_imus_calibration_data[i].raw_to_calib), &(calibrated_data[i]));
         }
     }
 

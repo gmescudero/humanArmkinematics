@@ -47,6 +47,9 @@ test: $(OBJS) all
 	cd test && make && cd -
 	./test/tests
 
+test_nl: $(OBJS) all
+	cd test && make && cd -
+
 main.o: $(SOURCE_DIR)/main.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/main.c -o $(BINARIES_DIR)/$@
 

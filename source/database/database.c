@@ -328,7 +328,7 @@ ERROR_CODE db_csv_dump(void) {
         csv_logging_fields.first = 0;
     }
 
-    dbg_str("Retrieve Database configured fields");
+    dbg_str("%s -> Retrieve Database configured fields",__FUNCTION__);
     for (int ind = 0; ind < csv_logging_fields.csv_coulmns && RET_OK == status; ind++) {
         current_field   = csv_logging_fields.fields[ind];
         instance        = csv_logging_fields.instances[ind];
@@ -338,7 +338,7 @@ ERROR_CODE db_csv_dump(void) {
             database[current_field].name, instance, index, csv_buff[ind]);
     }
 
-    dbg_str("Write CSV data row");
+    dbg_str("%s -> Write CSV data row",__FUNCTION__);
     csv_log(csv_buff);
     return status;
 }

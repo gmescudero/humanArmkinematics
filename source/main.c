@@ -44,10 +44,12 @@ int main(int argc, char **argv) {
     Quaternion predefined_quats[IMUS_NUM];
     Quaternion calibrated_quats[IMUS_NUM];
     Quaternion joints[ARM_NUMBER_OF_JOINTS];
+    Quaternion imus_quat[IMUS_NUM];
+    double buffTime;
     double startTime   = -1.0;
     double currentTime = -1.0;
-    double lastTime    = -1.0;
     // double rotVector[3] = {0.5,0.5,0.5};
+    int iteration_count = 300;
 
     /* Initialize all packages */
     log_str("Initialize");
@@ -93,41 +95,61 @@ int main(int argc, char **argv) {
         log_str("STAND IN T-POSE TO CALIBRATE");
         sleep_ms(2000);
         if (RET_OK == status) {
+            status = imu_orientation_offset_reset();
+            STATUS_EVAL(status);
+        }
+        if (RET_OK == status) {
             status = imu_batch_read(IMUS_NUM, data);
             STATUS_EVAL(status);
         }
         if (RET_OK == status) {
             for (int i = 0; i < IMUS_NUM; i++) {
                 Quaternion_set(1.0, 0.0, 0.0, 0.0, &predefined_quats[i]);
+                quaternion_from_float_buffer_build(data[i].q, &imus_quat[i]);
             }
-            cal_static_imu_quat_calibration_set(predefined_quats, data, IMUS_NUM);
+            cal_static_imu_quat_calibration_set(predefined_quats, imus_quat, IMUS_NUM);
         }
-        log_str("CALIBRATION_DONE");
+        if (RET_OK == status) {
+            log_str("CALIBRATION_DONE");
+        }
+    }
+
+    /* Start IMU reading callbacks */
+    for (int i = 0; RET_OK == status && i < IMUS_NUM; i++) {
+        status = imu_read_callback_attach(i, 0==i);
+        STATUS_EVAL(status);
+    }
+
+    /* Set starting time */
+    if (RET_OK == status) {
+        startTime = data[0].timeStamp;
     }
 
     if (RET_OK == status) {
         log_str("Loop reading IMU data to calibrate ");
         do {
-            sleep_ms(50);
-            if (RET_OK == status) {
-                // Read IMU data
-                // status = imu_read(0, &data);
-                status = imu_batch_read(IMUS_NUM, data);
-                STATUS_EVAL(status);
-            }
-            if (RET_OK == status && -1.0 == startTime){
-                // Initialize start time if required
-                startTime   = data[0].timeStamp;
-            }
+            sleep_ms(100);
+
             if (RET_OK == status) {
                 // Update current time
-                lastTime    = currentTime;
-                currentTime = data[0].timeStamp - startTime;
+                status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
+                STATUS_EVAL(status);
+                if (RET_OK == status) {
+                    currentTime = buffTime - startTime;
+                }
             }
             if (RET_OK == status) {
                 // Get the calibrated quaternions from IMU data
-                status = cal_static_imu_quat_calibration_apply(data, IMUS_NUM, calibrated_quats);
-                STATUS_EVAL(status);
+                double quat_buff[4] = {0.0};
+                for (int i = 0; RET_OK == status && i < IMUS_NUM; i++) {
+                    status = db_read(DB_IMU_QUATERNION, i, quat_buff);
+                    STATUS_EVAL(status);
+                    quaternion_from_buffer_build(quat_buff, &imus_quat[i]);
+                }
+                if (RET_OK == status) {
+                    status = cal_static_imu_quat_calibration_apply(imus_quat, IMUS_NUM, calibrated_quats);
+                    STATUS_EVAL(status);
+                }
             }
             if (RET_OK == status) {
                 // Compute each joint value
@@ -147,13 +169,9 @@ int main(int argc, char **argv) {
                 status = db_field_print(DB_ARM_WRIST_POSITION, 0);
                 STATUS_EVAL(status);
             }
-            if (RET_OK == status) {
-                // Write csv file
-                status = db_csv_dump();
-                STATUS_EVAL(status);
-            }
-            // dbg_str("time: %f (oldTime: %f)",currentTime,lastTime);
-        } while ((RET_OK == status || RET_NO_EXEC == status) && 50 > currentTime && currentTime - lastTime > EPSI);
+            dbg_str("time: %f",currentTime);
+            iteration_count--;
+        } while ((RET_OK == status || RET_NO_EXEC == status) && 20 > currentTime && 0 < iteration_count);
     } 
 
     // log_str("Rotation vector obtained: [%f, %f, %f]", rotVector[0], rotVector[1], rotVector[2]);

@@ -28,7 +28,6 @@
 static unsigned char num_imus = 0;
 static LpmsSensorManagerI* manager = NULL; /* Gets a LpmsSensorManager instance */
 static LpmsSensorI* lpms[IMU_MAX_NUMBER] = {NULL};
-static char imus_ports[IMU_MAX_NUMBER][COM_PORTS_LENGTH] = {{'\0'}};
 
 static ERROR_CODE simu_database_update(ImuData d, int index);
 static void simu_callback_new_data_update(ImuData d, const char *id);
@@ -53,7 +52,7 @@ ERROR_CODE imu_initialize(const char *com_port){
 
     // Add a new sensor to the list
     lpms[index] = manager->addSensor(DEVICE_LPMS_U2, com_port);
-    lpms[index]->setVerbose(false);
+    lpms[index]->setVerbose(true);
     if (NULL == lpms[index]) return RET_ERROR;
 
     // Retrieve cthe connection status
@@ -68,8 +67,6 @@ ERROR_CODE imu_initialize(const char *com_port){
         err_str("IMU Sensor %d failed to connect through %s", index, com_port);
         return RET_ERROR;
     }
-
-    strcpy(imus_ports[index],com_port);
 
     num_imus++;
     return RET_OK;
@@ -119,22 +116,28 @@ int imu_number_get() {
  * @param id (input) COM port
  */
 static void simu_callback_new_data_update(ImuData d, const char *id) {
-    dbg_str("%s -> Updated IMU data in port %s",__FUNCTION__, id);
+    dbg_str("%s -> Updating IMU data in port %s",__FUNCTION__, id);
     // Update database fields
     ERROR_CODE status;
     int comparison = -1;
     int imu;
+    int index;
+    char imu_id_str[COM_PORTS_LENGTH];
 
     // Retrieve IMU index
     for (imu = 0; 0 != comparison && imu < num_imus; imu++) {
-        comparison = strcmp(id,imus_ports[imu]);
+        lpms[imu]->getDeviceId(imu_id_str);
+        comparison = strcmp(id, imu_id_str);
     }
     if (0 != comparison) {
         err_str("Error identifying imu index");
         return;
     }
+    else {
+        index = imu-1;
+    }
     // Update database
-    status = simu_database_update(d, imu);
+    status = simu_database_update(d, index);
     if (RET_OK != status) {
         err_str("Error updating database IMU related fields from callback");
         return;
@@ -148,23 +151,26 @@ static void simu_callback_new_data_update(ImuData d, const char *id) {
  * @param id (input) COM port
  */
 static void simu_callback_new_data_update_and_dump(ImuData d, const char *id) {
+    dbg_str("%s -> Updating and dumping IMU data in port %s",__FUNCTION__, id);
     // Update database fields
     ERROR_CODE status;
     int comparison = -1;
     int imu;
-    int index = 0;
+    int index;
+    char imu_id_str[COM_PORTS_LENGTH];
 
     // Retrieve IMU index
     for (imu = 0; 0 != comparison && imu < num_imus; imu++) {
-        comparison = strcmp(id,imus_ports[imu]);
-        if (0 == comparison) index = imu;
+        lpms[imu]->getDeviceId(imu_id_str);
+        comparison = strcmp(id,imu_id_str);
     }
-    dbg_str("%s -> Updated IMU%d data in port %s",__FUNCTION__, index, id);
     if (0 != comparison) {
         err_str("Error identifying imu index");
         return;
     }
-
+    else {
+        index = imu-1;
+    }
     // Update database
     status = simu_database_update(d, index);
     if (RET_OK != status) {
