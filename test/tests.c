@@ -19,7 +19,7 @@
 #include "tst_lib.h"
 
 
-#define IMUS_CONNECTED (1)
+#define IMUS_CONNECTED (2)
 
 
 bool tst_math_001() 
@@ -1534,7 +1534,7 @@ bool tst_imu_single_001()
     // Test Steps
     ret = com_ports_list(&discoveredPorts);
     ok &= assert_OK(ret, "com_ports_list");
-    ok &= assert_int_greater(discoveredPorts.ports_number, 1, "com_ports_list result");
+    ok &= assert_int_greater_or_equal(discoveredPorts.ports_number, 1, "com_ports_list result");
     ok &= assert_string_not_empty(discoveredPorts.ports_names[0], "com_ports_list result");
 
     ret = imu_initialize(discoveredPorts.ports_names[0]);
@@ -1588,6 +1588,76 @@ bool tst_battery_imu_single()
 }
 #endif
 
+#if 2 <= IMUS_CONNECTED
+bool tst_imu_two_001()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    COM_PORTS discoveredPorts;
+
+    testDescription(__FUNCTION__, "Initialize two IMU sensors");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret = com_ports_list(&discoveredPorts);
+    ok &= assert_OK(ret, "com_ports_list");
+    ok &= assert_int_greater_or_equal(discoveredPorts.ports_number, 2, "com_ports_list result");
+    ok &= assert_string_not_empty(discoveredPorts.ports_names[0], "com_ports_list result");
+    ok &= assert_string_not_empty(discoveredPorts.ports_names[1], "com_ports_list result");
+
+    ret = imu_batch_initialize(discoveredPorts, 2);
+    ok &= assert_OK(ret, "imu_batch_initialize");
+
+    // ret = imu_initialize(NULL);
+    // ok &= assert_ERROR(ret,"imu_initialize NULL arg0");
+
+    // ret = imu_initialize("invalid");
+    // ok &= assert_ERROR(ret,"imu_initialize invalid arg0");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_imu_two_002() 
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    ImuData data;
+
+    testDescription(__FUNCTION__, "Attach the IMU data retrieve callbacks to both IMUs and generate a csv file for a set amount of time");
+    ok = preconditions_init_imus(__FUNCTION__); 
+
+    // Test Steps
+    ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
+    ret += db_csv_field_add(DB_IMU_GYROSCOPE,0);
+    ret += db_csv_field_add(DB_IMU_GYROSCOPE,1);
+    ok &= assert_OK(ret, "db_csv_field_add");
+
+    ret = imu_read_callback_attach(0, true);
+    ok &= assert_OK(ret, "imu_read_callback_attach");
+    ret = imu_read_callback_attach(1, false);
+    ok &= assert_OK(ret, "imu_read_callback_attach");
+
+    sleep_s(10);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_battery_imu_two()
+{
+    bool ok = true;
+
+    ok &= tst_imu_two_001();
+    ok &= tst_imu_two_002();
+
+    testBatteryReport(__FUNCTION__, "TWO IMUS", ok);
+    return ok;
+}
+#endif
+
 bool tst_battery_all()
 {
     bool ok = true;
@@ -1635,6 +1705,10 @@ bool tst_battery_all()
     ok &= tst_battery_imu_single();
 #endif
 
+#if 2 <= IMUS_CONNECTED
+    ok &= tst_battery_imu_two();
+#endif
+
     testBatteryReport(__FUNCTION__, "ALL TESTS", ok);
     return ok;
 }
@@ -1647,8 +1721,8 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    // ok &= tst_battery_all();
-    ok &= tst_battery_imu_single();
+    ok &= tst_battery_all();
+    // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
     // ok &= tst_cal_xxx();

@@ -130,7 +130,7 @@ bool preconditions_init_imus(const char *test_name)
 
     ret = com_ports_list(&discoveredPorts);
     ok &= assert_OK(ret, "com_ports_list");
-    ok &= assert_int_greater(discoveredPorts.ports_number, 1, "com_ports_list result");
+    ok &= assert_int_greater_or_equal(discoveredPorts.ports_number, 1, "com_ports_list result");
     ok &= assert_string_not_empty(discoveredPorts.ports_names[0], "com_ports_list result");
 
     ret = imu_batch_initialize(discoveredPorts, discoveredPorts.ports_number);
@@ -177,7 +177,7 @@ bool assert_int(int actual, int expected, const char *description) {
     return ok;
 }
 
-bool assert_int_greater(int actual, int expected, const char *description) {
+bool assert_int_greater_or_equal(int actual, int expected, const char *description) {
     bool ok = true;
 
     ok = (actual >= expected);

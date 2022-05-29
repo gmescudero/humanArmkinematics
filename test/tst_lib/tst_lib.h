@@ -33,7 +33,7 @@ bool preconditions_init_imus(const char *test_name);
 bool assert_OK(ERROR_CODE status, const char *description);
 bool assert_ERROR(ERROR_CODE status, const char *description);
 bool assert_int(int actual, int expected, const char *description);
-bool assert_int_greater(int actual, int expected, const char *description);
+bool assert_int_greater_or_equal(int actual, int expected, const char *description);
 bool assert_double(double actual, double expected, double threshold, const char *description);
 bool assert_string(const char *actual, const char *expected, const char *description);
 bool assert_string_not_equal(const char *actual, const char *expected, const char *description);
