@@ -62,12 +62,17 @@ typedef enum TRACE_LEVEL_ENUM {
 ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts);
 
 /**
+ * @brief Sleep with seconds precision
+ * 
+ * @param seconds (input) Seconds to wait
+ */
+void sleep_s(int seconds);
+/**
  * @brief Sleep with milliseconds precision
  * 
  * @param millis (input) Milliseconds to wait
- * @return ERROR_CODE: RET_OK on success
  */
-ERROR_CODE millis_sleep(int millis);
+void sleep_ms(int millis);
 
 /**
  * @brief Set up log file 

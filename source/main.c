@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
     if (RET_OK == status) {
         log_str("Calibrate IMU sensors");
         log_str("STAND IN T-POSE TO CALIBRATE");
-        millis_sleep(2000);
+        sleep_ms(2000);
         if (RET_OK == status) {
             status = imu_batch_read(IMUS_NUM, data);
             STATUS_EVAL(status);
@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
     if (RET_OK == status) {
         log_str("Loop reading IMU data to calibrate ");
         do {
-            millis_sleep(50);
+            sleep_ms(50);
             if (RET_OK == status) {
                 // Read IMU data
                 // status = imu_read(0, &data);

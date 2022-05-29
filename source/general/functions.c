@@ -1,24 +1,25 @@
-
+#include <unistd.h>
 #include <string.h>
 #include <libserialport.h>  /* READ COM ports before connect */
 #include <time.h>
 #include "general.h"
 
 
-ERROR_CODE millis_sleep(int millis) {
-    struct timespec ts;
-    int res;
+void sleep_s(int seconds) {
+    sleep(seconds);
+}
 
-    if (millis < 0) return RET_ARG_ERROR;
+void sleep_ms(int millis) {
+    struct timespec ts;
+    struct timespec remaining;
+    int res;
 
     ts.tv_sec = millis / 1000;
     ts.tv_nsec = (millis % 1000) * 1000000;
 
     do {
-        res = nanosleep(&ts, &ts);
+        res = nanosleep(&ts, &remaining);
     } while (res);
-
-    return RET_OK;
 }
 
 ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts) {

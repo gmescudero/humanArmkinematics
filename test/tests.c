@@ -1557,7 +1557,7 @@ bool tst_imu_single_002()
     ERROR_CODE ret = RET_OK;
     ImuData data;
 
-    testDescription(__FUNCTION__, "");
+    testDescription(__FUNCTION__, "Attach the IMU data retrieve callback to generate a csv file for a set amount of time");
     ok = preconditions_init_imus(__FUNCTION__); 
 
     // Test Steps
@@ -1566,24 +1566,10 @@ bool tst_imu_single_002()
     ret += db_csv_field_add(DB_IMU_GYROSCOPE,0);
     ok &= assert_OK(ret, "db_csv_field_add");
 
-    for (int i = 0; ok && i < 100; i++) {
-        tst_str("Try orientation offset set to %d",i);
-        millis_sleep(400);
-        ret = imu_orientatin_offset_set(1);
-        ok &= assert_OK(ret, "imu_orientatin_offset_set");
-        ret = imu_read(0, &data);
-        ok &= assert_OK(ret, "imu_read");
-        ret = db_csv_dump();
-        ok &= assert_OK(ret, "db_csv_dump");
+    ret = imu_read_callback_attach(0, true);
+    ok &= assert_OK(ret, "imu_read_callback_attach");
 
-        millis_sleep(400);
-        ret = imu_orientation_offset_reset();
-        ok &= assert_OK(ret, "imu_orientation_offset_reset");
-        ret = imu_read(0, &data);
-        ok &= assert_OK(ret, "imu_read");
-        ret = db_csv_dump();
-        ok &= assert_OK(ret, "db_csv_dump");
-    }
+    sleep_s(10);
 
     testCleanUp();
     testReport(ok);

@@ -28,10 +28,11 @@
 static unsigned char num_imus = 0;
 static LpmsSensorManagerI* manager = NULL; /* Gets a LpmsSensorManager instance */
 static LpmsSensorI* lpms[IMU_MAX_NUMBER] = {NULL};
-
+static char imus_ports[IMU_MAX_NUMBER][COM_PORTS_LENGTH] = {{'\0'}};
 
 static ERROR_CODE simu_database_update(ImuData d, int index);
-
+static void simu_callback_new_data_update(ImuData d, const char *id);
+static void simu_callback_new_data_update_and_dump(ImuData d, const char *id);
 
 ERROR_CODE imu_initialize(const char *com_port){
     int   connection_status = SENSOR_CONNECTION_CONNECTED;
@@ -67,6 +68,8 @@ ERROR_CODE imu_initialize(const char *com_port){
         err_str("IMU Sensor %d failed to connect through %s", index, com_port);
         return RET_ERROR;
     }
+
+    strcpy(imus_ports[index],com_port);
 
     num_imus++;
     return RET_OK;
@@ -107,6 +110,90 @@ void imu_terminate(){
 
 int imu_number_get() {
     return (int)num_imus;
+}
+
+/**
+ * @brief Callback for IMU data update
+ * 
+ * @param d (input) Last IMU data retrieved from sensor
+ * @param id (input) COM port
+ */
+static void simu_callback_new_data_update(ImuData d, const char *id) {
+    dbg_str("%s -> Updated IMU data in port %s",__FUNCTION__, id);
+    // Update database fields
+    ERROR_CODE status;
+    int comparison = -1;
+    int imu;
+
+    // Retrieve IMU index
+    for (imu = 0; 0 != comparison && imu < num_imus; imu++) {
+        comparison = strcmp(id,imus_ports[imu]);
+    }
+    if (0 != comparison) {
+        err_str("Error identifying imu index");
+        return;
+    }
+    // Update database
+    status = simu_database_update(d, imu);
+    if (RET_OK != status) {
+        err_str("Error updating database IMU related fields from callback");
+        return;
+    }
+}
+
+/**
+ * @brief Callback for IMU data update and update
+ * 
+ * @param d (input) Last IMU data retrieved from sensor
+ * @param id (input) COM port
+ */
+static void simu_callback_new_data_update_and_dump(ImuData d, const char *id) {
+    // Update database fields
+    ERROR_CODE status;
+    int comparison = -1;
+    int imu;
+    int index = 0;
+
+    // Retrieve IMU index
+    for (imu = 0; 0 != comparison && imu < num_imus; imu++) {
+        comparison = strcmp(id,imus_ports[imu]);
+        if (0 == comparison) index = imu;
+    }
+    dbg_str("%s -> Updated IMU%d data in port %s",__FUNCTION__, index, id);
+    if (0 != comparison) {
+        err_str("Error identifying imu index");
+        return;
+    }
+
+    // Update database
+    status = simu_database_update(d, index);
+    if (RET_OK != status) {
+        err_str("Error updating database IMU related fields from callback");
+        return;
+    }
+    // Dump csv
+    status = db_csv_dump();
+    if (RET_OK != status) {
+        err_str("Error updating csv from database");
+        return;
+    }
+}
+
+ERROR_CODE imu_read_callback_attach(unsigned int index, bool csv_dump) {
+    dbg_str("%s -> Attaching data retrieving callback to IMU%d",__FUNCTION__, index);
+    // Check arguments
+    if (0 > index || num_imus <= index) return RET_ARG_ERROR;
+
+    if (true == csv_dump) {
+        // Read data, update database and dump data into the csv
+        lpms[index]->setCallback(&simu_callback_new_data_update_and_dump);
+    }
+    else {
+        // Read data and update database
+        lpms[index]->setCallback(&simu_callback_new_data_update);
+    }
+
+    return RET_OK;
 }
 
 ERROR_CODE imu_read(unsigned int index, ImuData *imu) {
@@ -251,7 +338,7 @@ ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOI
     for (int i = 0; i < iterations && RET_OK == status; i++) {
         // Pause
         while (0 >= lpms[index]->hasImuData()) {
-            millis_sleep(1);
+            sleep_ms(1);
         }
         // Read imu
         status = imu_read(index,&data);
@@ -317,7 +404,7 @@ static ERROR_CODE simu_database_update(ImuData d, int index) {
 
 
 /* TODO: this has to be reviewed to see in which way it affects */
-ERROR_CODE imu_orientatin_offset_set(int v){
+ERROR_CODE imu_orientation_offset_set(int v){
     // Check status
     if (num_imus <= 0) return RET_ERROR;
 

@@ -76,6 +76,8 @@ typedef struct _ARM_MEASUREMENT{
     float forearm;
 }ARM_MEASUREMENT;
 
+typedef void(*IMU_READ_CALLBACK)(ImuData d, const char* id);
+
 /******************************************************************************/
 /*                            Declare functions                               */
 /******************************************************************************/
@@ -144,6 +146,15 @@ ERROR_CODE imu_read(unsigned int index, ImuData *imus) ;
 ERROR_CODE imu_batch_read(unsigned int imus_num, ImuData imus[]);
 
 /**
+ * @brief Attach the read callback to an IMU sensor
+ * 
+ * @param index (input) IMU sensor index to attack callback to
+ * @param csv_dump (input) Set the read callback to dump the csv or not
+ * @return ERROR_CODE 
+ */
+ERROR_CODE imu_read_callback_attach(unsigned int index, bool csv_dump);
+
+/**
  * @brief Print the IMU data through console
  * 
  * @param imu IMU data to be printed
@@ -163,7 +174,7 @@ ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOI
 
 
 
-ERROR_CODE imu_orientatin_offset_set(int v);
+ERROR_CODE imu_orientation_offset_set(int v);
 ERROR_CODE imu_orientation_offset_reset();
 
 #endif /*IMU_H*/
