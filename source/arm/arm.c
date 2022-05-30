@@ -42,21 +42,54 @@ static ARM_POSE arm_current_pose = {
 };
 
 ERROR_CODE arm_segments_length_set(double upper_arm, double forearm) {
-    Quaternion joints[ARM_NUMBER_OF_JOINTS] = {
-        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
-        {.w = 1.0, .v = {0.0, 0.0, 0.0}}
-    };
+    ERROR_CODE status;
+    double sh2el[3];
+    double sh2el_scaled[3];
+    double current_upper_length;
+    double el2wr[3];
+    double el2wr_scaled[3];
+    double current_forearm_length;
+
     // Check arguments
     if (EPSI > upper_arm) return RET_ARG_ERROR;
     if (EPSI > forearm) return RET_ARG_ERROR;
 
-    arm_kinematic_table[ELBOW].position[0] = upper_arm;
-    arm_kinematic_table[WRIST].position[0] = forearm;
+    // Rescale shoulder to elbow
+    status = vector3_substract(arm_current_pose.elbow.position, arm_current_pose.shoulder.position, sh2el);
+    if (RET_OK == status) {
+        status = vector3_norm(sh2el, &current_upper_length);
+    }
+    if (RET_OK == status) {
+        status = vector3_scale(sh2el, upper_arm/current_upper_length, sh2el_scaled);
+    }
+    if (RET_OK == status) {
+        status = vector3_add(arm_current_pose.shoulder.position, sh2el_scaled, arm_current_pose.elbow.position);
+    }
 
-    return arm_direct_kinematics_compute(joints, NULL);
+    // Rescale elbow to wrist
+    if (RET_OK == status) {
+        status = vector3_substract(arm_current_pose.wrist.position, arm_current_pose.elbow.position, el2wr);
+    }
+    if (RET_OK == status) {
+        status = vector3_norm(el2wr, &current_forearm_length);
+    }
+    if (RET_OK == status) {
+        status = vector3_scale(el2wr, forearm/current_forearm_length, el2wr_scaled);
+    }
+    if (RET_OK == status) {
+        status = vector3_add(arm_current_pose.elbow.position, el2wr_scaled, arm_current_pose.wrist.position);
+    }
+
+    // Adapt kinematic table
+    if (RET_OK == status) {
+        arm_kinematic_table[ELBOW].position[0] = upper_arm;
+        arm_kinematic_table[WRIST].position[0] = forearm;
+    }
+
+    return status;
 }
 
-void arm_joint_positions_set(ARM_POSE initial_arm_pose)
+void arm_pose_set(ARM_POSE initial_arm_pose)
 {
     memcpy(&arm_current_pose, &initial_arm_pose, sizeof(ARM_POSE));
 }
@@ -154,6 +187,10 @@ ERROR_CODE arm_direct_kinematics_compute(Quaternion joints[ARM_NUMBER_OF_JOINTS]
         memcpy(output, &result, sizeof(ARM_POSE));
     }
     return status;
+}
+
+ERROR_CODE arm_inverse_kinematics_compute(Quaternion upper_arm, Quaternion forearm, Quaternion joints[ARM_NUMBER_OF_JOINTS]) {
+    // TODO
 }
 
 /**

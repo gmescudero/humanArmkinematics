@@ -79,7 +79,7 @@ bool preconditions_initArm()
         .wrist.position       = {0.0, 0.0, -15.0},
         .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
     };
-    arm_joint_positions_set(currentPose);
+    arm_pose_set(currentPose);
 
     return true;
 }
@@ -116,6 +116,9 @@ bool preconditions_init(const char *test_name)
 
     ret = db_initialize();
     ok &= assert_OK(ret,"db_initialize");
+
+    ret = arm_segments_length_set(10.0, 5.0);
+    ok &= assert_OK(ret,"arm_segments_length_set");
 
     return ok;
 }

@@ -56,6 +56,15 @@ ERROR_CODE vector3_rotate90y(double a[3], double output[3]);
  */
 ERROR_CODE vector3_rotateMinus90y(double a[3], double output[3]);
 /**
+ * @brief Scale a given vector by a scaling factor
+ * 
+ * @param a (input) Vector to scale
+ * @param scale (input) Scaling factor
+ * @param output (output) Scaled vector
+ * @return ERROR_CODE 
+ */
+ERROR_CODE vector3_scale(double a[3], double scale, double *output);
+/**
  * @brief Compute the dot product between two. a*b
  * 
  * @param a (input) First vector

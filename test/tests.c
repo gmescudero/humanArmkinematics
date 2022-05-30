@@ -19,7 +19,7 @@
 #include "tst_lib.h"
 
 
-#define IMUS_CONNECTED (2)
+#define IMUS_CONNECTED (0)
 
 
 bool tst_math_001() 
@@ -1061,7 +1061,7 @@ bool tst_arm_012()
     bool ok = true;
     ERROR_CODE ret = RET_OK;
     Quaternion joints[ARM_NUMBER_OF_JOINTS] = {
-        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
         {.w = 1.0, .v = {0.0, 0.0, 0.0}},
     };
     ARM_POSE result;
@@ -1069,19 +1069,19 @@ bool tst_arm_012()
     double forearm_len  = 6.0;
     ARM_POSE expected1 = {
         .shoulder.position    = {0.0, 0.0, 0.0},
-        .shoulder.orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
-        .elbow.position       = {11.0, 0.0, 0.0},
-        .elbow.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
-        .wrist.position       = {17.0, 0.0, 0.0},
-        .wrist.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
-    };
-    ARM_POSE expected2 = {
-        .shoulder.position    = {0.0, 0.0, 0.0},
         .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
         .elbow.position       = {0.0, 0.0, -11.0},
         .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
         .wrist.position       = {0.0, 0.0, -17.0},
         .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    };
+    ARM_POSE expected2 = {
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        .elbow.position       = {11.0, 0.0, 0.0},
+        .elbow.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+        .wrist.position       = {17.0, 0.0, 0.0},
+        .wrist.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
     };
     double expected_quat_buff[4];
 
@@ -1093,7 +1093,7 @@ bool tst_arm_012()
     ok &= assert_OK(ret, "arm_segments_length_set");
 
     result = arm_pose_get();
-    ok &= assert_armEqual(result, expected1, "arm_pose_get result1");
+    ok &= assert_armEqual(result, expected1, "arm_pose_get result 1");
 
     ret = arm_direct_kinematics_compute(joints, &result);
     ok &= assert_OK(ret, "arm_direct_kinematics_compute");
@@ -1112,7 +1112,7 @@ bool tst_arm_012()
     ok &= assert_dbFieldDouble(DB_ARM_WRIST_ORIENTATION, 0, expected_quat_buff, "arm_direct_kinematics_compute db_wr_ori");
 
     result = arm_pose_get();
-    ok &= assert_armEqual(result, expected2, "arm_pose_get result");
+    ok &= assert_armEqual(result, expected2, "arm_pose_get result 2");
 
     testCleanUp();
     testReport(ok);
@@ -1120,6 +1120,69 @@ bool tst_arm_012()
 }
 
 bool tst_arm_013()
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    Quaternion joints1[ARM_NUMBER_OF_JOINTS] = {
+        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+    };
+    Quaternion joints2[ARM_NUMBER_OF_JOINTS] = {
+        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    };
+    Quaternion joints3[ARM_NUMBER_OF_JOINTS] = {
+        {.w = 0.5, .v = {0.5, 0.5,-0.5}},
+        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    };    
+    ARM_POSE result;
+    ARM_POSE expected1 = {
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .wrist.position       = {0.0, 0.0, -15.0},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    };
+    ARM_POSE expected2 = {
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = 0.0, .v = {0.0, 1.0, 0.0}},
+        .wrist.position       = {-5.0, 0.0, -10.0},
+        .wrist.orientation    = {.w = 0.0, .v = {0.0, 1.0, 0.0}},
+    };
+    ARM_POSE expected3 = {
+        .shoulder.position    = {0.0, 0.0, 0.0},
+        .shoulder.orientation = {.w = 0.5, .v = {0.5, 0.5,-0.5}},
+        .elbow.position       = {0.0, 0.0, -10.0},
+        .elbow.orientation    = {.w = 0.0, .v = {M_SQRT1_2, M_SQRT1_2, 0.0}},
+        .wrist.position       = {0.0, 5.0, -10.0},
+        .wrist.orientation    = {.w = 0.0, .v = {M_SQRT1_2, M_SQRT1_2, 0.0}},
+    };
+
+    testDescription(__FUNCTION__, "Apply direct kinematics for different sets of joint values for shoulder and elbow");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret = arm_direct_kinematics_compute(joints1, &result);
+    ok &= assert_OK(ret, "arm_direct_kinematics_compute");
+    ok &= assert_armEqual(result, expected1, "arm_direct_kinematics_compute result");
+
+    ret = arm_direct_kinematics_compute(joints2, &result);
+    ok &= assert_OK(ret, "arm_direct_kinematics_compute");
+    ok &= assert_armEqual(result, expected2, "arm_direct_kinematics_compute result");
+
+    ret = arm_direct_kinematics_compute(joints3, &result);
+    ok &= assert_OK(ret, "arm_direct_kinematics_compute");
+    ok &= assert_armEqual(result, expected3, "arm_direct_kinematics_compute result");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_arm_014()
 {
     bool ok = true;
     ERROR_CODE ret = RET_OK;
@@ -1694,6 +1757,7 @@ bool tst_battery_all()
     ok &= tst_arm_011();
     ok &= tst_arm_012();
     ok &= tst_arm_013();
+    ok &= tst_arm_014();
 
     ok &= tst_cal_001();
     ok &= tst_cal_002();

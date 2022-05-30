@@ -53,7 +53,7 @@ typedef struct ARM_POSE_STRUCT {
  */
 ERROR_CODE arm_segments_length_set(double upper_arm, double forearm);
 
-void arm_joint_positions_set(
+void arm_pose_set(
     ARM_POSE initial_arm_pose);
 
 /**

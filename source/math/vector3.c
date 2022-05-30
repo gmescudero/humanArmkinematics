@@ -79,6 +79,19 @@ ERROR_CODE vector3_rotateMinus90y(double a[3], double output[3]) {
     return vector3_copy(result,output);
 }
 
+ERROR_CODE vector3_scale(double a[3], double scale, double *output) {
+    double result[3];
+    // Check arguments
+    if (NULL == a)      return RET_ARG_ERROR;
+    if (NULL == output) return RET_ARG_ERROR;
+
+    result[0] = a[0]*scale;
+    result[1] = a[1]*scale;
+    result[2] = a[2]*scale;
+
+    return vector3_copy(result,output);
+}
+
 ERROR_CODE vector3_dot(double a[3], double b[3], double *output) {
     double result;
     // Check arguments
