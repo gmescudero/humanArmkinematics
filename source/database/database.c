@@ -58,6 +58,7 @@ static DB_FIELD database[DB_NUMBER_OF_ENTRIES] = {
 /*   field_id      , name         , type      , multiplicity, mutex, data_ptr */
     
     /* IMU data */
+    DB_FIELD_INIT(DB_IMU_NUMBER,                  "IMU_NUMBER",                 DB_INTEGER, 1, 1),
     DB_FIELD_INIT(DB_IMU_TIMESTAMP,               "IMU_TIMESTAMP",              DB_REAL,IMU_MAX_NUMBER,1),
     DB_FIELD_INIT(DB_IMU_ACCELEROMETER,           "IMU_ACCELEROMETER",          DB_REAL,IMU_MAX_NUMBER,3),
     DB_FIELD_INIT(DB_IMU_GYROSCOPE,               "IMU_GYROSCOPE",              DB_REAL,IMU_MAX_NUMBER,3),

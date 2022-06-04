@@ -34,6 +34,7 @@ static void simu_callback_new_data_update(ImuData d, const char *id);
 static void simu_callback_new_data_update_and_dump(ImuData d, const char *id);
 
 ERROR_CODE imu_initialize(const char *com_port){
+    ERROR_CODE status;
     int   connection_status = SENSOR_CONNECTION_CONNECTED;
     short timeout_counter   = IMU_CONNECTION_TIMEOUT; 
     unsigned int index      = (unsigned int) num_imus;
@@ -68,8 +69,11 @@ ERROR_CODE imu_initialize(const char *com_port){
         return RET_ERROR;
     }
 
+    // Update number of imus and database
     num_imus++;
-    return RET_OK;
+    status = db_write(DB_IMU_NUMBER, 0, &((int)num_imus));
+
+    return status;
 }
 
 ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num){
@@ -96,6 +100,8 @@ void imu_all_sensors_remove(){
     // Set total number of IMUs to 0
     num_imus = 0;
     manager = NULL;
+    // Update database
+    db_write(DB_IMU_NUMBER, 0, &((int)num_imus));
 }
 
 void imu_terminate(){

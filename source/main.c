@@ -154,6 +154,7 @@ int main(int argc, char **argv) {
             if (RET_OK == status) {
                 // Compute each joint value
                 status = arm_inverse_kinematics_compute(calibrated_quats[0], calibrated_quats[1], joints); 
+                STATUS_EVAL(status);
             }
             if (RET_OK == status) {
                 // Compute the positions
