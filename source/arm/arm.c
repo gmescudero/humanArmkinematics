@@ -190,7 +190,13 @@ ERROR_CODE arm_direct_kinematics_compute(Quaternion joints[ARM_NUMBER_OF_JOINTS]
 }
 
 ERROR_CODE arm_inverse_kinematics_compute(Quaternion upper_arm, Quaternion forearm, Quaternion joints[ARM_NUMBER_OF_JOINTS]) {
-    // TODO
+    Quaternion sh_joint_conj;
+    
+    Quaternion_copy(&upper_arm, &joints[SHOULDER]);
+    Quaternion_conjugate(&joints[SHOULDER], &sh_joint_conj);
+    Quaternion_multiply(&sh_joint_conj, &forearm, &joints[ELBOW]);
+
+    return RET_OK;
 }
 
 /**

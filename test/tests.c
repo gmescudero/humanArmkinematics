@@ -1212,6 +1212,55 @@ bool tst_arm_014()
     return ok;
 }
 
+bool tst_arm_015()
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    Quaternion joints1[ARM_NUMBER_OF_JOINTS] = {
+        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        {.w = 1.0, .v = {0.0, 0.0, 0.0}},
+    };
+    Quaternion joints2[ARM_NUMBER_OF_JOINTS] = {
+        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    };
+    Quaternion joints3[ARM_NUMBER_OF_JOINTS] = {
+        {.w = 0.5, .v = {0.5, 0.5,-0.5}},
+        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    };  
+    ARM_POSE dk_result;
+    Quaternion ik_result[ARM_NUMBER_OF_JOINTS];
+
+    testDescription(__FUNCTION__, "Execute the inverse kinematics of the result of the direct kinemtics to see if the starting point matches the result");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret = arm_direct_kinematics_compute(joints1, &dk_result);
+    ok &= assert_OK(ret, "arm_direct_kinematics_compute");
+    ret = arm_inverse_kinematics_compute(dk_result.shoulder.orientation, dk_result.elbow.orientation, ik_result);
+    ok &= assert_OK(ret, "arm_inverse_kinematics_compute");
+    ok &= assert_quaternion(ik_result[SHOULDER], joints1[SHOULDER], "arm_inverse_kinematics_compute result sh");
+    ok &= assert_quaternion(ik_result[ELBOW], joints1[ELBOW], "arm_inverse_kinematics_compute result el");
+
+    ret = arm_direct_kinematics_compute(joints2, &dk_result);
+    ok &= assert_OK(ret, "arm_direct_kinematics_compute");
+    ret = arm_inverse_kinematics_compute(dk_result.shoulder.orientation, dk_result.elbow.orientation, ik_result);
+    ok &= assert_OK(ret, "arm_inverse_kinematics_compute");
+    ok &= assert_quaternion(ik_result[SHOULDER], joints2[SHOULDER], "arm_inverse_kinematics_compute result sh");
+    ok &= assert_quaternion(ik_result[ELBOW], joints2[ELBOW], "arm_inverse_kinematics_compute result el");
+
+    ret = arm_direct_kinematics_compute(joints3, &dk_result);
+    ok &= assert_OK(ret, "arm_direct_kinematics_compute");
+    ret = arm_inverse_kinematics_compute(dk_result.shoulder.orientation, dk_result.elbow.orientation, ik_result);
+    ok &= assert_OK(ret, "arm_inverse_kinematics_compute");
+    ok &= assert_quaternion(ik_result[SHOULDER], joints3[SHOULDER], "arm_inverse_kinematics_compute result sh");
+    ok &= assert_quaternion(ik_result[ELBOW], joints3[ELBOW], "arm_inverse_kinematics_compute result el");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
 bool tst_cal_001() 
 {
     bool ok = true;
@@ -1758,6 +1807,7 @@ bool tst_battery_all()
     ok &= tst_arm_012();
     ok &= tst_arm_013();
     ok &= tst_arm_014();
+    ok &= tst_arm_015();
 
     ok &= tst_cal_001();
     ok &= tst_cal_002();
@@ -1791,6 +1841,7 @@ int main(int argc, char **argv)
     // ok &= tst_arm_014();
     // ok &= tst_cal_xxx();
     // ok &= tst_cal_005();
+    // ok &= tst_arm_015();
 
     return (ok)? RET_OK : RET_ERROR;
 }

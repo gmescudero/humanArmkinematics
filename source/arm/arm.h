@@ -91,6 +91,15 @@ ERROR_CODE arm_homogeneous_transform(ARM_FRAME origin, ARM_FRAME transform, ARM_
  * @return ERROR_CODE 
  */
 ERROR_CODE arm_direct_kinematics_compute(Quaternion joints[ARM_NUMBER_OF_JOINTS], ARM_POSE *output);
+/**
+ * @brief Inverse kinematis of an arm
+ * 
+ * @param upper_arm (input) Orientation of the Upper Arm
+ * @param forearm (input) Orientation of the Forearm
+ * @param joints (output) The joints chain
+ * @return ERROR_CODE 
+ */
+ERROR_CODE arm_inverse_kinematics_compute(Quaternion upper_arm, Quaternion forearm, Quaternion joints[ARM_NUMBER_OF_JOINTS]);
 
 /**
  * @brief Apply an incremental rotation to current arm pose

@@ -153,10 +153,7 @@ int main(int argc, char **argv) {
             }
             if (RET_OK == status) {
                 // Compute each joint value
-                Quaternion sh_joint_conj;
-                Quaternion_copy(&calibrated_quats[0], &joints[SHOULDER]);
-                Quaternion_conjugate(&joints[SHOULDER], &sh_joint_conj);
-                Quaternion_multiply(&sh_joint_conj, &calibrated_quats[1], &joints[ELBOW]);
+                status = arm_inverse_kinematics_compute(calibrated_quats[0], calibrated_quats[1], joints); 
             }
             if (RET_OK == status) {
                 // Compute the positions
