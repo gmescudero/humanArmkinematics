@@ -63,10 +63,10 @@ int main(int argc, char **argv) {
         // status += db_csv_field_add(DB_IMU_QUATERNION,0);
         // status += db_csv_field_add(DB_IMU_TIMESTAMP,1);
         // status += db_csv_field_add(DB_IMU_QUATERNION,1);
+        status += db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
         status += db_csv_field_add(DB_ARM_ELBOW_POSITION,0);
         status += db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
         status += db_csv_field_add(DB_ARM_WRIST_POSITION,0);
-        status += db_csv_field_add(DB_ARM_WRIST_ORIENTATION,0);
         STATUS_EVAL(status);
     }
 
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
     }
 
     if (RET_OK == status) {
-        log_str("Loop reading IMU data to calibrate ");
+        log_str("Start loop procedure");
         do {
             sleep_ms(100);
 

@@ -323,16 +323,21 @@ bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, const double 
     bool ok = true;
     ERROR_CODE ret;
     int size;
+    DB_FIELD_TYPE type;
     double buff[100];
 
-    ret = db_field_parameters_get(field, &size, NULL, NULL);
+    ret = db_field_parameters_get(field, &size, &type, NULL);
     ok &= assert_OK(ret, "db_field_parameters_get");
+    if (DB_REAL != type) {
+        printf("\t -> RESULT: FAILED (%s) | The requested field does not match type, should be real", description);
+        return false;
+    }
 
     ret = db_read(field, instance, buff);
     ok &= assert_OK(ret, "db_read");
     
     for (int i = 0; i < size; i++) {
-        ok &= assert_double(buff[0],expected[0],EPSI/*threshold*/,NULL);
+        ok &= assert_double(buff[i],expected[i],EPSI/*threshold*/,NULL);
     }
     if (WILL_PRINT(ok) && (NULL != description)) {
         printf("\t -> RESULT: %s (%s) | EXPECTED: [", (true == ok)?"PASSED":"FAILED", description);
@@ -343,6 +348,81 @@ bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, const double 
         printf("], ACTUAL: [");
         for (int i = 0; i < size; i++) {
             printf("%f",buff[i]);
+            if (size-1 > i)printf(", ");
+        }
+        printf("]\n");
+    }
+
+    return ok;
+}
+
+
+bool assert_dbFieldInt(DB_FIELD_IDENTIFIER field, int instance, const int expected[], const char *description){
+    bool ok = true;
+    ERROR_CODE ret;
+    int size;
+    DB_FIELD_TYPE type;
+    int buff[100];
+
+    ret = db_field_parameters_get(field, &size, &type, NULL);
+    ok &= assert_OK(ret, "db_field_parameters_get");
+    if (DB_INTEGER != type) {
+        printf("\t -> RESULT: FAILED (%s) | The requested field does not match type, should be integer", description);
+        return false;
+    }
+
+    ret = db_read(field, instance, buff);
+    ok &= assert_OK(ret, "db_read");
+    
+    for (int i = 0; i < size; i++) {
+        ok &= (buff[i] == expected[i]);
+    }
+    if (WILL_PRINT(ok) && (NULL != description)) {
+        printf("\t -> RESULT: %s (%s) | EXPECTED: [", (true == ok)?"PASSED":"FAILED", description);
+        for (int i = 0; i < size; i++) {
+            printf("%d",expected[i]);
+            if (size-1 > i)printf(", ");
+        }
+        printf("], ACTUAL: [");
+        for (int i = 0; i < size; i++) {
+            printf("%d",buff[i]);
+            if (size-1 > i)printf(", ");
+        }
+        printf("]\n");
+    }
+
+    return ok;
+}
+
+bool assert_dbFieldIntGreaterEqual(DB_FIELD_IDENTIFIER field, int instance, const int expected[], const char *description){
+    bool ok = true;
+    ERROR_CODE ret;
+    int size;
+    DB_FIELD_TYPE type;
+    int buff[100];
+
+    ret = db_field_parameters_get(field, &size, &type, NULL);
+    ok &= assert_OK(ret, "db_field_parameters_get");
+    if (DB_INTEGER != type) {
+        printf("\t -> RESULT: FAILED (%s) | The requested field does not match type, should be integer", description);
+        return false;
+    }
+
+    ret = db_read(field, instance, buff);
+    ok &= assert_OK(ret, "db_read");
+    
+    for (int i = 0; i < size; i++) {
+        ok &= (buff[i] >= expected[i]);
+    }
+    if (WILL_PRINT(ok) && (NULL != description)) {
+        printf("\t -> RESULT: %s (%s) | EXPECTED: >=[", (true == ok)?"PASSED":"FAILED", description);
+        for (int i = 0; i < size; i++) {
+            printf("%d",expected[i]);
+            if (size-1 > i)printf(", ");
+        }
+        printf("], ACTUAL: [");
+        for (int i = 0; i < size; i++) {
+            printf("%d",buff[i]);
             if (size-1 > i)printf(", ");
         }
         printf("]\n");

@@ -19,7 +19,7 @@
 #include "tst_lib.h"
 
 
-#define IMUS_CONNECTED (0)
+#define IMUS_CONNECTED (2)
 
 
 bool tst_math_001() 
@@ -1639,6 +1639,7 @@ bool tst_imu_single_001()
     bool ok = true;
     ERROR_CODE ret;
     COM_PORTS discoveredPorts;
+    int expected_imusNum = 1;
 
     testDescription(__FUNCTION__, "Initialize a single IMU sensor");
     ok = preconditions_init(__FUNCTION__); 
@@ -1651,6 +1652,7 @@ bool tst_imu_single_001()
 
     ret = imu_initialize(discoveredPorts.ports_names[0]);
     ok &= assert_OK(ret, "imu_initialize");
+    ok &= assert_dbFieldIntGreaterEqual(DB_IMU_NUMBER, 0, &expected_imusNum, "db imus num");
 
     // ret = imu_initialize(NULL);
     // ok &= assert_ERROR(ret,"imu_initialize NULL arg0");
@@ -1706,6 +1708,7 @@ bool tst_imu_two_001()
     bool ok = true;
     ERROR_CODE ret;
     COM_PORTS discoveredPorts;
+    int expected_imusNum = 2;
 
     testDescription(__FUNCTION__, "Initialize two IMU sensors");
     ok = preconditions_init(__FUNCTION__); 
@@ -1719,6 +1722,7 @@ bool tst_imu_two_001()
 
     ret = imu_batch_initialize(discoveredPorts, 2);
     ok &= assert_OK(ret, "imu_batch_initialize");
+    ok &= assert_dbFieldIntGreaterEqual(DB_IMU_NUMBER, 0, &expected_imusNum, "db imus num");
 
     // ret = imu_initialize(NULL);
     // ok &= assert_ERROR(ret,"imu_initialize NULL arg0");

@@ -71,7 +71,7 @@ ERROR_CODE imu_initialize(const char *com_port){
 
     // Update number of imus and database
     num_imus++;
-    status = db_write(DB_IMU_NUMBER, 0, &((int)num_imus));
+    status = db_write(DB_IMU_NUMBER, 0, (int*)&(num_imus));
 
     return status;
 }
@@ -101,7 +101,7 @@ void imu_all_sensors_remove(){
     num_imus = 0;
     manager = NULL;
     // Update database
-    db_write(DB_IMU_NUMBER, 0, &((int)num_imus));
+    db_write(DB_IMU_NUMBER, 0, (int*)&(num_imus));
 }
 
 void imu_terminate(){

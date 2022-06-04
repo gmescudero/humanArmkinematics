@@ -355,10 +355,10 @@ ERROR_CODE db_field_print(DB_FIELD_IDENTIFIER field, int instance) {
 
     status = db_read(field, instance, values);
     if (RET_OK == status) {
-        sprintf(field_str, "field %s (%d): ", database[field].name, instance);
+        sprintf(field_str, "field %s (%d):", database[field].name, instance);
     }
     for (int i = 0; RET_OK == status && i < database[field].multiplicity; i++) {
-        sprintf(partial_str, "%f ",values[i]);
+        sprintf(partial_str, "\t%f ",values[i]);
         strcat(field_str, partial_str);
     }
 
