@@ -60,13 +60,13 @@ int main(int argc, char **argv) {
     if (RET_OK == status) {
         log_str("Set the database fields to track into the csv");
         status += db_csv_field_add(DB_IMU_TIMESTAMP,0);
-        // status += db_csv_field_add(DB_IMU_QUATERNION,0);
+        status += db_csv_field_add(DB_IMU_QUATERNION,0);
         // status += db_csv_field_add(DB_IMU_TIMESTAMP,1);
-        // status += db_csv_field_add(DB_IMU_QUATERNION,1);
-        status += db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
-        status += db_csv_field_add(DB_ARM_ELBOW_POSITION,0);
-        status += db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
-        status += db_csv_field_add(DB_ARM_WRIST_POSITION,0);
+        status += db_csv_field_add(DB_IMU_QUATERNION,1);
+        // status += db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
+        // status += db_csv_field_add(DB_ARM_ELBOW_POSITION,0);
+        // status += db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
+        // status += db_csv_field_add(DB_ARM_WRIST_POSITION,0);
         STATUS_EVAL(status);
     }
 
