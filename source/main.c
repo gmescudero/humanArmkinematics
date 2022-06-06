@@ -41,8 +41,6 @@ int main(int argc, char **argv) {
     ERROR_CODE status = RET_OK;
     COM_PORTS discoveredPorts;
     ImuData data[IMUS_NUM];
-    Quaternion predefined_quats[IMUS_NUM];
-    Quaternion calibrated_quats[IMUS_NUM];
     Quaternion joints[ARM_NUMBER_OF_JOINTS];
     Quaternion imus_quat[IMUS_NUM];
     double buffTime;
@@ -63,9 +61,9 @@ int main(int argc, char **argv) {
         status += db_csv_field_add(DB_IMU_QUATERNION,0);
         // status += db_csv_field_add(DB_IMU_TIMESTAMP,1);
         status += db_csv_field_add(DB_IMU_QUATERNION,1);
-        // status += db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
+        status += db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
         // status += db_csv_field_add(DB_ARM_ELBOW_POSITION,0);
-        // status += db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
+        status += db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
         // status += db_csv_field_add(DB_ARM_WRIST_POSITION,0);
         STATUS_EVAL(status);
     }
@@ -95,19 +93,8 @@ int main(int argc, char **argv) {
         log_str("STAND IN T-POSE TO CALIBRATE");
         sleep_ms(2000);
         if (RET_OK == status) {
-            status = imu_orientation_offset_reset();
+            status = imu_orientation_offset_set(1);
             STATUS_EVAL(status);
-        }
-        if (RET_OK == status) {
-            status = imu_batch_read(IMUS_NUM, data);
-            STATUS_EVAL(status);
-        }
-        if (RET_OK == status) {
-            for (int i = 0; i < IMUS_NUM; i++) {
-                Quaternion_set(1.0, 0.0, 0.0, 0.0, &predefined_quats[i]);
-                quaternion_from_float_buffer_build(data[i].q, &imus_quat[i]);
-            }
-            cal_static_imu_quat_calibration_set(predefined_quats, imus_quat, IMUS_NUM);
         }
         if (RET_OK == status) {
             log_str("CALIBRATION_DONE");
@@ -122,7 +109,11 @@ int main(int argc, char **argv) {
 
     /* Set starting time */
     if (RET_OK == status) {
-        startTime = data[0].timeStamp;
+        status = imu_batch_read(IMUS_NUM, data);
+        STATUS_EVAL(status);
+        if (RET_OK == status) {
+            startTime = data[0].timeStamp;
+        }
     }
 
     if (RET_OK == status) {
@@ -146,14 +137,10 @@ int main(int argc, char **argv) {
                     STATUS_EVAL(status);
                     quaternion_from_buffer_build(quat_buff, &imus_quat[i]);
                 }
-                if (RET_OK == status) {
-                    status = cal_static_imu_quat_calibration_apply(imus_quat, IMUS_NUM, calibrated_quats);
-                    STATUS_EVAL(status);
-                }
             }
             if (RET_OK == status) {
                 // Compute each joint value
-                status = arm_inverse_kinematics_compute(calibrated_quats[0], calibrated_quats[1], joints); 
+                status = arm_inverse_kinematics_compute(imus_quat[0], imus_quat[1], joints); 
                 STATUS_EVAL(status);
             }
             if (RET_OK == status) {
@@ -171,8 +158,6 @@ int main(int argc, char **argv) {
             iteration_count--;
         } while ((RET_OK == status || RET_NO_EXEC == status) && 20 > currentTime && 0 < iteration_count);
     } 
-
-    // log_str("Rotation vector obtained: [%f, %f, %f]", rotVector[0], rotVector[1], rotVector[2]);
 
     log_str("Terminate all IMU connections");
     imu_terminate();

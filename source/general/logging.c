@@ -152,7 +152,7 @@ static void scsv_default_headers_set(void) {
         fd = fopen(csv_file_name, "w");
         if (NULL != fd) {
             for (int i = 0; i < CSV_FILE_VALUES_NUMBER; i++) {
-                fprintf(fd,"data%d,",i);
+                fprintf(fd,"data%d",i);
                 if (i<CSV_FILE_VALUES_NUMBER-1) fprintf(fd,",");
             }
             fprintf(fd,"\n");

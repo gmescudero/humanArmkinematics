@@ -12,80 +12,13 @@ typedef struct CAL_ROT_AXIS_CALIB_CONFIG_STRUCT {
     double minVel;
 } CAL_ROT_AXIS_CALIB_CONFIG;
 
-typedef struct CAL_STATIC_CALIBRATION_STRUCT {
-    bool        calibration_done;
-    Quaternion  raw_to_calib;
-} CAL_STATIC_CALIBRATION;
-
 static void scal_buffer_shift_and_insert(double array[], double value, int size);
-
-
-static CAL_STATIC_CALIBRATION cal_imus_calibration_data[IMU_MAX_NUMBER] = {
-    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
-    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
-    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
-    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
-    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
-    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
-    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
-};
 
 static CAL_ROT_AXIS_CALIB_CONFIG cal_rot_axis_autocalib_config = { 
     .window   = DEFAULT_ROT_AXIS_CALIB_WINDOW,
     .stepSize = DEFAULT_ROT_AXIS_CALIB_STEP_SZ,
     .minVel   = DEFAULT_ROT_AXIS_CALIB_MIN_VEL
 };
-
-void cal_static_imu_quat_calibration_set(
-    Quaternion known_quat[IMU_MAX_NUMBER],
-    Quaternion imus_quat[IMU_MAX_NUMBER],
-    int number_of_imus)
-{
-    Quaternion imu_quat_conj;
-    double db_quat[4];
-    int i;
-    
-    if (number_of_imus > 0) log_str("Calibrating quaternion data of %d IMU sensors", number_of_imus);
-
-    for (i = 0; i < number_of_imus; i++) {
-        // Conjugate the imu reading
-        Quaternion_conjugate(&imus_quat[i], &imu_quat_conj);
-        // Compute the raw to calibrated quaternion
-        Quaternion_multiply(&imu_quat_conj, &(known_quat[i]), &(cal_imus_calibration_data[i].raw_to_calib));
-        // Set the imu calibration as "done"
-        cal_imus_calibration_data[i].calibration_done = true;
-        // Update database
-        quaternion_buffer_build(cal_imus_calibration_data[i].raw_to_calib, db_quat);
-        if (RET_OK != db_write(DB_IMU_STATIC_QUATERNION_CALIB, i, db_quat)) {
-            wrn_str("Failed to update IMU%d quaternion calibration data to the database", i);
-        }
-        
-        dbg_str("\t -> Calibration quaternion for IMU%d: [%f, %f, %f, %f]",i, db_quat[0],db_quat[1],db_quat[2],db_quat[3]);
-    }
-}
-
-ERROR_CODE cal_static_imu_quat_calibration_apply(
-    Quaternion imus_quat[IMU_MAX_NUMBER],
-    int number_of_imus,
-    Quaternion calibrated_data[IMU_MAX_NUMBER])
-{
-    ERROR_CODE status = RET_OK;
-    int i;
-
-    for (i = 0; RET_OK == status && i < number_of_imus; i++) {
-        if (false == cal_imus_calibration_data[i].calibration_done) {
-            err_str("Imu %d not calibrated!", i);
-            status = RET_ERROR;
-        }
-        else {
-            // Apply the calibration
-            Quaternion_multiply(&imus_quat[i], &(cal_imus_calibration_data[i].raw_to_calib), &(calibrated_data[i]));
-        }
-    }
-
-    return status;
-}
-
 
 ERROR_CODE cal_automatic_rotation_axis_calibrate(
     double omegaR[3],

@@ -319,7 +319,7 @@ bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected, const char 
     return ok;
 }
 
-bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, const double expected[], const char *description){
+bool assert_dbFieldDoubleThreshold(DB_FIELD_IDENTIFIER field, int instance, const double expected[], double threshold, const char *description) {
     bool ok = true;
     ERROR_CODE ret;
     int size;
@@ -337,7 +337,7 @@ bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, const double 
     ok &= assert_OK(ret, "db_read");
     
     for (int i = 0; i < size; i++) {
-        ok &= assert_double(buff[i],expected[i],EPSI/*threshold*/,NULL);
+        ok &= assert_double(buff[i],expected[i],threshold,NULL);
     }
     if (WILL_PRINT(ok) && (NULL != description)) {
         printf("\t -> RESULT: %s (%s) | EXPECTED: [", (true == ok)?"PASSED":"FAILED", description);
@@ -356,6 +356,9 @@ bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, const double 
     return ok;
 }
 
+bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, const double expected[], const char *description){
+    return assert_dbFieldDoubleThreshold(field, instance, expected, EPSI, description);
+}
 
 bool assert_dbFieldInt(DB_FIELD_IDENTIFIER field, int instance, const int expected[], const char *description){
     bool ok = true;

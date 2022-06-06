@@ -27,7 +27,7 @@
 static ERROR_CODE sarm_current_position_update(ARM_POSE pose);
 
 static ARM_FRAME arm_kinematic_table[NUMBER_OF_NODES] = {
-    {.position = {0.0, 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Base to Shoulder
+    {.position = {0.0, 0.0, 0.0},                             .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Base to Shoulder
     {.position = {DEFAULT_SHOULDER_2_ELBOW_LENGTH, 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Shoulder to elbow
     {.position = {DEFAULT_ELBOW_2_WRIST_LENGTH   , 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Elbow to wrist
 };
@@ -194,7 +194,7 @@ ERROR_CODE arm_inverse_kinematics_compute(Quaternion upper_arm, Quaternion forea
     
     Quaternion_copy(&upper_arm, &joints[SHOULDER]);
     Quaternion_conjugate(&joints[SHOULDER], &sh_joint_conj);
-    Quaternion_multiply(&sh_joint_conj, &forearm, &joints[ELBOW]);
+    Quaternion_multiply(&forearm, &sh_joint_conj, &joints[ELBOW]);
 
     dbg_str("%s -> Inverse kinematics resulted in joints: ",__FUNCTION__);
     dbg_str("\t -> Shoulder: %f, %f, %f, %f", joints[SHOULDER].w, joints[SHOULDER].v[0],joints[SHOULDER].v[1],joints[SHOULDER].v[2]);
@@ -203,9 +203,6 @@ ERROR_CODE arm_inverse_kinematics_compute(Quaternion upper_arm, Quaternion forea
     return RET_OK;
 }
 
-/**
- * Rotate the arm segments by two given quaternions
- */
 ARM_POSE arm_rotate(
     Quaternion sh2el_orientation,
     Quaternion el2wr_orientation)
@@ -236,6 +233,10 @@ ARM_POSE arm_rotate(
     // Compute the resulting elbow and wrist position
     vector3_add(arm_current_pose.shoulder.position, sh2el_vector_rot, arm_current_pose.elbow.position);
     vector3_add(arm_current_pose.elbow.position, el2wr_vector_rot, arm_current_pose.wrist.position);
+
+
+    // Update current position
+    sarm_current_position_update(arm_current_pose);
 
     return arm_current_pose;
 }
