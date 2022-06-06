@@ -53,6 +53,15 @@ typedef enum TRACE_LEVEL_ENUM {
 } TRACE_LEVEL;
 
 /**
+ * @brief Macro that gets the maximum value among two given
+ */
+#define MAX(a,b) ((a>b)?a:b)
+/**
+ * @brief Macro that gets the minimum value among two given
+ */
+#define MIN(a,b) ((a<b)?a:b)
+
+/**
  * @brief Retrieve all COM ports available in the system
  * 
  * @param discoveredPorts Output structure containing retrieved COM ports data

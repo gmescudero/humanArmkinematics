@@ -101,7 +101,7 @@ ERROR_CODE db_initialize(void) {
 
     log_str("Initialzing database fields");
     for (int field_id = 0; RET_OK == status && field_id < DB_NUMBER_OF_ENTRIES; field_id++) {
-        dbg_str("Initializing field %s (field identifier: %d)",database[field_id].name, field_id);
+        dbg_str("\t -> Initializing field %s (field identifier: %d)",database[field_id].name, field_id);
         // Initialize database entry mutex
         if (0 != sem_init(&(database[field_id].mutex),0,1)) {
             status = RET_ERROR;

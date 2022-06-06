@@ -20,16 +20,12 @@
 #define DEFAULT_ELBOW_2_WRIST_LENGTH    (5.0)
 #define DEFAULT_TOTAL_ARM_LENGTH (DEFAULT_SHOULDER_2_ELBOW_LENGTH+DEFAULT_ELBOW_2_WRIST_LENGTH)
 
-#define MAX(a,b) ((a>b)?a:b)
-#define MIN(a,b) ((a<b)?a:b)
-
-
 static ERROR_CODE sarm_current_position_update(ARM_POSE pose);
 
 static ARM_FRAME arm_kinematic_table[NUMBER_OF_NODES] = {
-    {.position = {0.0, 0.0, 0.0},                             .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Base to Shoulder
-    {.position = {DEFAULT_SHOULDER_2_ELBOW_LENGTH, 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Shoulder to elbow
-    {.position = {DEFAULT_ELBOW_2_WRIST_LENGTH   , 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Elbow to wrist
+    {.position = {0.0, 0.0, 0.0},                              .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Base to Shoulder
+    {.position = {-DEFAULT_SHOULDER_2_ELBOW_LENGTH, 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Shoulder to elbow
+    {.position = {-DEFAULT_ELBOW_2_WRIST_LENGTH   , 0.0, 0.0}, .orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}}}, // Elbow to wrist
 };
 
 static ARM_POSE arm_current_pose = {
@@ -274,7 +270,7 @@ static ERROR_CODE sarm_current_position_update(ARM_POSE pose) {
     ERROR_CODE status = RET_OK;
     double quat_ori[4];
 
-    dbg_str("Updating arm pose into database");
+    dbg_str("%s -> Updating arm pose into database",__FUNCTION__);
 
     // Update database
     if (RET_OK == status) {

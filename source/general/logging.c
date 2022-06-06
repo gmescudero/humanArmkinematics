@@ -167,7 +167,7 @@ void csv_headers_set(const char headers[CSV_FILE_VALUES_NUMBER][CSV_HEADER_MAX_L
         fd = fopen(csv_file_name, "w");
         if (NULL != fd) {
             csv_data_num = data_num;
-            dbg_str("Setting csv headers");
+            log_str("Setting csv headers");
             for (int i = 0; i < data_num; i++) {
                 dbg_str("\t -> %s",headers[i]);
                 if (0 < strlen(headers[i])){
