@@ -192,6 +192,9 @@ ERROR_CODE arm_inverse_kinematics_compute(Quaternion upper_arm, Quaternion forea
     Quaternion_conjugate(&joints[SHOULDER], &sh_joint_conj);
     Quaternion_multiply(&forearm, &sh_joint_conj, &joints[ELBOW]);
 
+    Quaternion_conjugate(&joints[SHOULDER], &joints[SHOULDER]);
+    Quaternion_conjugate(&joints[ELBOW], &joints[ELBOW]);
+
     dbg_str("%s -> Inverse kinematics resulted in joints: ",__FUNCTION__);
     dbg_str("\t -> Shoulder: %f, %f, %f, %f", joints[SHOULDER].w, joints[SHOULDER].v[0],joints[SHOULDER].v[1],joints[SHOULDER].v[2]);
     dbg_str("\t -> Elbow:    %f, %f, %f, %f", joints[ELBOW].w, joints[ELBOW].v[0],joints[ELBOW].v[1],joints[ELBOW].v[2]);
