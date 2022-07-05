@@ -157,7 +157,7 @@ ERROR_CODE arm_direct_kinematics_compute(Quaternion joints[ARM_NUMBER_OF_JOINTS]
             Quaternion_multiply(&(joints[i]),&(transform.orientation), &(transform.orientation));
         }
         // Compute next node position and orientation
-        status = arm_homogeneous_transform(poses[MAX(i-1, 0)], transform, &(poses[i]));
+        status = arm_homogeneous_transform(poses[MAX_GET(i-1, 0)], transform, &(poses[i]));
     }
 
     // Set current position

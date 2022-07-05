@@ -17,6 +17,7 @@
 #include "general.h"
 #include "database.h"
 #include "calib.h"
+#include "interface.h"
 #include <string.h>
 
 #define IMUS_NUM (2) // Set the expected minimum imu sensors for the program to work
@@ -53,6 +54,10 @@ int main(int argc, char **argv) {
     /* Initialize all packages */
     log_str("Initialize");
     status = initialize();
+    STATUS_EVAL(status);
+
+    log_str("Set up the graphical user interface");
+    status = interface_initialize(argc, argv);
     STATUS_EVAL(status);
 
     /* Set the csv logging from the database */
