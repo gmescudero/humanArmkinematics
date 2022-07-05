@@ -21,12 +21,14 @@ INC = \
 	-I$(SOURCE_DIR)/math \
 	-I$(SOURCE_DIR)/imu \
 	-I$(SOURCE_DIR)/database \
-	-I$(SOURCE_DIR)/calibration
+	-I$(SOURCE_DIR)/calibration \
+	-I$(SOURCE_DIR)/interface \
 	
 # libraries
 IMULIB= -L$(current_dir)/lib -lLpSensor -lstdc++ -lX11
 PTHREAD = -pthread
 PTHREADSERIAL = $(PTHREAD) -lserialport
+GTKLIB = `pkg-config --cflags --libs gtk+-3.0`
 # debug
 DEBUG = -g
 # optimisation
@@ -37,11 +39,11 @@ WARN = -Wall
 CCFLAGS = $(DEBUG) $(OPT) $(WARN)
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
-OBJS =  quaternion.o arm.o vector3.o imu.o functions.o logging.o database.o calib.o
+OBJS =  quaternion.o arm.o vector3.o imu.o functions.o logging.o database.o calib.o interface.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
-	$(LD) $(INC) $(BINARIES_DIR)/*.o $(IMULIB) $(PTHREADSERIAL) -o $(TARGET) -lm -ldl
+	$(LD) $(INC) $(BINARIES_DIR)/*.o $(IMULIB) $(PTHREADSERIAL) $(GTKLIB) -o $(TARGET) -lm -ldl
 
 test: $(OBJS) all
 	cd test && make && cd -
@@ -51,7 +53,7 @@ test_nl: $(OBJS) all
 	cd test && make && cd -
 
 main.o: $(SOURCE_DIR)/main.c dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/main.c -o $(BINARIES_DIR)/$@
+	$(CC) -c  $(CPPFLAGS) $(INC) $(GTKLIB) $(SOURCE_DIR)/main.c -o $(BINARIES_DIR)/$@
 
 functions.o: $(SOURCE_DIR)/general/functions.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/general/functions.c -o $(BINARIES_DIR)/$@ 
@@ -76,6 +78,9 @@ imu.o: $(SOURCE_DIR)/imu/imu.cpp dirs_create
 
 database.o: $(SOURCE_DIR)/database/database.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/database/database.c -o $(BINARIES_DIR)/$@ 
+
+interface.o: $(SOURCE_DIR)/interface/interface.c dirs_create
+	$(CC) -c  $(CPPFLAGS) $(INC) $(GTKLIB) $(SOURCE_DIR)/interface/interface.c -o $(BINARIES_DIR)/$@ 
 
 dirs_create:
 	mkdir -p $(BINARIES_DIR)

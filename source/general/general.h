@@ -55,11 +55,11 @@ typedef enum TRACE_LEVEL_ENUM {
 /**
  * @brief Macro that gets the maximum value among two given
  */
-#define MAX(a,b) ((a>b)?a:b)
+#define MAX_GET(a,b) ((a>b)?a:b)
 /**
  * @brief Macro that gets the minimum value among two given
  */
-#define MIN(a,b) ((a<b)?a:b)
+#define MIN_GET(a,b) ((a<b)?a:b)
 
 /**
  * @brief Retrieve all COM ports available in the system
