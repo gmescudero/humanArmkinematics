@@ -64,6 +64,7 @@ ERROR_CODE db_field_parameters_get(DB_FIELD_IDENTIFIER field, int *multiplicity,
  * @brief Write values to a database field
  * 
  * @param field (input) Field identifier
+ * @param instance (input) Instance of the field
  * @param data (input) Data to write
  * @return ERROR_CODE 
  */
@@ -72,6 +73,7 @@ ERROR_CODE db_write(DB_FIELD_IDENTIFIER field, int instance, const void *data);
  * @brief Write a single value of a database field
  * 
  * @param field (input) Field identifier
+ * @param instance (input) Instance of the field
  * @param index (input) Data index
  * @param data (input) Data to write
  * @return ERROR_CODE 
@@ -81,14 +83,16 @@ ERROR_CODE db_index_write(DB_FIELD_IDENTIFIER field, int instance, int index, co
  * @brief Read values from the database
  * 
  * @param field (input) Field identifier
+ * @param instance (input) Instance of the field
  * @param data (output) Data to retrieve
  * @return ERROR_CODE 
  */
-ERROR_CODE db_read(DB_FIELD_IDENTIFIER field, int instance, void *data);
+ERROR_CODE db_read(DB_FIELD_IDENTIFIER field, int c, void *data);
 /**
  * @brief Read a single value from a field of the database
  * 
  * @param field (input) Field identifier
+ * @param instance (input) Instance of the field
  * @param index (input) Data index
  * @param data (output) Data to retrieve
  * @return ERROR_CODE 
@@ -112,8 +116,8 @@ ERROR_CODE db_csv_dump(void);
 /**
  * @brief Print a database field throug console
  * 
- * @param field (input)
- * @param instance 
+ * @param field (input) Field identifier
+ * @param instance (input) Field instance
  * @return ERROR_CODE 
  */
 ERROR_CODE db_field_print(DB_FIELD_IDENTIFIER field, int instance);
