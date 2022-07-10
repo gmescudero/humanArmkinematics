@@ -65,7 +65,7 @@ ERROR_CODE vector3_rotateMinus90y(double a[3], double output[3]);
  */
 ERROR_CODE vector3_scale(double a[3], double scale, double *output);
 /**
- * @brief Compute the dot product between two. a*b
+ * @brief Compute the dot product between two vectors. a*b
  * 
  * @param a (input) First vector
  * @param b (input) Second vector
@@ -73,6 +73,15 @@ ERROR_CODE vector3_scale(double a[3], double scale, double *output);
  * @return ERROR_CODE: RET_OK on succes
  */
 ERROR_CODE vector3_dot(double a[3], double b[3], double *output);
+/**
+ * @brief Compute the cross product between two vectors. a x b
+ * 
+ * @param a (input) First vector
+ * @param b (input) Second vector
+ * @param output (output) Result vector
+ * @return ERROR_CODE: RET_OK on succes
+ */
+ERROR_CODE vector3_cross(double a[3], double b[3], double output[3]);
 /**
  * @brief Compute the norm value of a given vector
  * 

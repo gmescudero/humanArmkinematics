@@ -255,6 +255,88 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
 }
 
 
+ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
+    double omega1_from1[3],
+    double omega2_from2[3],
+    Quaternion q_sensor1,
+    Quaternion q_sensor2,
+    double rotationV1[3],
+    double rotationV2[3])
+{
+    ERROR_CODE status = RET_OK;
+
+    // Check arguments
+    if (NULL == omega1_from1)       return RET_ARG_ERROR;
+    if (NULL == omega2_from2)       return RET_ARG_ERROR;
+    if (NULL == rotationV1)         return RET_ARG_ERROR;
+    if (NULL == rotationV2)         return RET_ARG_ERROR;
+
+    // Get quaternion conversion to the sensor1 frame
+    Quaternion q_from2_to_1;
+    Quaternion q_conj;
+    Quaternion_conjugate(&q_sensor1, &q_conj);
+    Quaternion_multiply(&q_conj, &q_sensor2, &q_from2_to_1);
+
+    // Get the relative agular velocity
+    double omega2_from1[3];
+    double omegaR[3];
+    Quaternion_rotate(&q_from2_to_1, omega2_from2, omega2_from1);
+    status = vector3_substract(omega2_from1, omega1_from1, omegaR);
+    
+    // Check the moving status
+    double omegaR_norm;
+    if (RET_OK == status) {
+        status = vector3_norm(omegaR, &omegaR_norm);
+    }
+    if (RET_OK == status) {
+        if (omegaR_norm < cal_rot_axis_autocalib_config.minVel) {
+            dbg_str("%s -> Not moving. OmegaR: %f",__FUNCTION__,omegaR_norm);
+            return RET_OK;
+        }
+    }
+
+    // Spherical coordinates
+    double theta1, rho1, theta2, rho2;
+    int sph_alt1 = 0, sph_alt2 = 0;
+    if (RET_OK == status) {
+        // First vector
+        theta1 = atan2(sqrt(rotationV1[0]*rotationV1[0]+rotationV1[1]*rotationV1[1]) , rotationV1[2]);
+        if (fabs(sin(theta1)) < 0.5) {
+            // Avoid singularity
+            sph_alt1 = 1;
+            theta1 = atan2(sqrt(rotationV1[2]*rotationV1[2]+rotationV1[1]*rotationV1[1]) , rotationV1[0]);
+            rho1   = atan2(rotationV1[1],rotationV1[2]);
+        }
+        else {
+            rho1   = atan2(rotationV1[1],rotationV1[0]);
+        }
+
+        // Second Vector
+        theta2 = atan2(sqrt(rotationV2[0]*rotationV2[0]+rotationV2[1]*rotationV2[1]) , rotationV2[2]);
+        if (fabs(sin(theta2)) < 0.5) {
+            // Avoid singularity
+            sph_alt2 = 1;
+            theta2 = atan2(sqrt(rotationV2[2]*rotationV2[2]+rotationV2[1]*rotationV2[1]) , rotationV2[0]);
+            rho2   = atan2(rotationV2[1],rotationV2[2]);
+        }
+        else {
+            rho2   = atan2(rotationV2[1],rotationV2[0]);
+        }
+    }
+
+    // Calculate error
+    double error;
+    double rotationVn[3]; 
+    if (RET_OK == status) {
+        status = vector3_cross(rotationV1, rotationV2, rotationVn);
+    }
+
+
+
+    return status;
+}
+
+
 /**
  * @brief Insert a new value in the position 0 of a buffer and shift everything else forward
  * 
