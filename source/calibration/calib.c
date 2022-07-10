@@ -2,6 +2,7 @@
 #include "calib.h"
 #include "database.h"
 #include "vector3.h"
+#include "matrix.h"
 #include "general.h"
 #include "constants.h"
 #include "arm.h"
@@ -326,12 +327,136 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
 
     // Calculate error
     double error;
+    static double errorV[DEFAULT_ROT_AXIS_CALIB_WINDOW] = {0.0};
     double rotationVn[3]; 
     if (RET_OK == status) {
         status = vector3_cross(rotationV1, rotationV2, rotationVn);
     }
+    if (RET_OK == status) {
+        status = vector3_dot(omegaR, rotationVn, &error);
+    }
+    if (RET_OK == status) {
+        for (int i = DEFAULT_ROT_AXIS_CALIB_WINDOW-2; i >= 0; i--) {
+            errorV[i+1] = errorV[i];
+        }
+        errorV[0] = error;
+    }
 
+    // Calcualte partials of each angle
+    double dpart_th1[3], dpart_rh1[3], dpart_th2[3], dpart_rh2[3];
+    double ct, st, cr, sr;
+    if (RET_OK == status) {
+        ct = cos(theta1); st = sin(theta1); cr = cos(rho1); sr = sin(rho1);
+        dpart_th1[0] =  ct*cr;   dpart_th1[1] = ct*sr;    dpart_th1[2] = -st;
+        dpart_rh1[0] = -st*sr;   dpart_rh1[1] = st*cr;    dpart_rh1[2] = 0.0;
+        
+        ct = cos(theta2); st = sin(theta2); cr = cos(rho2); sr = sin(rho2);
+        dpart_th2[0] =  ct*cr;   dpart_th2[1] = ct*sr;    dpart_th2[2] = -st;
+        dpart_rh2[0] = -st*sr;   dpart_rh2[1] = st*cr;    dpart_rh2[2] = 0.0;    
+    }
 
+    // Calculate partials of the error
+    double dpart_error[4];
+    double aux_vector[3];
+    if (RET_OK == status) {
+        // d(err)/d(theta1)
+        status = vector3_cross(dpart_th1,rotationV2, aux_vector);
+        if (RET_OK == status) {
+            status = vector3_dot(omegaR, aux_vector, &dpart_error[0]);
+        }
+    }
+    if (RET_OK == status) {
+        // d(err)/d(rho1)
+        status = vector3_cross(dpart_rh1,rotationV2, aux_vector);
+        if (RET_OK == status) {
+            status = vector3_dot(omegaR, aux_vector, &dpart_error[1]);
+        }
+    }
+    if (RET_OK == status) {
+        // d(err)/d(theta2)
+        status = vector3_cross(rotationV1,dpart_th2, aux_vector);
+        if (RET_OK == status) {
+            status = vector3_dot(omegaR, aux_vector, &dpart_error[2]);
+        }
+    }
+    if (RET_OK == status) {
+        // d(err)/d(rho2)
+        status = vector3_cross(rotationV1,dpart_rh2, aux_vector);
+        if (RET_OK == status) {
+            status = vector3_dot(omegaR, aux_vector, &dpart_error[3]);
+        }
+    }
+
+    // Calculate Jacobian Matrix
+    static double Jacobian[DEFAULT_ROT_AXIS_CALIB_WINDOW][4] = {{0.0}};
+    if (RET_OK == status) {
+        for (int i = DEFAULT_ROT_AXIS_CALIB_WINDOW-2; i >= 0; i--) {
+            for (int j = 0; j < 4; j++) {
+                Jacobian[i+1][j] = Jacobian[i][j];
+            }
+        }
+        for (int j = 0; j < 4; j++) {
+            Jacobian[0][j] = dpart_error[j];
+        }
+    }
+
+    // Update vector of parameters with Gauss-Newton method
+    double phi_buff[4] = {theta1, rho1, theta2, rho2};
+    MATRIX phi = matrix_from_buffer_allocate(4, 1, (double **)phi_buff);
+    MATRIX e   = matrix_from_buffer_allocate(4, 1, (double **)errorV);
+    MATRIX J   = matrix_from_buffer_allocate(DEFAULT_ROT_AXIS_CALIB_WINDOW, 4, (double **)Jacobian);
+
+    // phi = phi + pinv(J) * Jt * e
+    MATRIX Jt  = matrix_allocate(4,DEFAULT_ROT_AXIS_CALIB_WINDOW);
+    if (RET_OK == status) {
+        status = matrix_transpose(J,&Jt);
+    }
+    MATRIX Jte = matrix_allocate(4,1);
+    if (RET_OK == status) {
+        status = matrix_multiply(Jt,e, &Jte);
+    }
+    matrix_free(Jt); matrix_free(e); 
+    MATRIX Jpinv = matrix_allocate(4,4);
+    if (RET_OK == status) {
+        status = matrix_pseudoinverse(J,&Jpinv);
+    }
+    matrix_free(J);
+    MATRIX phi_correction = matrix_allocate(4,1);
+    if (RET_OK == status) {
+        status = matrix_multiply(Jpinv, Jte, &phi_correction);
+    }
+    matrix_free(Jpinv); matrix_free(Jte);
+    if (RET_OK == status) {
+        status = matrix_add(phi, phi_correction, &phi);
+    }
+    matrix_free(phi_correction); 
+    if (RET_OK == status) {
+        theta1 = phi.data[0][0];
+        rho1   = phi.data[0][1];
+        theta2 = phi.data[0][2];
+        rho2   = phi.data[0][3];
+    }
+    matrix_free(phi);
+
+    // Set new vectors
+    if (RET_OK == status) {
+        ct = cos(theta1); st = sin(theta1); cr = cos(rho1); sr = sin(rho1);
+        if (0 == sph_alt1) {
+            rotationV1[0] = st*cr; rotationV1[1] = st*sr; rotationV1[2] = ct;
+        }
+        else {
+            rotationV1[0] = ct; rotationV1[1] = st*sr; rotationV1[2] = st*cr;
+        }
+    }
+    if (RET_OK == status) {
+        ct = cos(theta2); st = sin(theta2); cr = cos(rho2); sr = sin(rho2);
+        if (0 == sph_alt2) {
+            rotationV2[0] = st*cr; rotationV2[1] = st*sr; rotationV2[2] = ct;
+        }
+        else {
+            rotationV2[0] = ct; rotationV2[1] = st*sr; rotationV2[2] = st*cr;
+        }
+    }
 
     return status;
 }
