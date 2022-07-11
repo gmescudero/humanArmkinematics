@@ -387,8 +387,23 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
         }
     }
 
-    // Calculate Jacobian Matrix
+    // Set up Phi matrix
+    MATRIX phi = matrix_allocate(4, 1);
+    phi.data[0][0] = theta1;    
+    phi.data[1][0] = rho1;      
+    phi.data[2][0] = theta2;    
+    phi.data[3][0] = rho2;
+
+    // Set up Error matrix
+    MATRIX e   = matrix_allocate(DEFAULT_ROT_AXIS_CALIB_WINDOW, 1);
+    for (int i=0; i<DEFAULT_ROT_AXIS_CALIB_WINDOW; i++) {
+        e.data[i][0]   = errorV[i]; 
+    }
+
+    // Calculate and set Jacobian Matrix
     static double Jacobian[DEFAULT_ROT_AXIS_CALIB_WINDOW][4] = {{0.0}};
+    MATRIX J = matrix_allocate(DEFAULT_ROT_AXIS_CALIB_WINDOW, 4);
+
     if (RET_OK == status) {
         for (int i = DEFAULT_ROT_AXIS_CALIB_WINDOW-2; i >= 0; i--) {
             for (int j = 0; j < 4; j++) {
@@ -397,35 +412,24 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
         }
         for (int j = 0; j < 4; j++) {
             Jacobian[0][j] = dpart_error[j];
+            for (int i = 0; i < DEFAULT_ROT_AXIS_CALIB_WINDOW; i++) {
+                J.data[i][j]   = Jacobian[i][j];
+            }
         }
     }
 
     // Update vector of parameters with Gauss-Newton method
-    double phi_buff[4] = {theta1, rho1, theta2, rho2};
-    MATRIX phi = matrix_from_buffer_allocate(4, 1, (double **)phi_buff);
-    MATRIX e   = matrix_from_buffer_allocate(4, 1, (double **)errorV);
-    MATRIX J   = matrix_from_buffer_allocate(DEFAULT_ROT_AXIS_CALIB_WINDOW, 4, (double **)Jacobian);
-
-    // phi = phi + pinv(J) * Jt * e
-    MATRIX Jt  = matrix_allocate(4,DEFAULT_ROT_AXIS_CALIB_WINDOW);
-    if (RET_OK == status) {
-        status = matrix_transpose(J,&Jt);
-    }
-    MATRIX Jte = matrix_allocate(4,1);
-    if (RET_OK == status) {
-        status = matrix_multiply(Jt,e, &Jte);
-    }
-    matrix_free(Jt); matrix_free(e); 
-    MATRIX Jpinv = matrix_allocate(4,4);
+    // phi := phi + Jt*(J*Jt)^-1 * e = phi + pinv(J) * e
+    MATRIX Jpinv = matrix_allocate(4,DEFAULT_ROT_AXIS_CALIB_WINDOW);
     if (RET_OK == status) {
         status = matrix_pseudoinverse(J,&Jpinv);
     }
     matrix_free(J);
     MATRIX phi_correction = matrix_allocate(4,1);
     if (RET_OK == status) {
-        status = matrix_multiply(Jpinv, Jte, &phi_correction);
+        status = matrix_multiply(Jpinv,e, &phi_correction);
     }
-    matrix_free(Jpinv); matrix_free(Jte);
+    matrix_free(e); matrix_free(Jpinv);
     if (RET_OK == status) {
         status = matrix_add(phi, phi_correction, &phi);
     }

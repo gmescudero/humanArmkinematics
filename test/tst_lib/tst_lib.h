@@ -4,6 +4,7 @@
 
 #include "arm.h"
 #include "database.h"
+#include "matrix.h"
 
 #ifndef EPSI
 #define EPSI (1e-6)
@@ -49,6 +50,7 @@ bool assert_dbFieldDoubleThreshold(DB_FIELD_IDENTIFIER field, int instance, cons
 bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, const double expected[], const char *description);
 bool assert_dbFieldInt(DB_FIELD_IDENTIFIER field, int instance, const int expected[], const char *description);
 bool assert_dbFieldIntGreaterEqual(DB_FIELD_IDENTIFIER field, int instance, const int expected[], const char *description);
-
+bool assert_matrix(MATRIX actual, MATRIX expected, const char *description);
+bool assert_matrix_identity(MATRIX actual, const char *description);
 
 #endif

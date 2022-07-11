@@ -29,14 +29,12 @@ typedef struct MATRIX_STRUCT
  */
 MATRIX matrix_allocate(unsigned rows, unsigned cols);
 /**
- * @brief Allocate memory for a matrix and set the initial data from a buffer
+ * @brief Allocate memory for a square matrix and initialize it with an identity matrix
  * 
- * @param rows (input) Number of rows
- * @param cols (input) Number of columns
- * @param buff (input) Buffer to be copied to the matrix
- * @return MATRIX with allocated memory
+ * @param size (input) Range of the matrix
+ * @return MATRIX 
  */
-MATRIX matrix_from_buffer_allocate(unsigned rows, unsigned cols, double *buff[]);
+MATRIX matrix_identity_allocate(unsigned size);
 /**
  * @brief Free the Matrix allocated memory
  * 
@@ -94,7 +92,11 @@ ERROR_CODE matrix_inverse(MATRIX a, MATRIX *output);
  * @return ERROR_CODE 
  */
 ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output);
-
-
+/**
+ * @brief Show a given Matrix
+ * 
+ * @param a (input) Matrix to print
+ */
+void matrix_print(MATRIX a);
 
 #endif /* __matrix_h__ */

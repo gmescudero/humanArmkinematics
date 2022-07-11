@@ -13,6 +13,7 @@
 #include "arm.h"
 #include "imu.h"
 #include "vector3.h"
+#include "matrix.h"
 #include "database.h"
 #include "calib.h"
 
@@ -364,6 +365,239 @@ bool tst_math_009()
     ret = quaternion_ang_vel_apply(q, T, w, NULL);
     ok &= assert_ERROR(ret, "quaternion_ang_vel_apply");
 
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_math_010()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX m, m1, m2;
+
+    testDescription(__FUNCTION__, "Check matrix allocation");
+    ok = preconditions_init(__FUNCTION__);
+
+    m = matrix_allocate(4,3);
+    ok &= assert_int(m.rows, 4, "rows");
+    ok &= assert_int(m.cols, 3, "cols");
+
+    m1 = matrix_identity_allocate(2);
+    ok &= assert_int(m1.rows, 2, "rows");
+    ok &= assert_int(m1.cols, 2, "cols");
+
+    m2 = matrix_allocate(2,2);
+    ok &= assert_int(m2.rows, 2, "rows");
+    ok &= assert_int(m2.cols, 2, "cols");
+    m2.data[0][0] = 1.0; 
+    m2.data[0][1] = 0.0; 
+    m2.data[1][0] = 0.0; 
+    m2.data[1][1] = 1.0; 
+
+    ok &= assert_matrix(m1,m2,"identity");
+
+    matrix_free(m);
+    matrix_free(m1);
+    matrix_free(m2);
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_math_011()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX m1, m2;
+
+    testDescription(__FUNCTION__, "Check matrix copy");
+    ok = preconditions_init(__FUNCTION__);
+
+    m1 = matrix_identity_allocate(3);
+    m2 = matrix_allocate(3,3);
+
+    ok &= assert_matrix_identity(m1, "identity 1");
+
+    ret = matrix_copy(m1, &m2);
+    ok &= assert_OK(ret, "matrix_copy");
+
+    ok &= assert_matrix_identity(m2, "identity 2");
+
+    matrix_free(m1);
+    matrix_free(m2);
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_math_012()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX m, mt;
+
+    testDescription(__FUNCTION__, "Check matrix transposition");
+    ok = preconditions_init(__FUNCTION__);
+
+    m = matrix_identity_allocate(3);
+    mt = matrix_allocate(3,3);
+
+    m.data[0][2] = 3.5;
+    ok &= assert_double(m.data[2][0], 0.0, EPSI, "before transposing");
+
+    ret = matrix_transpose(m, &mt);
+    ok &= assert_OK(ret, "matrix_transpose");
+
+    ok &= assert_double(mt.data[0][2], 0.0, EPSI, "Transposed 0,2");
+    ok &= assert_double(mt.data[2][0], 3.5, EPSI, "Transposed 2,0");
+
+    matrix_free(m);
+    matrix_free(mt);
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_math_013()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX m1, m2, m;
+    MATRIX m_expected;
+
+    testDescription(__FUNCTION__, "Check matrix addition");
+    ok = preconditions_init(__FUNCTION__);
+
+    m1 = matrix_identity_allocate(3);
+    m2 = matrix_identity_allocate(3);
+    m  = matrix_allocate(3,3);
+    m_expected = matrix_identity_allocate(3);
+
+    m_expected.data[0][0] = 2.0;
+    m_expected.data[1][1] = 2.0;
+    m_expected.data[2][2] = 2.0;
+
+    ret = matrix_add(m1, m2, &m);
+    ok &= assert_OK(ret, "matrix_add");
+    ok &= assert_matrix(m, m_expected, "matrix_add result");
+
+    matrix_free(m);
+    matrix_free(m1);
+    matrix_free(m2);
+    matrix_free(m_expected);
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_math_014()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX m1, m2, m3;
+    MATRIX m_result1, m_result2;
+    MATRIX m_expected1, m_expected2;
+
+    testDescription(__FUNCTION__, "Check matrix multiplication");
+    ok = preconditions_init(__FUNCTION__);
+
+    m1 = matrix_identity_allocate(2); m1.data[0][1] = 2.0;
+    m2 = matrix_identity_allocate(2); m2.data[0][1] = 3.0;
+    m3 = matrix_allocate(2,1); 
+    m3.data[0][0] = 3.0;
+    m3.data[1][0] = 4.0;
+    m_result1  = matrix_allocate(2,2);
+    m_result2  = matrix_allocate(2,1);
+    m_expected1 = matrix_identity_allocate(2);
+    m_expected1.data[0][1] = 5.0;
+    m_expected2 = matrix_allocate(2,1);
+    m_expected2.data[0][0] = 11.0;
+    m_expected2.data[1][0] = 4.0;
+
+
+    ret = matrix_multiply(m1, m2, &m_result1);
+    ok &= assert_OK(ret, "matrix_multiply 1");
+    ok &= assert_matrix(m_result1, m_expected1, "matrix_multiply 1 result");
+
+    ret = matrix_multiply(m1, m3, &m_result2);
+    ok &= assert_OK(ret, "matrix_multiply 2");
+    ok &= assert_matrix(m_result2, m_expected2, "matrix_multiply 2 result");
+
+    matrix_free(m1);
+    matrix_free(m2);
+    matrix_free(m3);
+    matrix_free(m_result1);
+    matrix_free(m_result2);
+    matrix_free(m_expected1);
+    matrix_free(m_expected2);
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_math_015()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX m, minv;
+    MATRIX m_expected;
+
+    testDescription(__FUNCTION__, "Check matrix inversion");
+    ok = preconditions_init(__FUNCTION__);
+
+    m    = matrix_allocate(3,3);
+    minv = matrix_allocate(3,3);
+    m_expected = matrix_allocate(3,3);
+
+    m.data[0][0] = 1.0;    m.data[0][1] = 1.0;    m.data[0][2] = 3.0;
+    m.data[1][0] = 1.0;    m.data[1][1] = 3.0;    m.data[1][2] =-3.0;
+    m.data[2][0] =-2.0;    m.data[2][1] =-4.0;    m.data[2][2] =-4.0;
+
+    m_expected.data[0][0] = 3.0;    m_expected.data[0][1] = 1.0;    m_expected.data[0][2] = 1.5;
+    m_expected.data[1][0] =-1.25;   m_expected.data[1][1] =-0.25;   m_expected.data[1][2] =-0.75;
+    m_expected.data[2][0] =-0.25;   m_expected.data[2][1] =-0.25;   m_expected.data[2][2] =-0.25;
+
+    ret = matrix_inverse(m, &minv);
+    ok &= assert_OK(ret, "matrix_inverse");
+    ok &= assert_matrix(minv, m_expected, "matrix_inverse result");
+
+    matrix_free(m);
+    matrix_free(minv);
+    matrix_free(m_expected);
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_math_016()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX m, mpinv;
+    MATRIX m_expected;
+
+    testDescription(__FUNCTION__, "Check matrix pseudo inversion");
+    ok = preconditions_init(__FUNCTION__);
+
+    m    = matrix_allocate(2,3);
+    mpinv = matrix_allocate(3,2);
+    m_expected = matrix_allocate(3,2);
+
+    m.data[0][0] = 1.0;    m.data[0][1] = 0.0;    m.data[0][2] = 0.0;
+    m.data[1][0] = 0.0;    m.data[1][1] = 1.0;    m.data[1][2] =-3.0;
+
+    m_expected.data[0][0] = 1.0;   m_expected.data[0][1] = 0.0;
+    m_expected.data[1][0] = 0.0;   m_expected.data[1][1] = 0.1;
+    m_expected.data[2][0] = 0.0;   m_expected.data[2][1] =-0.3;
+
+    ret = matrix_pseudoinverse(m, &mpinv);
+    ok &= assert_OK(ret, "matrix_pseudoinverse");
+    ok &= assert_matrix(mpinv, m_expected, "matrix_pseudoinverse result");
+
+    matrix_free(m);
+    matrix_free(mpinv);
+    matrix_free(m_expected);
     testCleanUp();
     testReport(ok);
     return ok;
@@ -1674,7 +1908,14 @@ bool tst_battery_all()
     ok &= tst_math_007();
     ok &= tst_math_008();
     ok &= tst_math_009();
-
+    ok &= tst_math_010();
+    ok &= tst_math_011();
+    ok &= tst_math_012();
+    ok &= tst_math_013();
+    ok &= tst_math_014();
+    ok &= tst_math_015();
+    ok &= tst_math_016();
+    
     ok &= tst_db_001();
     ok &= tst_db_002();
     ok &= tst_db_003();
@@ -1698,7 +1939,7 @@ bool tst_battery_all()
     ok &= tst_arm_012();
     ok &= tst_arm_013();
     ok &= tst_arm_014();
-    ok &= tst_arm_015();
+    // ok &= tst_arm_015();
 
     ok &= tst_cal_001();
     ok &= tst_cal_002();
@@ -1731,6 +1972,7 @@ int main(int argc, char **argv)
     // ok &= tst_cal_xxx();
     // ok &= tst_cal_005();
     // ok &= tst_arm_015();
+
 
     return (ok)? RET_OK : RET_ERROR;
 }

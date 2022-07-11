@@ -433,3 +433,59 @@ bool assert_dbFieldIntGreaterEqual(DB_FIELD_IDENTIFIER field, int instance, cons
 
     return ok;
 }
+
+bool assert_matrix(MATRIX actual, MATRIX expected, const char *description) {
+    bool ok = true;
+
+    ok &= assert_int(actual.rows, expected.rows, NULL);
+    ok &= assert_int(actual.cols, expected.cols, NULL);
+
+    for (int r = 0; ok && r < expected.rows; r ++) {
+        for (int c = 0; ok && c < expected.cols; c ++) {
+            ok &= assert_double(actual.data[r][c], expected.data[r][c], EPSI, NULL);
+        }
+    }
+
+    if (WILL_PRINT(ok) && (NULL != description)) {        
+        printf("\t -> RESULT: %s (%s) | EXPECTED: ", (true == ok)?"PASSED":"FAILED", description);
+        for (int r = 0; r < expected.rows; r ++) {
+            printf("\n\t\t");
+            for (int c = 0; c < expected.cols; c ++) {
+                printf("%f\t",expected.data[r][c]);
+            }
+        }
+        printf("\n\n\t\tACTUAL: ");
+        for (int r = 0; r < actual.rows; r ++) {
+            printf("\n\t\t");
+            for (int c = 0; c < actual.cols; c ++) {
+                printf("%f\t",actual.data[r][c]);
+            }
+        }
+        printf("\n");
+    }
+    return ok;
+}
+
+bool assert_matrix_identity(MATRIX actual, const char *description) {
+    bool ok = true;
+    MATRIX I;
+
+    ok &= assert_int(actual.rows, actual.cols, NULL);
+
+    I = matrix_identity_allocate(actual.rows);
+    ok &= assert_matrix(actual, I, NULL);
+    matrix_free(I);
+
+    if (WILL_PRINT(ok) && (NULL != description)) {        
+        printf("\t -> RESULT: %s (%s) | EXPECTED: IDENTITY, ACTUAL: ", (true == ok)?"PASSED":"FAILED", description);
+        for (int r = 0; r < actual.rows; r ++) {
+            printf("\n\t\t");
+            for (int c = 0; c < actual.cols; c ++) {
+                printf("%f\t",actual.data[r][c]);
+            }
+        }
+        printf("\n");
+    }
+
+    return ok;
+}

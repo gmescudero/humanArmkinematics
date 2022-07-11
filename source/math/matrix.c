@@ -1,8 +1,10 @@
 
+#include "constants.h"
 #include "matrix.h"
 #include "general.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 
 
@@ -17,17 +19,16 @@ MATRIX matrix_allocate(unsigned rows, unsigned cols) {
     return result;
 }
 
-MATRIX matrix_from_buffer_allocate(unsigned rows, unsigned cols, double *buff[]) {
-    MATRIX result;
-
-    result = matrix_allocate(rows, cols);
-    for (int r = 0; r < rows; r++) {
-        for (int c = 0; c<cols; c++) {
-            result.data[r][c] = buff[r][c];
-        }    
+MATRIX matrix_identity_allocate(unsigned size) {
+    MATRIX result = matrix_allocate(size,size);
+    for (int r = 0; r<size; r++) {
+        for (int c = 0; c<size; c++) {
+            result.data[r][c] = (r==c) ? 1.0 : 0.0;
+        }
     }
     return result;
 }
+
 
 void matrix_free(MATRIX a) {
     for (int i = 0; i < a.rows; i++) {
@@ -91,11 +92,10 @@ ERROR_CODE matrix_add(MATRIX a, MATRIX b, MATRIX *output) {
 }
 
 ERROR_CODE matrix_multiply(MATRIX a, MATRIX b, MATRIX *output) {
-    ERROR_CODE status;
+    ERROR_CODE status = RET_OK;
     MATRIX result;
     // Check arguments
     if (NULL == output)   return RET_ARG_ERROR;
-    if (a.rows != b.cols) return RET_ARG_ERROR;
     if (a.cols != b.rows) return RET_ARG_ERROR;
 
     result = matrix_allocate(a.rows, b.cols);
@@ -114,7 +114,7 @@ ERROR_CODE matrix_multiply(MATRIX a, MATRIX b, MATRIX *output) {
 }
 
 ERROR_CODE matrix_inverse(MATRIX a, MATRIX *output) {
-    ERROR_CODE status;
+    ERROR_CODE status = RET_OK;
     MATRIX result;
     double temp;
     int size = a.rows;
@@ -122,32 +122,33 @@ ERROR_CODE matrix_inverse(MATRIX a, MATRIX *output) {
     if (NULL == output)   return RET_ARG_ERROR;
     if (a.rows != a.cols) return RET_ARG_ERROR;
     
-    result = matrix_allocate(size, size);
-    for(int i=0; i<size; i++)
-        for(int j=0; j<size; j++)
-            if(i==j)
-                result.data[i][j]=1.0;
-            else
-                result.data[i][j]=0.0;
+    result = matrix_identity_allocate(size);
 
-    for(int k=0; k<size; k++) {
+    for(int k=0; RET_OK == status && k<size; k++) {
         temp = a.data[k][k]; 
-        for(int j=0; j<size; j++) {
-            a.data[k][j] /= temp;
-            result.data[k][j] /= temp;
+        if (EPSI > fabs(temp)) {
+            status = RET_ERROR;
+            err_str("Failed to invert a matrix");
         }
-        for(int i=0; i<size; i++) {
-            temp = a.data[i][k];
-            for(int j=0; j<size;j++) { 
-                if(i==k)
-                    break;
-                a.data[i][j]     -= a.data[k][j]*temp; 
-                result.data[i][j]-= result.data[k][j]*temp;
+        else {
+            for(int j=0; j<size; j++) {
+                a.data[k][j] /= temp;
+                result.data[k][j] /= temp;
+            }
+            for(int i=0; i<size; i++) {
+                temp = a.data[i][k];
+                for(int j=0; j<size;j++) { 
+                    if(i!=k) {
+                        a.data[i][j]     -= a.data[k][j]*temp; 
+                        result.data[i][j]-= result.data[k][j]*temp;
+                    }
+                }
             }
         }
     }
-
-    status = matrix_copy(result, output);
+    if (RET_OK == status) {
+        status = matrix_copy(result, output);
+    }
     matrix_free(result);
     return status;
 }
@@ -158,24 +159,49 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
     MATRIX result;
     MATRIX at;
     MATRIX aat;
+    MATRIX aatinv;
 
     // (Jt*J)^-1
     at      = matrix_allocate(a.cols, a.rows);
-    aat     = matrix_allocate(at.rows, a.cols);
-    result  = matrix_allocate(aat.rows, aat.cols);
+    aat     = matrix_allocate(a.rows, at.cols);
+    aatinv  = matrix_allocate(aat.rows, aat.cols);
+    result  = matrix_allocate(at.rows, aatinv.cols);
 
     status = matrix_transpose(a, &at);
+    matrix_print(a);
     if (RET_OK == status) {
-        status = matrix_multiply(at, a, &aat);
+        matrix_print(at);
+        status = matrix_multiply(a, at, &aat);
     }
     if (RET_OK == status) {
-        status = matrix_inverse(aat, &result);
+        matrix_print(aat);
+        status = matrix_inverse(aat, &aatinv);
     }
     if (RET_OK == status) {
+        matrix_print(aatinv);
+        status = matrix_multiply(at, aatinv, &result);
+    }
+    if (RET_OK == status) {
+        matrix_print(result);
         status = matrix_copy(result, output);
     }
     matrix_free(result);
+    matrix_free(aatinv);
     matrix_free(aat);
     matrix_free(at);
     return status;
+}
+
+void matrix_print(MATRIX a) {
+    char string[250] = "";
+    char part_string[25] = "";  
+
+    for (int r = 0; r < a.rows; r ++) {
+        strcat(string, "\n\t\t");
+        for (int c = 0; c < a.cols; c ++) {
+            sprintf(part_string,"%f\t",a.data[r][c]);
+            strcat(string, part_string);
+        }
+    }
+    log_str("%dx%d Matrix: %s",a.rows, a.cols, string);
 }
