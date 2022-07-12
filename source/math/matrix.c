@@ -86,6 +86,27 @@ ERROR_CODE matrix_transpose(MATRIX a, MATRIX *output) {
     return status;
 }
 
+
+ERROR_CODE matrix_scale(MATRIX a, double scale, MATRIX *output) {
+    ERROR_CODE status;
+    MATRIX result;
+    // Check arguments
+    if (NULL == output) return RET_ARG_ERROR;
+    if (false == a.allocated) return RET_ARG_ERROR;
+    if (false == output->allocated) return RET_ARG_ERROR;
+
+    result = matrix_allocate(a.rows, a.cols);
+    for (int r = 0; r < a.rows; r++) {
+        for (int c = 0; c < a.cols; c++) {
+            result.data[r][c] = a.data[r][c] * scale;
+        }
+    }
+
+    status = matrix_copy(result, output);
+    matrix_free(result);
+    return status;
+}
+
 ERROR_CODE matrix_add(MATRIX a, MATRIX b, MATRIX *output) {
     ERROR_CODE status;
     MATRIX result;

@@ -61,6 +61,15 @@ ERROR_CODE matrix_copy(MATRIX a, MATRIX *output);
  */
 ERROR_CODE matrix_transpose(MATRIX a, MATRIX *output);
 /**
+ * @brief Multiply a matrix by a given value
+ * 
+ * @param a (input) Matrix to scale
+ * @param scale (input) Scale value
+ * @param output (output) Resulting matrix
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_scale(MATRIX a, double scale, MATRIX *output);
+/**
  * @brief Add two given matrixes
  * 
  * @param a (input) First matrix

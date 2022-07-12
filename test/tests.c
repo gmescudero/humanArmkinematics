@@ -1654,12 +1654,14 @@ bool tst_cal_004()
 
     double rotVector1[3]    = {1.0,0.0,0.0};
     double rotVector2[3]    = {0.5,-0.5,0.5};
-    double timeout = 20.0;/*(seconds)*/
+    double timeout = 40.0;/*(seconds)*/
     double timeInc = 0.02;/*(seconds)*/
     double time = 0.0;
 
     double omega1[] = {1000.0,0.0,0.0};
     double omega2[] = {1000.0,0.0,500.0};
+    double omega1_noise[3];
+    double omega2_noise[3];
 
     Quaternion q_sensor1 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
     Quaternion q_sensor2 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
@@ -1687,7 +1689,17 @@ bool tst_cal_004()
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
         // Execute arm calibration of a single rotation axis
-        ret = cal_automatic_two_rotation_axis_calibrate(omega1,omega2,q_sensor1,q_sensor2,rotVector1,rotVector2);
+        omega1_noise[0] = omega1[0] + 100.0*tstRandomDoubleGenerate();
+        omega1_noise[1] = omega1[1] + 100.0*tstRandomDoubleGenerate();
+        omega1_noise[2] = omega1[2] + 100.0*tstRandomDoubleGenerate();
+        omega2_noise[0] = omega2[0] + 100.0*tstRandomDoubleGenerate();
+        omega2_noise[1] = omega2[1] + 100.0*tstRandomDoubleGenerate();
+        omega2_noise[2] = omega2[2] + 100.0*tstRandomDoubleGenerate();
+        // tst_str("Time %f (iterations %d)", time, (int)(time/timeInc));
+        ret = cal_automatic_two_rotation_axis_calibrate(omega1_noise,omega2_noise,q_sensor1,q_sensor2,rotVector1,rotVector2);
+        // tst_str("V1: <%f, %f, %f>, V2: <%f, %f, %f>", 
+        //     rotVector1[0],rotVector1[1], rotVector1[2],
+        //     rotVector2[0],rotVector2[1], rotVector2[2]);
         ok &= assert_OK(ret, "cal_automatic_two_rotation_axis_calibrate");
         // Dump database data
         ret = db_csv_dump();
@@ -1695,10 +1707,12 @@ bool tst_cal_004()
     }
     ret = vector3_normalize(omega1,v1_expected);
     ok &= assert_OK(ret, "vector3_normalize");
+    ret = vector3_substract(omega2,omega1,omega2);
+    ok &= assert_OK(ret, "vector3_substract");
     ret = vector3_normalize(omega2,v2_expected);
     ok &= assert_OK(ret, "vector3_normalize");
-    ok &= assert_vector3EqualThreshold(rotVector1,v1_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
-    ok &= assert_vector3EqualThreshold(rotVector2,v2_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
+    ok &= assert_vector3EqualThreshold(rotVector1,v1_expected,5e-2,"cal_automatic_rotation_axis_calibrate result1");
+    ok &= assert_vector3EqualThreshold(rotVector2,v2_expected,5e-2,"cal_automatic_rotation_axis_calibrate result2");
 
     // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
 

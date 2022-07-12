@@ -299,6 +299,7 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
             sph_alt1 = 1;
             theta1 = atan2(sqrt(rotationV1[2]*rotationV1[2]+rotationV1[1]*rotationV1[1]) , rotationV1[0]);
             rho1   = atan2(rotationV1[1],rotationV1[2]);
+            dbg_str("Using alternative spherical convention for rotation vector 1");
         }
         else {
             rho1   = atan2(rotationV1[1],rotationV1[0]);
@@ -311,6 +312,7 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
             sph_alt2 = 1;
             theta2 = atan2(sqrt(rotationV2[2]*rotationV2[2]+rotationV2[1]*rotationV2[1]) , rotationV2[0]);
             rho2   = atan2(rotationV2[1],rotationV2[2]);
+            dbg_str("Using alternative spherical convention for rotation vector 2");
         }
         else {
             rho2   = atan2(rotationV2[1],rotationV2[0]);
@@ -331,17 +333,29 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
         scal_buffer_shift_and_insert(errorV, error, DEFAULT_ROT_AXIS_CALIB_WINDOW);
     }
 
-    // Calcualte partials of each angle
+    // Calculate partials of each angle
     double dpart_th1[3], dpart_rh1[3], dpart_th2[3], dpart_rh2[3];
     double ct, st, cr, sr;
     if (RET_OK == status) {
         ct = cos(theta1); st = sin(theta1); cr = cos(rho1); sr = sin(rho1);
-        dpart_th1[0] =  ct*cr;   dpart_th1[1] = ct*sr;    dpart_th1[2] = -st;
-        dpart_rh1[0] = -st*sr;   dpart_rh1[1] = st*cr;    dpart_rh1[2] = 0.0;
-        
+        if (0 == sph_alt1) {
+            dpart_th1[0] =  ct*cr;   dpart_th1[1] = ct*sr;    dpart_th1[2] = -st;
+            dpart_rh1[0] = -st*sr;   dpart_rh1[1] = st*cr;    dpart_rh1[2] = 0.0;
+        }
+        else { // Alternative
+            dpart_th1[0] = -st;      dpart_th1[1] = ct*sr;    dpart_th1[2] =  ct*cr;  
+            dpart_rh1[0] = 0.0;      dpart_rh1[1] = st*cr;    dpart_rh1[2] = -st*sr;
+        }
+
         ct = cos(theta2); st = sin(theta2); cr = cos(rho2); sr = sin(rho2);
-        dpart_th2[0] =  ct*cr;   dpart_th2[1] = ct*sr;    dpart_th2[2] = -st;
-        dpart_rh2[0] = -st*sr;   dpart_rh2[1] = st*cr;    dpart_rh2[2] = 0.0;    
+        if (0 == sph_alt2) {
+            dpart_th2[0] =  ct*cr;   dpart_th2[1] = ct*sr;    dpart_th2[2] = -st;
+            dpart_rh2[0] = -st*sr;   dpart_rh2[1] = st*cr;    dpart_rh2[2] = 0.0;    
+        }
+        else { // Alternative
+            dpart_th2[0] = -st;      dpart_th2[1] = ct*sr;    dpart_th2[2] =  ct*cr;  
+            dpart_rh2[0] = 0.0;      dpart_rh2[1] = st*cr;    dpart_rh2[2] = -st*sr;
+        }
     }
 
     // Calculate partials of the error
@@ -428,6 +442,9 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
             status = matrix_multiply(Jpinv,e, &phi_correction);
         }
         matrix_free(e); matrix_free(Jpinv);
+        if (RET_OK == status) {
+            status = matrix_scale(phi_correction, cal_rot_axis_autocalib_config.stepSize, &phi_correction);
+        }
         if (RET_OK == status) {
             status = matrix_add(phi, phi_correction, &phi);
         }

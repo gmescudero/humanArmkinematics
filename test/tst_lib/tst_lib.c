@@ -50,16 +50,16 @@ void tst_str(const char *text, ...) {
     }
 }
 
-double testRandomDoubleGenerate() {
-    return ((double)rand() - 0.5*(double)RAND_MAX);
+double tstRandomDoubleGenerate() {
+    return ((double)rand()/(double)RAND_MAX - 0.5);
 }
 
-Quaternion testRandomQuaternionGenerate() {
+Quaternion tstRandomQuaternionGenerate() {
     Quaternion gen_quat;
-    double w  = testRandomDoubleGenerate();
-    double v1 = testRandomDoubleGenerate();
-    double v2 = testRandomDoubleGenerate();
-    double v3 = testRandomDoubleGenerate();
+    double w  = tstRandomDoubleGenerate();
+    double v1 = tstRandomDoubleGenerate();
+    double v2 = tstRandomDoubleGenerate();
+    double v3 = tstRandomDoubleGenerate();
     
     Quaternion_set(w, v1, v2, v3, &gen_quat);
     Quaternion_normalize(&gen_quat, &gen_quat);
