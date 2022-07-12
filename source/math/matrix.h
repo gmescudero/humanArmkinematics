@@ -12,9 +12,11 @@
 #define __matrix_h__
 
 #include "errors.h"
+#include <stdbool.h>
 
 typedef struct MATRIX_STRUCT
 {
+    bool allocated;
     unsigned rows;
     unsigned cols;
     double **data;
