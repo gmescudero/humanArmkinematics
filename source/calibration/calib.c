@@ -272,18 +272,10 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
     if (NULL == rotationV1)         return RET_ARG_ERROR;
     if (NULL == rotationV2)         return RET_ARG_ERROR;
 
-    // Get quaternion conversion to the sensor1 frame
-    Quaternion q_from2_to_1;
-    Quaternion q_conj;
-    Quaternion_conjugate(&q_sensor1, &q_conj);
-    Quaternion_multiply(&q_conj, &q_sensor2, &q_from2_to_1);
-
     // Get the relative agular velocity
-    double omega2_from1[3];
     double omegaR[3];
-    Quaternion_rotate(&q_from2_to_1, omega2_from2, omega2_from1);
-    status = vector3_substract(omega2_from1, omega1_from1, omegaR);
-    
+    status = arm_relative_angular_vel_compute(q_sensor1,q_sensor2, omega1_from1, omega2_from2, omegaR);
+
     // Check the moving status
     double omegaR_norm;
     if (RET_OK == status) {
@@ -336,10 +328,7 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
         status = vector3_dot(omegaR, rotationVn, &error);
     }
     if (RET_OK == status) {
-        for (int i = DEFAULT_ROT_AXIS_CALIB_WINDOW-2; i >= 0; i--) {
-            errorV[i+1] = errorV[i];
-        }
-        errorV[0] = error;
+        scal_buffer_shift_and_insert(errorV, error, DEFAULT_ROT_AXIS_CALIB_WINDOW);
     }
 
     // Calcualte partials of each angle
@@ -401,6 +390,7 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
     }
 
     // Calculate and set Jacobian Matrix
+    static int it_counter = DEFAULT_ROT_AXIS_CALIB_WINDOW;
     static double Jacobian[DEFAULT_ROT_AXIS_CALIB_WINDOW][4] = {{0.0}};
     MATRIX J = matrix_allocate(DEFAULT_ROT_AXIS_CALIB_WINDOW, 4);
 
@@ -410,56 +400,89 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
                 Jacobian[i+1][j] = Jacobian[i][j];
             }
         }
-        for (int j = 0; j < 4; j++) {
-            Jacobian[0][j] = dpart_error[j];
-            for (int i = 0; i < DEFAULT_ROT_AXIS_CALIB_WINDOW; i++) {
-                J.data[i][j]   = Jacobian[i][j];
+        for (int c = 0; c < 4; c++) {
+            Jacobian[0][c] = dpart_error[c];
+            for (int r = 0; r < DEFAULT_ROT_AXIS_CALIB_WINDOW; r++) {
+                J.data[r][c]   = Jacobian[r][c];
             }
         }
     }
 
-    // Update vector of parameters with Gauss-Newton method
-    // phi := phi + Jt*(J*Jt)^-1 * e = phi + pinv(J) * e
-    MATRIX Jpinv = matrix_allocate(4,DEFAULT_ROT_AXIS_CALIB_WINDOW);
-    if (RET_OK == status) {
-        status = matrix_pseudoinverse(J,&Jpinv);
+    if (0 < it_counter) {
+        // Allow the Jacobian to reach full range before starting calibration
+        it_counter--;
+        matrix_free(J);
+        matrix_free(e);
+        matrix_free(phi);
     }
-    matrix_free(J);
-    MATRIX phi_correction = matrix_allocate(4,1);
-    if (RET_OK == status) {
-        status = matrix_multiply(Jpinv,e, &phi_correction);
-    }
-    matrix_free(e); matrix_free(Jpinv);
-    if (RET_OK == status) {
-        status = matrix_add(phi, phi_correction, &phi);
-    }
-    matrix_free(phi_correction); 
-    if (RET_OK == status) {
-        theta1 = phi.data[0][0];
-        rho1   = phi.data[0][1];
-        theta2 = phi.data[0][2];
-        rho2   = phi.data[0][3];
-    }
-    matrix_free(phi);
-
-    // Set new vectors
-    if (RET_OK == status) {
-        ct = cos(theta1); st = sin(theta1); cr = cos(rho1); sr = sin(rho1);
-        if (0 == sph_alt1) {
-            rotationV1[0] = st*cr; rotationV1[1] = st*sr; rotationV1[2] = ct;
+    else {
+        // Update vector of parameters with Gauss-Newton method
+        // phi := phi + Jt*(J*Jt)^-1 * e = phi + pinv(J) * e
+        MATRIX Jpinv = matrix_allocate(4,DEFAULT_ROT_AXIS_CALIB_WINDOW);
+        if (RET_OK == status) {
+            status = matrix_pseudoinverse(J,&Jpinv);
         }
-        else {
-            rotationV1[0] = ct; rotationV1[1] = st*sr; rotationV1[2] = st*cr;
+        matrix_free(J);
+        MATRIX phi_correction = matrix_allocate(4,1);
+        if (RET_OK == status) {
+            status = matrix_multiply(Jpinv,e, &phi_correction);
+        }
+        matrix_free(e); matrix_free(Jpinv);
+        if (RET_OK == status) {
+            status = matrix_add(phi, phi_correction, &phi);
+        }
+        matrix_free(phi_correction); 
+        if (RET_OK == status) {
+            theta1 = phi.data[0][0];
+            rho1   = phi.data[0][1];
+            theta2 = phi.data[0][2];
+            rho2   = phi.data[0][3];
+        }
+        matrix_free(phi);
+        
+        // Set new vectors
+        if (RET_OK == status) {
+            ct = cos(theta1); st = sin(theta1); cr = cos(rho1); sr = sin(rho1);
+            if (0 == sph_alt1) {
+                rotationV1[0] = st*cr; rotationV1[1] = st*sr; rotationV1[2] = ct;
+            }
+            else {
+                rotationV1[0] = ct; rotationV1[1] = st*sr; rotationV1[2] = st*cr;
+            }
+        }
+        if (RET_OK == status) {
+            ct = cos(theta2); st = sin(theta2); cr = cos(rho2); sr = sin(rho2);
+            if (0 == sph_alt2) {
+                rotationV2[0] = st*cr; rotationV2[1] = st*sr; rotationV2[2] = ct;
+            }
+            else {
+                rotationV2[0] = ct; rotationV2[1] = st*sr; rotationV2[2] = st*cr;
+            }
         }
     }
+    // Update database
     if (RET_OK == status) {
-        ct = cos(theta2); st = sin(theta2); cr = cos(rho2); sr = sin(rho2);
-        if (0 == sph_alt2) {
-            rotationV2[0] = st*cr; rotationV2[1] = st*sr; rotationV2[2] = ct;
-        }
-        else {
-            rotationV2[0] = ct; rotationV2[1] = st*sr; rotationV2[2] = st*cr;
-        }
+        status = db_write(DB_CALIB_ERROR, 0, &error);
+    }
+    if (RET_OK == status) {
+        status = db_write(DB_CALIB_ROT_VECTOR, 0, rotationV1);
+    }
+    if (RET_OK == status) {
+        status = db_write(DB_CALIB_ROT_VECTOR, 1, rotationV2);
+    }
+    if (RET_OK == status) {
+        double spherical[] = {theta1,rho1};
+        status = db_write(DB_CALIB_SPHERICAL_COORDS, 0, spherical);
+    }
+    if (RET_OK == status) {
+        double spherical[] = {theta2,rho2};
+        status = db_write(DB_CALIB_SPHERICAL_COORDS, 1, spherical);
+    }
+    if (RET_OK == status) {
+        status = db_write(DB_CALIB_OMEGA, 0, omegaR);
+    }
+    if (RET_OK == status) {
+        status = db_write(DB_CALIB_OMEGA_NORM, 0, &omegaR_norm);
     }
 
     return status;

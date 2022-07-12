@@ -1646,6 +1646,67 @@ bool tst_cal_003()
     return ok;
 }
 
+
+bool tst_cal_004() 
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+
+    double rotVector1[3]    = {1.0,0.0,0.0};
+    double rotVector2[3]    = {0.5,-0.5,0.5};
+    double timeout = 20.0;/*(seconds)*/
+    double timeInc = 0.02;/*(seconds)*/
+    double time = 0.0;
+
+    double omega1[] = {1000.0,0.0,0.0};
+    double omega2[] = {1000.0,0.0,500.0};
+
+    Quaternion q_sensor1 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
+    Quaternion q_sensor2 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
+    double v1_expected[3];
+    double v2_expected[3];
+
+    testDescription(__FUNCTION__, "Test one rotation axis calibration over X axis");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
+    ret += db_csv_field_add(DB_CALIB_OMEGA,0);
+    ret += db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
+    ret += db_csv_field_add(DB_CALIB_ERROR,0);
+    ret += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
+    ret += db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
+    ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,0);
+    ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,1);
+    ok &= assert_OK(ret, "db csv fields add");
+
+    while (ok && time<timeout)
+    {
+        // Set timestamp
+        ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
+        ok &= assert_OK(ret, "db_index_write timestamp");
+        time += timeInc;
+        // Execute arm calibration of a single rotation axis
+        ret = cal_automatic_two_rotation_axis_calibrate(omega1,omega2,q_sensor1,q_sensor2,rotVector1,rotVector2);
+        ok &= assert_OK(ret, "cal_automatic_two_rotation_axis_calibrate");
+        // Dump database data
+        ret = db_csv_dump();
+        ok &= assert_OK(ret, "db_csv_dump");
+    }
+    ret = vector3_normalize(omega1,v1_expected);
+    ok &= assert_OK(ret, "vector3_normalize");
+    ret = vector3_normalize(omega2,v2_expected);
+    ok &= assert_OK(ret, "vector3_normalize");
+    ok &= assert_vector3EqualThreshold(rotVector1,v1_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
+    ok &= assert_vector3EqualThreshold(rotVector2,v2_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
+
+    // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
 bool tst_cal_xxx()
 {
     bool ok = true;
@@ -1972,6 +2033,7 @@ int main(int argc, char **argv)
     // ok &= tst_cal_xxx();
     // ok &= tst_cal_005();
     // ok &= tst_arm_015();
+    ok &= tst_cal_004();
 
 
     return (ok)? RET_OK : RET_ERROR;

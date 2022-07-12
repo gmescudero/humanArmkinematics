@@ -128,7 +128,7 @@ ERROR_CODE matrix_inverse(MATRIX a, MATRIX *output) {
         temp = a.data[k][k]; 
         if (EPSI > fabs(temp)) {
             status = RET_ERROR;
-            err_str("Failed to invert a matrix");
+            err_str("Failed to invert, matrix is singular");
         }
         else {
             for(int j=0; j<size; j++) {
@@ -168,21 +168,16 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
     result  = matrix_allocate(at.rows, aatinv.cols);
 
     status = matrix_transpose(a, &at);
-    matrix_print(a);
     if (RET_OK == status) {
-        matrix_print(at);
         status = matrix_multiply(a, at, &aat);
     }
     if (RET_OK == status) {
-        matrix_print(aat);
         status = matrix_inverse(aat, &aatinv);
     }
     if (RET_OK == status) {
-        matrix_print(aatinv);
         status = matrix_multiply(at, aatinv, &result);
     }
     if (RET_OK == status) {
-        matrix_print(result);
         status = matrix_copy(result, output);
     }
     matrix_free(result);
@@ -192,7 +187,7 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
     return status;
 }
 
-void matrix_print(MATRIX a) {
+void matrix_print(MATRIX a, const char *name) {
     char string[250] = "";
     char part_string[25] = "";  
 
@@ -203,5 +198,5 @@ void matrix_print(MATRIX a) {
             strcat(string, part_string);
         }
     }
-    log_str("%dx%d Matrix: %s",a.rows, a.cols, string);
+    log_str("%dx%d Matrix (%s): %s",a.rows, a.cols, (NULL!=name)?name:"-", string);
 }

@@ -96,7 +96,7 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output);
  * @brief Show a given Matrix
  * 
  * @param a (input) Matrix to print
+ * @param name (input) Specific name of the matrix. Can be NULL
  */
-void matrix_print(MATRIX a);
-
+void matrix_print(MATRIX a, const char *name);
 #endif /* __matrix_h__ */
