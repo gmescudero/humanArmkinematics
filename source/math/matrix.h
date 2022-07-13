@@ -79,6 +79,15 @@ ERROR_CODE matrix_scale(MATRIX a, double scale, MATRIX *output);
  */
 ERROR_CODE matrix_add(MATRIX a, MATRIX b, MATRIX *output);
 /**
+ * @brief Substract two given matrixes
+ * 
+ * @param a (input) First matrix
+ * @param b (input) Second matrix
+ * @param output (output) Resulting matrix
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_substract(MATRIX a, MATRIX b, MATRIX *output);
+/**
  * @brief Multiply two given matrixes
  * 
  * @param a (input) First matrix

@@ -20,7 +20,8 @@ typedef struct CAL_STATIC_CALIBRATION_STRUCT {
 } CAL_STATIC_CALIBRATION;
 
 static void scal_buffer_shift_and_insert(double array[], double value, int size);
-
+static void scal_vector3_to_spherical_coordinates_convert(double vector[3], double *theta, double *rho, int *shperical_convention);
+static void scal_spherical_coordinates_to_vector3_convert(double theta, double rho, int shperical_convention, double vector[3]);
 
 static CAL_STATIC_CALIBRATION cal_imus_calibration_data[IMU_MAX_NUMBER] = {
     {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
@@ -293,30 +294,9 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
     int sph_alt1 = 0, sph_alt2 = 0;
     if (RET_OK == status) {
         // First vector
-        theta1 = atan2(sqrt(rotationV1[0]*rotationV1[0]+rotationV1[1]*rotationV1[1]) , rotationV1[2]);
-        if (fabs(sin(theta1)) < 0.5) {
-            // Avoid singularity
-            sph_alt1 = 1;
-            theta1 = atan2(sqrt(rotationV1[2]*rotationV1[2]+rotationV1[1]*rotationV1[1]) , rotationV1[0]);
-            rho1   = atan2(rotationV1[1],rotationV1[2]);
-            dbg_str("Using alternative spherical convention for rotation vector 1");
-        }
-        else {
-            rho1   = atan2(rotationV1[1],rotationV1[0]);
-        }
-
+        scal_vector3_to_spherical_coordinates_convert(rotationV1,&theta1,&rho1,&sph_alt1);
         // Second Vector
-        theta2 = atan2(sqrt(rotationV2[0]*rotationV2[0]+rotationV2[1]*rotationV2[1]) , rotationV2[2]);
-        if (fabs(sin(theta2)) < 0.5) {
-            // Avoid singularity
-            sph_alt2 = 1;
-            theta2 = atan2(sqrt(rotationV2[2]*rotationV2[2]+rotationV2[1]*rotationV2[1]) , rotationV2[0]);
-            rho2   = atan2(rotationV2[1],rotationV2[2]);
-            dbg_str("Using alternative spherical convention for rotation vector 2");
-        }
-        else {
-            rho2   = atan2(rotationV2[1],rotationV2[0]);
-        }
+        scal_vector3_to_spherical_coordinates_convert(rotationV2,&theta2,&rho2,&sph_alt2);
     }
 
     // Calculate error
@@ -446,7 +426,7 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
             status = matrix_scale(phi_correction, cal_rot_axis_autocalib_config.stepSize, &phi_correction);
         }
         if (RET_OK == status) {
-            status = matrix_add(phi, phi_correction, &phi);
+            status = matrix_substract(phi, phi_correction, &phi);
         }
         matrix_free(phi_correction); 
         if (RET_OK == status) {
@@ -459,22 +439,8 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
         
         // Set new vectors
         if (RET_OK == status) {
-            ct = cos(theta1); st = sin(theta1); cr = cos(rho1); sr = sin(rho1);
-            if (0 == sph_alt1) {
-                rotationV1[0] = st*cr; rotationV1[1] = st*sr; rotationV1[2] = ct;
-            }
-            else {
-                rotationV1[0] = ct; rotationV1[1] = st*sr; rotationV1[2] = st*cr;
-            }
-        }
-        if (RET_OK == status) {
-            ct = cos(theta2); st = sin(theta2); cr = cos(rho2); sr = sin(rho2);
-            if (0 == sph_alt2) {
-                rotationV2[0] = st*cr; rotationV2[1] = st*sr; rotationV2[2] = ct;
-            }
-            else {
-                rotationV2[0] = ct; rotationV2[1] = st*sr; rotationV2[2] = st*cr;
-            }
+            scal_spherical_coordinates_to_vector3_convert(theta1, rho1, sph_alt1, rotationV1);
+            scal_spherical_coordinates_to_vector3_convert(theta2, rho2, sph_alt2, rotationV2);
         }
     }
     // Update database
@@ -521,4 +487,48 @@ static void scal_buffer_shift_and_insert(double array[], double value, int size)
         }
     }
     array[0] = value;
+}
+
+/**
+ * @brief Convert a 3D vector to spherical coordinates
+ * 
+ * @param vector (input) Vector to convert
+ * @param theta (output) Theta angle of spherical coordinates
+ * @param rho (output) Rho angle of spherical coordinates
+ * @param shperical_convention (output) Convention used to get shperical coordinates 
+ */
+static void scal_vector3_to_spherical_coordinates_convert(double vector[3], double *theta, double *rho, int *shperical_convention) {
+    *theta = atan2(sqrt(vector[0]*vector[0]+vector[1]*vector[1]) , vector[2]);
+    if (fabs(sin(*theta)) < 0.5) {
+        // Avoid singularity
+        *shperical_convention = 1;
+        *theta = atan2(sqrt(vector[2]*vector[2]+vector[1]*vector[1]) , vector[0]);
+        *rho   = atan2(vector[1],vector[2]);
+    }
+    else {
+        *shperical_convention = 0;
+        *rho   = atan2(vector[1],vector[0]);
+    }
+}
+
+/**
+ * @brief Convert a set of spherical coordinates to its 3D vector
+ * 
+ * @param theta (input) Theta angle of spherical coordinates
+ * @param rho (input) Rho angle of spherical coordinates
+ * @param shperical_convention (input) Convention used to get shperical coordinates 
+ * @param vector (output) Converted vector
+ */
+static void scal_spherical_coordinates_to_vector3_convert(double theta, double rho, int shperical_convention, double vector[3]) {
+    double ct = cos(theta);
+    double st = sin(theta);
+    double cr = cos(rho); 
+    double sr = sin(rho);
+
+    if (0 == shperical_convention) {
+        vector[0] = st*cr; vector[1] = st*sr; vector[2] = ct;
+    }
+    else {
+        vector[0] = ct; vector[1] = st*sr; vector[2] = st*cr;
+    }
 }
