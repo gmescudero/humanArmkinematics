@@ -67,6 +67,13 @@ Quaternion tstRandomQuaternionGenerate() {
     return gen_quat;
 }
 
+void tstRandomUnitVector3Generate(double vector[3]) {
+    vector[0] = tstRandomDoubleGenerate();
+    vector[1] = tstRandomDoubleGenerate();
+    vector[2] = tstRandomDoubleGenerate();
+    vector3_normalize(vector, vector);
+}
+
 // * PRECONDITIONS ************************************************************
 
 bool preconditions_initArm()

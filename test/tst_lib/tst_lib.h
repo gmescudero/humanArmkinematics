@@ -25,6 +25,7 @@ void testCleanUp();
 void tst_str(const char *text, ...);
 double tstRandomDoubleGenerate();
 Quaternion tstRandomQuaternionGenerate();
+void tstRandomUnitVector3Generate(double vector[3]);
 // * PRECONDITIONS ************************************************************
 bool preconditions_initArm();
 bool preconditions_initTraces(const char *test_name);

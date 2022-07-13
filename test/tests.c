@@ -1652,14 +1652,16 @@ bool tst_cal_004()
     bool ok = true;
     ERROR_CODE ret = RET_OK;
 
-    double rotVector1[3]    = {1.0,0.0,0.0};
-    double rotVector2[3]    = {0.5,-0.5,0.5};
-    double timeout = 40.0;/*(seconds)*/
+    double rotVector1[3];
+    double rotVector2[3];
+    double timeout = 20.0;/*(seconds)*/
     double timeInc = 0.02;/*(seconds)*/
     double time = 0.0;
 
-    double omega1[] = {1000.0,0.0,0.0};
-    double omega2[] = {1000.0,0.0,500.0};
+    double omega1[] = {500.0,0.0,0.0};
+    double omega2[] = {500.0,0.0,1000.0};
+    double omega3[] = {500.0,0.0,0.0};
+    double omega4[] = {1500.0,0.0,0.0};
     double omega1_noise[3];
     double omega2_noise[3];
 
@@ -1668,7 +1670,7 @@ bool tst_cal_004()
     double v1_expected[3];
     double v2_expected[3];
 
-    testDescription(__FUNCTION__, "Test one rotation axis calibration over X axis");
+    testDescription(__FUNCTION__, "Test two rotation axis calibration");
     ok = preconditions_init(__FUNCTION__); 
 
     // Test Steps
@@ -1682,6 +1684,9 @@ bool tst_cal_004()
     ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,1);
     ok &= assert_OK(ret, "db csv fields add");
 
+    tstRandomUnitVector3Generate(rotVector1);
+    tstRandomUnitVector3Generate(rotVector2);
+
     while (ok && time<timeout)
     {
         // Set timestamp
@@ -1689,12 +1694,22 @@ bool tst_cal_004()
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
         // Execute arm calibration of a single rotation axis
-        omega1_noise[0] = omega1[0] + 100.0*tstRandomDoubleGenerate();
-        omega1_noise[1] = omega1[1] + 100.0*tstRandomDoubleGenerate();
-        omega1_noise[2] = omega1[2] + 100.0*tstRandomDoubleGenerate();
-        omega2_noise[0] = omega2[0] + 100.0*tstRandomDoubleGenerate();
-        omega2_noise[1] = omega2[1] + 100.0*tstRandomDoubleGenerate();
-        omega2_noise[2] = omega2[2] + 100.0*tstRandomDoubleGenerate();
+        if (time < (timeout/2)) {
+            omega1_noise[0] = omega1[0] + 100.0*tstRandomDoubleGenerate();
+            omega1_noise[1] = omega1[1] + 100.0*tstRandomDoubleGenerate();
+            omega1_noise[2] = omega1[2] + 100.0*tstRandomDoubleGenerate();
+            omega2_noise[0] = omega2[0] + 100.0*tstRandomDoubleGenerate();
+            omega2_noise[1] = omega2[1] + 100.0*tstRandomDoubleGenerate();
+            omega2_noise[2] = omega2[2] + 100.0*tstRandomDoubleGenerate();
+        }
+        else {
+            omega1_noise[0] = omega3[0] + 100.0*tstRandomDoubleGenerate();
+            omega1_noise[1] = omega3[1] + 100.0*tstRandomDoubleGenerate();
+            omega1_noise[2] = omega3[2] + 100.0*tstRandomDoubleGenerate();
+            omega2_noise[0] = omega4[0] + 100.0*tstRandomDoubleGenerate();
+            omega2_noise[1] = omega4[1] + 100.0*tstRandomDoubleGenerate();
+            omega2_noise[2] = omega4[2] + 100.0*tstRandomDoubleGenerate();
+        }
         // tst_str("Time %f (iterations %d)", time, (int)(time/timeInc));
         ret = cal_automatic_two_rotation_axis_calibrate(omega1_noise,omega2_noise,q_sensor1,q_sensor2,rotVector1,rotVector2);
         // tst_str("V1: <%f, %f, %f>, V2: <%f, %f, %f>", 
