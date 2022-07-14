@@ -22,6 +22,7 @@ typedef struct CAL_STATIC_CALIBRATION_STRUCT {
 static void scal_buffer_shift_and_insert(double array[], double value, int size);
 static void scal_vector3_to_spherical_coordinates_convert(double vector[3], double *theta, double *rho, int *shperical_convention);
 static void scal_spherical_coordinates_to_vector3_convert(double theta, double rho, int shperical_convention, double vector[3]);
+static void scal_spherical_coordinates_derivatives(double theta, double rho, int shperical_convention, double dtheta[3],double drho[3]);
 
 static CAL_STATIC_CALIBRATION cal_imus_calibration_data[IMU_MAX_NUMBER] = {
     {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
@@ -120,6 +121,7 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
     double lambda   = cal_rot_axis_autocalib_config.stepSize;
     double minVel   = cal_rot_axis_autocalib_config.minVel;
 
+    int sph_alt = 0;
     double t,r;
     double tempV[3];
 
@@ -157,8 +159,7 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
     else {
         // Convert to spheric coordinates
         if (RET_OK == status) {
-            t = atan2(sqrt(rotationV[0]*rotationV[0]+rotationV[1]*rotationV[1]) , rotationV[2]);
-            r = atan2(rotationV[1],rotationV[0]);
+            scal_vector3_to_spherical_coordinates_convert(rotationV,&t,&r,&sph_alt);
         }
 
         // Calculate alpha to satisfy given angular speed
@@ -175,9 +176,7 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
 
         // Calculate partials of each angle
         if (RET_OK == status) {
-            ct = cos(t); st = sin(t); cr = cos(r); sr = sin(r);
-            partRotT[0] =  ct*cr;   partRotT[1] = ct*sr;    partRotT[2] = -st;
-            partRotR[0] = -st*sr;   partRotR[1] = st*cr;    partRotT[2] = 0.0;
+            scal_spherical_coordinates_derivatives(t, r, sph_alt, partRotT, partRotR);
         }
 
         // Calculate the partials of the cost index
@@ -214,10 +213,7 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
 
         // Set the output vector
         if (RET_OK == status) {
-            ct = cos(newT); st = sin(newT); cr = cos(newR); sr = sin(newR);
-            tempV[0] = st*cr; tempV[1] = st*sr; tempV[2] = ct;
-
-            status = vector3_normalize(tempV, rotationV);
+            scal_spherical_coordinates_to_vector3_convert(newT, newR, sph_alt, rotationV);
         }
 
         // Compute the error
@@ -293,9 +289,7 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
     double theta1, rho1, theta2, rho2;
     int sph_alt1 = 0, sph_alt2 = 0;
     if (RET_OK == status) {
-        // First vector
         scal_vector3_to_spherical_coordinates_convert(rotationV1,&theta1,&rho1,&sph_alt1);
-        // Second Vector
         scal_vector3_to_spherical_coordinates_convert(rotationV2,&theta2,&rho2,&sph_alt2);
     }
 
@@ -315,27 +309,9 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
 
     // Calculate partials of each angle
     double dpart_th1[3], dpart_rh1[3], dpart_th2[3], dpart_rh2[3];
-    double ct, st, cr, sr;
     if (RET_OK == status) {
-        ct = cos(theta1); st = sin(theta1); cr = cos(rho1); sr = sin(rho1);
-        if (0 == sph_alt1) {
-            dpart_th1[0] =  ct*cr;   dpart_th1[1] = ct*sr;    dpart_th1[2] = -st;
-            dpart_rh1[0] = -st*sr;   dpart_rh1[1] = st*cr;    dpart_rh1[2] = 0.0;
-        }
-        else { // Alternative
-            dpart_th1[0] = -st;      dpart_th1[1] = ct*sr;    dpart_th1[2] =  ct*cr;  
-            dpart_rh1[0] = 0.0;      dpart_rh1[1] = st*cr;    dpart_rh1[2] = -st*sr;
-        }
-
-        ct = cos(theta2); st = sin(theta2); cr = cos(rho2); sr = sin(rho2);
-        if (0 == sph_alt2) {
-            dpart_th2[0] =  ct*cr;   dpart_th2[1] = ct*sr;    dpart_th2[2] = -st;
-            dpart_rh2[0] = -st*sr;   dpart_rh2[1] = st*cr;    dpart_rh2[2] = 0.0;    
-        }
-        else { // Alternative
-            dpart_th2[0] = -st;      dpart_th2[1] = ct*sr;    dpart_th2[2] =  ct*cr;  
-            dpart_rh2[0] = 0.0;      dpart_rh2[1] = st*cr;    dpart_rh2[2] = -st*sr;
-        }
+        scal_spherical_coordinates_derivatives(theta1, rho1, sph_alt1, dpart_th1, dpart_rh1);
+        scal_spherical_coordinates_derivatives(theta2, rho2, sph_alt2, dpart_th2, dpart_rh2);
     }
 
     // Calculate partials of the error
@@ -397,7 +373,7 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
         for (int c = 0; c < 4; c++) {
             Jacobian[0][c] = dpart_error[c];
             for (int r = 0; r < DEFAULT_ROT_AXIS_CALIB_WINDOW; r++) {
-                J.data[r][c]   = Jacobian[r][c];
+                J.data[r][c] = Jacobian[r][c];
             }
         }
     }
@@ -405,9 +381,6 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
     if (0 < it_counter) {
         // Allow the Jacobian to reach full range before starting calibration
         it_counter--;
-        matrix_free(J);
-        matrix_free(e);
-        matrix_free(phi);
     }
     else {
         // Update vector of parameters with Gauss-Newton method
@@ -416,26 +389,24 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
         if (RET_OK == status) {
             status = matrix_pseudoinverse(J,&Jpinv);
         }
-        matrix_free(J);
         MATRIX phi_correction = matrix_allocate(4,1);
         if (RET_OK == status) {
             status = matrix_multiply(Jpinv,e, &phi_correction);
         }
-        matrix_free(e); matrix_free(Jpinv);
         if (RET_OK == status) {
             status = matrix_scale(phi_correction, cal_rot_axis_autocalib_config.stepSize, &phi_correction);
         }
         if (RET_OK == status) {
             status = matrix_substract(phi, phi_correction, &phi);
         }
-        matrix_free(phi_correction); 
         if (RET_OK == status) {
             theta1 = phi.data[0][0];
-            rho1   = phi.data[0][1];
-            theta2 = phi.data[0][2];
-            rho2   = phi.data[0][3];
+            rho1   = phi.data[1][0];
+            theta2 = phi.data[2][0];
+            rho2   = phi.data[3][0];
         }
-        matrix_free(phi);
+        matrix_free(Jpinv);
+        matrix_free(phi_correction); 
         
         // Set new vectors
         if (RET_OK == status) {
@@ -443,6 +414,10 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
             scal_spherical_coordinates_to_vector3_convert(theta2, rho2, sph_alt2, rotationV2);
         }
     }
+    matrix_free(J);
+    matrix_free(e); 
+    matrix_free(phi);
+
     // Update database
     if (RET_OK == status) {
         status = db_write(DB_CALIB_ERROR, 0, &error);
@@ -530,5 +505,30 @@ static void scal_spherical_coordinates_to_vector3_convert(double theta, double r
     }
     else {
         vector[0] = ct; vector[1] = st*sr; vector[2] = st*cr;
+    }
+}
+
+/**
+ * @brief Compute the derivatives of the spherical representation of 3D vectors
+ * 
+ * @param theta (input) Theta angle of spherical coordinates
+ * @param rho (input) Rho angle of spherical coordinates
+ * @param shperical_convention (input) Convention used to get shperical coordinates 
+ * @param dtheta (output) Derivative with respect to theta
+ * @param drho (output) Derivative with respect to rho
+ */
+static void scal_spherical_coordinates_derivatives(double theta, double rho, int shperical_convention, double dtheta[3],double drho[3]) {
+    double ct = cos(theta);
+    double st = sin(theta);
+    double cr = cos(rho); 
+    double sr = sin(rho);
+
+    if (0 == shperical_convention) {
+        dtheta[0] =  ct*cr; dtheta[1] = ct*sr; dtheta[2] = -st;
+          drho[0] = -st*sr;   drho[1] = st*cr;   drho[2] = 0.0;
+    }
+    else { // Alternative
+        dtheta[0] = -st; dtheta[1] = ct*sr; dtheta[2] =  ct*cr;  
+          drho[0] = 0.0;   drho[1] = st*cr;   drho[2] = -st*sr;
     }
 }
