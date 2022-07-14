@@ -390,6 +390,7 @@ static ERROR_CODE simu_database_update(ImuData d, int index) {
     double gyr[3]    = {(double)d.g[0],(double)d.g[1],(double)d.g[2]};
     double mag[3]    = {(double)d.b[0],(double)d.b[1],(double)d.b[2]};
     double linAcc[3] = {(double)d.linAcc[0],(double)d.linAcc[1],(double)d.linAcc[2]};
+    double angVel[3] = {(double)d.r[0],(double)d.r[1],(double)d.r[2]};
     double quat[4]   = {(double)d.q[0],(double)d.q[1],(double)d.q[2],(double)d.q[3]};
 
     status = db_write(DB_IMU_TIMESTAMP, index, &timestamp);
@@ -405,6 +406,9 @@ static ERROR_CODE simu_database_update(ImuData d, int index) {
     }
     if (RET_OK == status) {
         status = db_write(DB_IMU_LINEAR_ACCELERATION, index, &linAcc);
+    }
+    if (RET_OK == status) {
+        status = db_write(DB_IMU_ANGULAR_VELOCITY, index, &angVel);
     }
     if (RET_OK == status) {
         status = db_write(DB_IMU_QUATERNION, index, &quat);
