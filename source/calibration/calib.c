@@ -123,7 +123,6 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
 
     int sph_alt = 0;
     double t,r;
-    double tempV[3];
 
     double alpha;
     double aux1,aux2;
@@ -132,7 +131,6 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
     double omegaR2;
     double err[3];
 
-    double ct,cr,st,sr;
     double partRotT[3];
     double partRotR[3];
 
@@ -271,26 +269,16 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
 
     // Get the relative agular velocity
     double omegaR[3];
-    status = arm_relative_angular_vel_compute(q_sensor1,q_sensor2, omega1_from1, omega2_from2, omegaR);
+    status = arm_relative_angular_vel_compute(q_sensor1, q_sensor2, omega1_from1, omega2_from2, omegaR);
 
     // Check the moving status
     double omegaR_norm;
     if (RET_OK == status) {
         status = vector3_norm(omegaR, &omegaR_norm);
     }
-    if (RET_OK == status) {
-        if (omegaR_norm < cal_rot_axis_autocalib_config.minVel) {
-            dbg_str("%s -> Not moving. OmegaR: %f",__FUNCTION__,omegaR_norm);
-            return RET_OK;
-        }
-    }
-
-    // Spherical coordinates
-    double theta1, rho1, theta2, rho2;
-    int sph_alt1 = 0, sph_alt2 = 0;
-    if (RET_OK == status) {
-        scal_vector3_to_spherical_coordinates_convert(rotationV1,&theta1,&rho1,&sph_alt1);
-        scal_vector3_to_spherical_coordinates_convert(rotationV2,&theta2,&rho2,&sph_alt2);
+    if (RET_OK == status && omegaR_norm < cal_rot_axis_autocalib_config.minVel) {
+        dbg_str("%s -> Not moving. OmegaR: %f",__FUNCTION__,omegaR_norm);
+        return RET_OK;
     }
 
     // Calculate error
@@ -305,6 +293,18 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
     }
     if (RET_OK == status) {
         scal_buffer_shift_and_insert(errorV, error, DEFAULT_ROT_AXIS_CALIB_WINDOW);
+    }
+    if (RET_OK == status && 5e-5 > fabs(error)) {
+        dbg_str("%s -> Error below threshold: %f",__FUNCTION__,error);
+        return RET_OK;
+    }
+
+    // Spherical coordinates
+    double theta1, rho1, theta2, rho2;
+    int sph_alt1 = 0, sph_alt2 = 0;
+    if (RET_OK == status) {
+        scal_vector3_to_spherical_coordinates_convert(rotationV1, &theta1, &rho1, &sph_alt1);
+        scal_vector3_to_spherical_coordinates_convert(rotationV2, &theta2, &rho2, &sph_alt2);
     }
 
     // Calculate partials of each angle
