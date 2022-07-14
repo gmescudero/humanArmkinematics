@@ -46,7 +46,8 @@ int main(int argc, char **argv) {
     double buffTime;
     double startTime   = -1.0;
     double currentTime = -1.0;
-    // double rotVector[3] = {0.5,0.5,0.5};
+    double rotVector1[3] = {1.0,0.0,0.0};
+    double rotVector2[3] = {0.0,0.0,1.0};
     int iteration_count = 300;
 
     /* Initialize all packages */
@@ -61,10 +62,16 @@ int main(int argc, char **argv) {
         status += db_csv_field_add(DB_IMU_QUATERNION,0);
         // status += db_csv_field_add(DB_IMU_TIMESTAMP,1);
         status += db_csv_field_add(DB_IMU_QUATERNION,1);
-        status += db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
+        // status += db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
         // status += db_csv_field_add(DB_ARM_ELBOW_POSITION,0);
-        status += db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
+        // status += db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
         // status += db_csv_field_add(DB_ARM_WRIST_POSITION,0);
+        status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,0);
+        status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,1);
+        status += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
+        status += db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
+        status += db_csv_field_add(DB_CALIB_ERROR,0);
+
         STATUS_EVAL(status);
     }
 
@@ -150,6 +157,18 @@ int main(int argc, char **argv) {
             }
 
             if (RET_OK == status) {
+                // Calibration of two rotation axes
+                double omega1[3], omega2[3];
+                status = db_write(DB_IMU_ANGULAR_VELOCITY,0,omega1);
+                if (RET_OK == status) {
+                    status = db_write(DB_IMU_ANGULAR_VELOCITY,1,omega2);
+                }
+                if (RET_OK == status) {
+                    status = cal_automatic_two_rotation_axis_calibrate(omega1, omega2, imus_quat[0], imus_quat[1], rotVector1, rotVector2);
+                }
+            }
+
+            if (RET_OK == status) {
                 // Print the wrist position through console
                 status = db_field_print(DB_ARM_WRIST_POSITION, 0);
                 STATUS_EVAL(status);
@@ -158,6 +177,9 @@ int main(int argc, char **argv) {
             iteration_count--;
         } while ((RET_OK == status || RET_NO_EXEC == status) && 20 > currentTime && 0 < iteration_count);
     } 
+
+    log_str("Rotation vector 1:[%f,%f,%f]", rotVector1[0],rotVector1[1], rotVector1[2]);
+    log_str("Rotation vector 2:[%f,%f,%f]", rotVector2[0],rotVector2[1], rotVector2[2]);
 
     log_str("Terminate all IMU connections");
     imu_terminate();
