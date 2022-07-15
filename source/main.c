@@ -55,6 +55,10 @@ int main(int argc, char **argv) {
     status = initialize();
     STATUS_EVAL(status);
 
+    // log_str("Set up the graphical user interface");
+    // status = interface_initialize(argc, argv);
+    // STATUS_EVAL(status);
+
     /* Set the csv logging from the database */
     if (RET_OK == status) {
         log_str("Set the database fields to track into the csv");
@@ -157,14 +161,15 @@ int main(int argc, char **argv) {
             }
 
             if (RET_OK == status) {
-                // Calibration of two rotation axes
+                // Calibration of rotation axes
                 double omega1[3], omega2[3];
                 status = db_write(DB_IMU_ANGULAR_VELOCITY,0,omega1);
                 if (RET_OK == status) {
                     status = db_write(DB_IMU_ANGULAR_VELOCITY,1,omega2);
                 }
                 if (RET_OK == status) {
-                    status = cal_automatic_two_rotation_axis_calibrate(omega1, omega2, imus_quat[0], imus_quat[1], rotVector1, rotVector2);
+                    // status = cal_automatic_two_rotation_axis_calibrate(omega1, omega2, imus_quat[0], imus_quat[1], rotVector1, rotVector2);
+                    status = cal_automatic_rotation_axis_calibrate(omega1, omega2, imus_quat[0], imus_quat[1], rotVector1);
                 }
             }
 

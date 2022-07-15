@@ -40,6 +40,13 @@ MATRIX matrix_identity_allocate(unsigned size) {
     return result;
 }
 
+MATRIX matrix_from_matrix_allocate(MATRIX a) {
+    MATRIX result = matrix_allocate(a.rows,a.cols);
+    if (RET_OK != matrix_copy(a,&result)) {
+        err_str("Failed to initialize matrix");
+    }
+    return result;
+}
 
 void matrix_free(MATRIX a) {
     for (int i = 0; i < a.rows; i++) {
@@ -180,6 +187,7 @@ ERROR_CODE matrix_multiply(MATRIX a, MATRIX b, MATRIX *output) {
 
 ERROR_CODE matrix_inverse(MATRIX a, MATRIX *output) {
     ERROR_CODE status = RET_OK;
+    MATRIX aux;
     MATRIX result;
     double temp;
     int size = a.rows;
@@ -190,24 +198,26 @@ ERROR_CODE matrix_inverse(MATRIX a, MATRIX *output) {
     if (a.rows != a.cols) return RET_ARG_ERROR;
     
     result = matrix_identity_allocate(size);
+    aux = matrix_from_matrix_allocate(a);
 
     for(int k=0; RET_OK == status && k<size; k++) {
-        temp = a.data[k][k]; 
+        temp = aux.data[k][k]; 
         if (EPSI > fabs(temp)) {
             status = RET_ERROR;
             err_str("Failed to invert, matrix is singular");
+            matrix_print(a, "Singular matrix");
         }
         else {
             for(int j=0; j<size; j++) {
-                a.data[k][j] /= temp;
+                aux.data[k][j] /= temp;
                 result.data[k][j] /= temp;
             }
             for(int i=0; i<size; i++) {
-                temp = a.data[i][k];
+                temp = aux.data[i][k];
                 for(int j=0; j<size;j++) { 
                     if(i!=k) {
-                        a.data[i][j]     -= a.data[k][j]*temp; 
-                        result.data[i][j]-= result.data[k][j]*temp;
+                        aux.data[i][j]    -= aux.data[k][j]*temp; 
+                        result.data[i][j] -= result.data[k][j]*temp;
                     }
                 }
             }
@@ -258,8 +268,8 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
 }
 
 void matrix_print(MATRIX a, const char *name) {
-    char string[250] = "";
-    char part_string[25] = "";  
+    char string[512] = "";
+    char part_string[32] = "";  
 
     if (false == a.allocated) wrn_str("Failed to print matrix. Not allocated!");
 

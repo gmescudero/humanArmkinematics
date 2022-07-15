@@ -109,7 +109,10 @@ ERROR_CODE cal_static_imu_quat_calibrated_data_get(Quaternion calib_quat[IMU_MAX
 
 
 ERROR_CODE cal_automatic_rotation_axis_calibrate(
-    double omegaR[3],
+    double omega1_from1[3],
+    double omega2_from2[3],
+    Quaternion q_sensor1,
+    Quaternion q_sensor2,
     double rotationV[3])
 {
     ERROR_CODE status = RET_OK;
@@ -144,8 +147,13 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
     double error = 0.0;
 
     // Check arguments
-    if (NULL == rotationV) return RET_ARG_ERROR;
-    if (NULL == omegaR)    return RET_ARG_ERROR;
+    if (NULL == rotationV)      return RET_ARG_ERROR;
+    if (NULL == omega1_from1)   return RET_ARG_ERROR;
+    if (NULL == omega2_from2)   return RET_ARG_ERROR;
+
+    // Get the relative agular velocity
+    double omegaR[3];
+    status = arm_relative_angular_vel_compute(q_sensor1, q_sensor2, omega1_from1, omega2_from2, omegaR);
 
     // Check if moving
     status = vector3_norm(omegaR, &omegaRnorm);

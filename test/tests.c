@@ -1506,7 +1506,9 @@ bool tst_cal_001()
     double timeInc = 0.02;/*(seconds)*/
     double time = 0.0;
 
-    double omegaR[] = {1000.0,0.0,0.0};
+    double omega1[] = {500.0,0.0,0.0};
+    double omega2[] = {1000.0,0.0,0.0};
+    Quaternion dummy = {.w = 1.0, .v = {0.0, 0.0, 0.0}};
     double v_expected[3];
 
     testDescription(__FUNCTION__, "Test one rotation axis calibration over X axis");
@@ -1529,13 +1531,15 @@ bool tst_cal_001()
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
         // Execute arm calibration of a single rotation axis
-        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
+        ret = cal_automatic_rotation_axis_calibrate(omega1,omega2,dummy,dummy,rotVector);
         ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
         // Dump database data
         ret = db_csv_dump();
         ok &= assert_OK(ret, "db_csv_dump");
     }
-    ret = vector3_normalize(omegaR,v_expected);
+    ret = vector3_substract(omega2,omega1,v_expected);
+    ok &= assert_OK(ret, "vector3_substract");
+    ret = vector3_normalize(v_expected,v_expected);
     ok &= assert_OK(ret, "vector3_normalize");
     ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
 
@@ -1556,7 +1560,9 @@ bool tst_cal_002()
     double timeInc = 0.02;/*(seconds)*/
     double time = 0.0;
 
-    double omegaR[] = {0.0,1000.0,0.0};
+    double omega1[] = {0.0,500.0,0.0};
+    double omega2[] = {0.0,1000.0,0.0};
+    Quaternion dummy = {.w = 1.0, .v = {0.0, 0.0, 0.0}};
     double v_expected[3];
 
     testDescription(__FUNCTION__, "Test one rotation axis calibration over Y axis");
@@ -1579,13 +1585,15 @@ bool tst_cal_002()
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
         // Execute arm calibration of a single rotation axis
-        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
+        ret = cal_automatic_rotation_axis_calibrate(omega1,omega2,dummy,dummy,rotVector);
         ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
         // Dump database data
         ret = db_csv_dump();
         ok &= assert_OK(ret, "db_csv_dump");
     }
-    ret = vector3_normalize(omegaR,v_expected);
+    ret = vector3_substract(omega2,omega1,v_expected);
+    ok &= assert_OK(ret, "vector3_substract");
+    ret = vector3_normalize(v_expected,v_expected);
     ok &= assert_OK(ret, "vector3_normalize");
     ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
 
@@ -1606,7 +1614,9 @@ bool tst_cal_003()
     double timeInc = 0.02;/*(seconds)*/
     double time = 0.0;
 
-    double omegaR[] = {0.0,0.0,1000.0};
+    double omega1[] = {0.0,0.0,500.0};
+    double omega2[] = {0.0,0.0,1000.0};
+    Quaternion dummy = {.w = 1.0, .v = {0.0, 0.0, 0.0}};
     double v_expected[3];
 
     testDescription(__FUNCTION__, "Test one rotation axis calibration over Z axis");
@@ -1629,13 +1639,15 @@ bool tst_cal_003()
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
         // Execute arm calibration of a single rotation axis
-        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
+        ret = cal_automatic_rotation_axis_calibrate(omega1,omega2,dummy,dummy,rotVector);
         ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
         // Dump database data
         ret = db_csv_dump();
         ok &= assert_OK(ret, "db_csv_dump");
     }
-    ret = vector3_normalize(omegaR,v_expected);
+    ret = vector3_substract(omega2,omega1,v_expected);
+    ok &= assert_OK(ret, "vector3_substract");
+    ret = vector3_normalize(v_expected,v_expected);
     ok &= assert_OK(ret, "vector3_normalize");
     ok &= assert_vector3EqualThreshold(rotVector,v_expected,5e-2,"cal_automatic_rotation_axis_calibrate result");
 
@@ -1694,7 +1706,7 @@ bool tst_cal_004()
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
         // Execute arm calibration of a single rotation axis
-        if (time < (timeout/2)) {
+        if (time < (timeout)) {
             omega1_noise[0] = omega1[0] + 100.0*tstRandomDoubleGenerate();
             omega1_noise[1] = omega1[1] + 100.0*tstRandomDoubleGenerate();
             omega1_noise[2] = omega1[2] + 100.0*tstRandomDoubleGenerate();
@@ -1730,95 +1742,6 @@ bool tst_cal_004()
     ok &= assert_vector3EqualThreshold(rotVector2,v2_expected,5e-2,"cal_automatic_rotation_axis_calibrate result2");
 
     // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
-
-    testCleanUp();
-    testReport(ok);
-    return ok;
-}
-
-bool tst_cal_xxx()
-{
-    bool ok = true;
-    ERROR_CODE ret = RET_OK;
-
-    double timeout = 100.0;/*(seconds)*/
-    double timeInc = 0.02;/*(seconds)*/
-    double time = 0.0;
-
-    Quaternion q1 = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
-    Quaternion q2 = { .w = 1.0, .v = {0.0, 0.0, 0.0} };
-    Quaternion q1_,q21;
-    double quat_buff[4];
-
-    double omega1[3] = {M_PI_2, 0.0, 0.0};
-    double omega2[3] = {M_PI_2, 0.0, M_PI_2};
-    double omega2_1[3], omegaR[3];
-
-    double rotVector[3]  = {0.5, 0.5, 0.5};
-    double v_expected[3] = {0.0, 0.0, 1.0};
-    double rotNorm;
-
-    testDescription(__FUNCTION__, "Emulate 2 different IMU sensors rotating");
-    ok = preconditions_init(__FUNCTION__); 
-
-    // Test Steps
-    ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
-    ret += db_csv_field_add(DB_IMU_TIMESTAMP,1);
-    ret += db_csv_field_add(DB_IMU_QUATERNION,0);
-    ret += db_csv_field_add(DB_IMU_QUATERNION,1);
-    ret += db_csv_field_add(DB_CALIB_OMEGA,0);
-    ret += db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
-    ret += db_csv_field_add(DB_CALIB_ERROR,0);
-    ret += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
-    ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,0);
-    ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
-    ok &= assert_OK(ret, "db csv fields add");
-
-    do {
-        /* Compute q21 */
-        Quaternion_conjugate(&q1,&q1_);
-        Quaternion_multiply(&q1_,&q2,&q21);
-        /* Compute relative w */
-        Quaternion_rotate(&q21, omega2, omega2_1);
-        ret = vector3_substract(omega2_1, omega1, omegaR);
-        ok &= assert_OK(ret, "vector3_substract");
-        /* Calibrate rotation axis */
-        ret = cal_automatic_rotation_axis_calibrate(omegaR,rotVector);
-        ok &= assert_OK(ret, "cal_automatic_rotation_axis_calibrate");
-        /* Set timestamp */
-        ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
-        ok &= assert_OK(ret, "db_index_write timestamp");
-        ret = db_index_write(DB_IMU_TIMESTAMP,1,0,&time);
-        ok &= assert_OK(ret, "db_index_write timestamp");
-        /* Set quaternions */
-        quaternion_buffer_build(q1, quat_buff);
-        ret = db_write(DB_IMU_QUATERNION,0,quat_buff);
-        dbg_str("Q1: %f, %f, %f, %f",quat_buff[0],quat_buff[1],quat_buff[2],quat_buff[3]);
-        quaternion_buffer_build(q2, quat_buff);
-        ret = db_write(DB_IMU_QUATERNION,1,quat_buff);
-        /* Dump database data */
-        ret = db_csv_dump();
-        ok &= assert_OK(ret, "db_csv_dump");
-
-        // printf("q1: %f, %f, %f, %f\n",q1.w,q1.v[0],q1.v[1],q1.v[2]);
-        // printf("q2: %f, %f, %f, %f\n",q2.w,q2.v[0],q2.v[1],q2.v[2]);
-        // printf("q21: %f, %f, %f, %f\n",q21.w,q21.v[0],q21.v[1],q21.v[2]);
-
-        /* Set new time */
-        time += timeInc;
-        /* Compute next quaternions */
-        ret = quaternion_ang_vel_apply(q1, timeInc, omega1, &q1);
-        ok &= assert_OK(ret, "quaternion_ang_vel_apply");
-        ret = quaternion_ang_vel_apply(q2, timeInc, omega2, &q2);
-        ok &= assert_OK(ret, "quaternion_ang_vel_apply");
-
-    } while (ok && time<timeout);
-
-    ret = vector3_norm(rotVector,&rotNorm);
-    ok &= assert_OK(ret, "vector3_norm");
-    ok &= assert_double(rotNorm, 1.0, EPSI, "vector3_norm result");
-    ok &= assert_vector3EqualThreshold(rotVector, v_expected, 1e-1, "cal_automatic_rotation_axis_calibrate result");
-    printf("rotVector: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
 
     testCleanUp();
     testReport(ok);

@@ -35,14 +35,20 @@ ERROR_CODE cal_static_imu_quat_calibrated_data_get(Quaternion calib_quat[IMU_MAX
 /**
  * @brief Calibrate a rotation axis for a 1 DOF joint knowing its angular velocity
  * 
- * @param omegaR (input) Current angular velocity
+ * @param omega1_from1 (input) Current angular velocity in the first sensor
+ * @param omega2_from2 (input) Current angular velocity in the second sensor
+ * @param q_sensor1 (input) Quaternion orientation of the first sensor
+ * @param q_sensor2 (input) Quaternion orientation of the second sensor
  * @param rotationV (input/output) Rotation vector
  * @return ERROR_CODE:
  *  - RET_OK on success
  *  - RET_ERROR otherwise
  */
 ERROR_CODE cal_automatic_rotation_axis_calibrate(
-    double omegaR[3],
+    double omega1_from1[3],
+    double omega2_from2[3],
+    Quaternion q_sensor1,
+    Quaternion q_sensor2,
     double rotationV[3]);
 /**
  * @brief Calibrate two rotation axis for a 2 DOF joint knowing its angular velocities

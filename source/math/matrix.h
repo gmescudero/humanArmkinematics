@@ -38,6 +38,13 @@ MATRIX matrix_allocate(unsigned rows, unsigned cols);
  */
 MATRIX matrix_identity_allocate(unsigned size);
 /**
+ * @brief Allocate memory for a matrix based on a given one
+ * 
+ * @param a (input) Base Matrix
+ * @return MATRIX 
+ */
+MATRIX matrix_from_matrix_allocate(MATRIX a);
+/**
  * @brief Free the Matrix allocated memory
  * 
  * @param a (input) Matrix to be freed
