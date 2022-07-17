@@ -603,6 +603,153 @@ bool tst_math_016()
     return ok;
 }
 
+bool tst_math_017()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX m, mminor;
+    MATRIX m_expected;
+
+    testDescription(__FUNCTION__, "Check matrix minor");
+    ok = preconditions_init(__FUNCTION__);
+
+    m          = matrix_allocate(3,3);
+    mminor     = matrix_allocate(2,2);
+    m_expected = matrix_allocate(2,2);
+
+    m.data[0][0] = 1.0;    m.data[0][1] = 0.0;    m.data[0][2] = 0.0;
+    m.data[1][0] = 0.0;    m.data[1][1] = 1.0;    m.data[1][2] =-3.0;
+    m.data[2][0] = 2.0;    m.data[2][1] = 1.0;    m.data[2][2] = 5.0;
+
+    ret = matrix_minor(m, 0, 0, &mminor);
+    ok &= assert_OK(ret, "matrix_minor 1");
+    m_expected.data[0][0] = 1.0;   m_expected.data[0][1] =-3.0;
+    m_expected.data[1][0] = 1.0;   m_expected.data[1][1] = 5.0;
+    ok &= assert_matrix(mminor, m_expected, "matrix_minor result 1");
+
+    ret = matrix_minor(m, 1, 2, &mminor);
+    ok &= assert_OK(ret, "matrix_minor 2");
+    m_expected.data[0][0] = 1.0;   m_expected.data[0][1] = 0.0;
+    m_expected.data[1][0] = 2.0;   m_expected.data[1][1] = 1.0;
+    ok &= assert_matrix(mminor, m_expected, "matrix_minor result 2");
+
+    ret = matrix_minor(m, 2, 2, &mminor);
+    ok &= assert_OK(ret, "matrix_minor 3");
+    m_expected.data[0][0] = 1.0;   m_expected.data[0][1] = 0.0;
+    m_expected.data[1][0] = 0.0;   m_expected.data[1][1] = 1.0;
+    ok &= assert_matrix(mminor, m_expected, "matrix_minor result 3");
+
+    matrix_free(m);
+    matrix_free(mminor);
+    matrix_free(m_expected);
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_math_018()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX m1, m2, m3, m4;
+    double det;
+    
+    testDescription(__FUNCTION__, "Check matrix determinant");
+    ok = preconditions_init(__FUNCTION__);
+
+    m1    = matrix_identity_allocate(1);
+    m2    = matrix_identity_allocate(2);
+    m3    = matrix_identity_allocate(3);
+    m4    = matrix_identity_allocate(5);
+
+    ret = matrix_determinant(m1, &det);
+    ok &= assert_OK(ret, "matrix_determinant 1");
+    ok &= assert_double(det, 1.0, EPSI, "matrix_determinant result 1");
+
+    m2.data[0][0] = 1.0; m2.data[0][1] = 2.0;
+    m2.data[1][0] = 3.0; m2.data[1][1] = 4.0;   
+    ret = matrix_determinant(m2, &det);
+    ok &= assert_OK(ret, "matrix_determinant 2");
+    ok &= assert_double(det,-2.0, EPSI, "matrix_determinant result 2");
+
+    m3.data[0][0] = 1.0; m3.data[0][1] = 2.0; m3.data[0][2] = 3.0;
+    m3.data[1][0] = 4.0; m3.data[1][1] = 5.0; m3.data[1][2] = 6.0;
+    m3.data[2][0] = 7.0; m3.data[2][1] = 8.0; m3.data[2][2] = 10.0;
+    ret = matrix_determinant(m3, &det);
+    ok &= assert_OK(ret, "matrix_determinant 3");
+    ok &= assert_double(det, -3.0, EPSI, "matrix_determinant result 3");
+
+    m4.data[0][0] = 2.0;  m4.data[0][1] = 2.0;  m4.data[0][2] = 3.0;  m4.data[0][3] = 0.0;  m4.data[0][4] = 5.0; 
+    m4.data[1][0] = 6.0;  m4.data[1][1] = 8.0;  m4.data[1][2] = 8.0;  m4.data[1][3] = 9.0;  m4.data[1][4] = 10.0; 
+    m4.data[2][0] = 14.0; m4.data[2][1] = 13.0; m4.data[2][2] = 13.0; m4.data[2][3] = 11.0; m4.data[2][4] = 11.0; 
+    m4.data[3][0] = 15.0; m4.data[3][1] = 16.0; m4.data[3][2] = 17.0; m4.data[3][3] = 19.0; m4.data[3][4] = 19.0; 
+    m4.data[4][0] = 24.0; m4.data[4][1] = 23.0; m4.data[4][2] = 22.0; m4.data[4][3] = 21.0; m4.data[4][4] = 20.0; 
+    ret = matrix_determinant(m4, &det); 
+    ok &= assert_OK(ret, "matrix_determinant 4");
+    ok &= assert_double(det,-482.0, EPSI, "matrix_determinant result 4");
+
+    matrix_free(m1);
+    matrix_free(m2);
+    matrix_free(m3);
+    matrix_free(m4);
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+
+bool tst_math_019()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX m1, m2;
+    MATRIX m1adj, m2adj;
+    MATRIX m1exp, m2exp;
+    double det;
+    
+    testDescription(__FUNCTION__, "Check matrix adjoint");
+    ok = preconditions_init(__FUNCTION__);
+
+    m1    = matrix_identity_allocate(3);
+    m2    = matrix_identity_allocate(5);
+
+    m1adj = matrix_from_matrix_allocate(m1);
+    m2adj = matrix_from_matrix_allocate(m2);
+
+    m1exp = matrix_from_matrix_allocate(m1);
+    m2exp = matrix_from_matrix_allocate(m2);
+
+    m1.data[0][0] = 1.0; m1.data[0][1] = 2.0; m1.data[0][2] = 3.0;
+    m1.data[1][0] = 4.0; m1.data[1][1] = 5.0; m1.data[1][2] = 6.0;
+    m1.data[2][0] = 7.0; m1.data[2][1] = 8.0; m1.data[2][2] = 10.0;
+    ret = matrix_adjoint(m1, &m1adj);
+    ok &= assert_OK(ret, "matrix_adjoint 1");
+    m1exp.data[0][0] = 2.0; m1exp.data[0][1] = 4.0;  m1exp.data[0][2] =-3.0;
+    m1exp.data[1][0] = 2.0; m1exp.data[1][1] =-11.0; m1exp.data[1][2] = 6.0;
+    m1exp.data[2][0] =-3.0; m1exp.data[2][1] = 6.0;  m1exp.data[2][2] =-3.0;
+    ok &= assert_matrix(m1adj, m1exp, "matrix_adjoint result 1");
+
+    m2.data[0][0] = 2.0;  m2.data[0][1] = 2.0;  m2.data[0][2] = 3.0;  m2.data[0][3] = 0.0;  m2.data[0][4] = 5.0; 
+    m2.data[1][0] = 6.0;  m2.data[1][1] = 8.0;  m2.data[1][2] = 8.0;  m2.data[1][3] = 9.0;  m2.data[1][4] = 10.0; 
+    m2.data[2][0] = 14.0; m2.data[2][1] = 13.0; m2.data[2][2] = 13.0; m2.data[2][3] = 11.0; m2.data[2][4] = 11.0; 
+    m2.data[3][0] = 15.0; m2.data[3][1] = 16.0; m2.data[3][2] = 17.0; m2.data[3][3] = 19.0; m2.data[3][4] = 19.0; 
+    m2.data[4][0] = 24.0; m2.data[4][1] = 23.0; m2.data[4][2] = 22.0; m2.data[4][3] = 21.0; m2.data[4][4] = 20.0; 
+    ret = matrix_adjoint(m2, &m2adj); 
+    ok &= assert_OK(ret, "matrix_adjoint 2");
+    m2exp.data[0][0] =-120.0; m2exp.data[0][1] = 362.0; m2exp.data[0][2] = 362.0; m2exp.data[0][3] =-118.0; m2exp.data[0][4] =-238.0; 
+    m2exp.data[1][0] = 60.0;  m2exp.data[1][1] =-422.0; m2exp.data[1][2] = 60.0;  m2exp.data[1][3] = 300.0; m2exp.data[1][4] =-122.0; 
+    m2exp.data[2][0] = 131.0; m2exp.data[2][1] =-110.0; m2exp.data[2][2] =-833.0; m2exp.data[2][3] =-68.0;  m2exp.data[2][4] = 545.0; 
+    m2exp.data[3][0] = 78.0;  m2exp.data[3][1] = 78.0;  m2exp.data[3][2] = 78.0;  m2exp.data[3][3] =-92.0;  m2exp.data[3][4] =-14.0; 
+    m2exp.data[4][0] =-151.0; m2exp.data[4][1] = 90.0;  m2exp.data[4][2] = 331.0; m2exp.data[4][3] =-32.0;  m2exp.data[4][4] =-183.0; 
+    ok &= assert_matrix(m2adj, m2exp, "matrix_adjoint result 2");
+
+    matrix_free(m1);
+    matrix_free(m2);
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
 bool tst_db_001()
 {
     bool ok = true;
@@ -1928,7 +2075,10 @@ bool tst_battery_all()
     ok &= tst_math_014();
     ok &= tst_math_015();
     ok &= tst_math_016();
-    
+    ok &= tst_math_017();
+    ok &= tst_math_018();
+    ok &= tst_math_019();
+
     ok &= tst_db_001();
     ok &= tst_db_002();
     ok &= tst_db_003();
@@ -1986,7 +2136,6 @@ int main(int argc, char **argv)
     // ok &= tst_cal_005();
     // ok &= tst_arm_015();
     ok &= tst_cal_004();
-
 
     return (ok)? RET_OK : RET_ERROR;
 }

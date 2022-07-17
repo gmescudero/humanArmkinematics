@@ -104,6 +104,32 @@ ERROR_CODE matrix_substract(MATRIX a, MATRIX b, MATRIX *output);
  */
 ERROR_CODE matrix_multiply(MATRIX a, MATRIX b, MATRIX *output);
 /**
+ * @brief Compute a minor of a matrix for a given element
+ * 
+ * @param a (input) Matrix to get minor from
+ * @param row (input) Row of the matrix element 
+ * @param col (input) Column of the matrix element
+ * @param output (output) The resulting minor
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_minor(MATRIX a, int row, int col, MATRIX *output);
+/**
+ * @brief Compute the determinant of a matrix
+ * 
+ * @param a (input) Matrix to calculate determinant from 
+ * @param output (output) The determinant value
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_determinant(MATRIX a, double *output);
+/**
+ * @brief Compute the adjoint matrix
+ * 
+ * @param a (input) Matrix to compute adjoint from
+ * @param output (output) Resulting Adjoint matrix
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_adjoint(MATRIX a, MATRIX *output);
+/**
  * @brief Compute the inverse of a matrix
  * 
  * @param a (input) Matrix to invert

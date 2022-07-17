@@ -133,5 +133,14 @@ ERROR_CODE arm_relative_angular_vel_compute(
     Quaternion q1, Quaternion q2, 
     double angVel1[3], double angVel2[3], double angVelR[3]);
 
+/**
+ * @brief Compute the quaternion to convert from 2 to 1
+ * 
+ * @param q1 (input) The orientation of the reference frame
+ * @param q2 (input) The orientation of the second frame
+ * @return Quaternion: The quaternion to convert from q2 to q1
+ */
+Quaternion arm_quaternion_between_two_get(Quaternion q1, Quaternion q2);
+
 
 #endif

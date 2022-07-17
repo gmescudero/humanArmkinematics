@@ -248,18 +248,26 @@ ARM_POSE arm_pose_get()
     return arm_current_pose;
 }
 
+Quaternion arm_quaternion_between_two_get(Quaternion q1, Quaternion q2) {
+    Quaternion q1_conj;
+    Quaternion q2_to1;
+
+    Quaternion_conjugate(&q1,&q1_conj);
+    Quaternion_multiply(&q1_conj,&q2,&q2_to1);
+
+    return q2_to1;
+}
+
 ERROR_CODE arm_relative_angular_vel_compute(
     Quaternion q1, Quaternion q2, 
     double angVel1[3], double angVel2[3], double angVelR[3]) 
 {
     ERROR_CODE status = RET_OK;
-    Quaternion q1_conj;
     Quaternion q2_to1;
     double angVel2_from1[3];
     
     /* Compute q21 */
-    Quaternion_conjugate(&q1,&q1_conj);
-    Quaternion_multiply(&q1_conj,&q2,&q2_to1);
+    q2_to1 = arm_quaternion_between_two_get(q1,q2);
 
     /* Compute relative w */
     Quaternion_rotate(&q2_to1, angVel2, angVel2_from1);

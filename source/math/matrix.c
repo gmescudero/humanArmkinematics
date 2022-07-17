@@ -185,7 +185,149 @@ ERROR_CODE matrix_multiply(MATRIX a, MATRIX b, MATRIX *output) {
     return status;
 }
 
+ERROR_CODE matrix_minor(MATRIX a, int row, int col, MATRIX *output) {
+    ERROR_CODE status = RET_OK;
+    MATRIX result;
+    // Check arguments
+    if (NULL == output)             return RET_ARG_ERROR;
+    if (false == a.allocated)       return RET_ARG_ERROR;
+    if (false == output->allocated) return RET_ARG_ERROR;
+    if (a.rows != a.cols)           return RET_ARG_ERROR;
+    if (0 > row || a.rows <= row)   return RET_ARG_ERROR;
+    if (0 > col || a.cols <= col)   return RET_ARG_ERROR;
+
+    int rp, cp;
+
+    result = matrix_allocate(a.rows-1, a.cols-1);
+    for(int r = 0; r < result.rows; r++) {
+        for (int c = 0; c < result.cols; c++) {
+            if (r >= row) rp = r+1; else rp = r;
+            if (c >= col) cp = c+1; else cp = c;
+            result.data[r][c] = a.data[rp][cp];
+        }   
+    }
+    
+    status = matrix_copy(result, output);
+    matrix_free(result);
+    return status;
+}
+
+ERROR_CODE matrix_determinant(MATRIX a, double *output) {
+    ERROR_CODE status = RET_OK;
+    int size = a.rows;
+    // Check arguments
+    if (NULL == output)         return RET_ARG_ERROR;
+    if (false == a.allocated)   return RET_ARG_ERROR;
+    if (a.rows != a.cols)       return RET_ARG_ERROR;
+
+    if      (1 == size) {
+        *output = a.data[0][0];
+    }
+    else if (2 == size) {
+        *output = a.data[0][0]*a.data[1][1] - a.data[0][1]*a.data[1][0];
+    }
+    else if (3 == size) {
+        *output = a.data[0][0]*a.data[1][1]*a.data[2][2]
+                + a.data[0][1]*a.data[1][2]*a.data[2][0]
+                + a.data[0][2]*a.data[1][0]*a.data[2][1]
+                - a.data[0][2]*a.data[1][1]*a.data[2][0]
+                - a.data[0][0]*a.data[1][2]*a.data[2][1]
+                - a.data[0][1]*a.data[1][0]*a.data[2][2];
+    }
+    else {
+        double partialDet = 0;
+        MATRIX cofactor = matrix_allocate(size-1,size-1);
+        *output = 0.0;
+        for (int i = 0; RET_OK == status && i < size; i++) {
+            if (EPSI < fabs(a.data[0][i])) {
+                status = matrix_minor(a, 0, i, &cofactor);
+                if (RET_OK == status) {
+                    status = matrix_determinant(cofactor, &partialDet);
+                }
+                if (RET_OK == status) {
+                    if (0 == i%2) {
+                        *output += a.data[0][i]*partialDet;
+                    }
+                    else {
+                        *output -= a.data[0][i]*partialDet;
+                    }
+                }
+            }
+        }
+        matrix_free(cofactor);
+    }
+
+    return status;
+}
+
+
+ERROR_CODE matrix_adjoint(MATRIX a, MATRIX *output) {
+    ERROR_CODE status = RET_OK;
+    MATRIX result;
+    MATRIX minor;
+    int size = a.rows;
+    // Check arguments
+    if (NULL == output)   return RET_ARG_ERROR;
+    if (false == a.allocated) return RET_ARG_ERROR;
+    if (false == output->allocated) return RET_ARG_ERROR;
+    if (a.rows != a.cols) return RET_ARG_ERROR;
+
+    result = matrix_allocate(size, size);
+    minor  = matrix_allocate(size-1,size-1);
+    for (int r = 0; RET_OK == status && r < size; r++) {
+        for (int c = 0; RET_OK == status && c < size; c++) {
+            status = matrix_minor(a,r,c,&minor);
+            if (RET_OK == status) {
+                status = matrix_determinant(minor, &result.data[r][c]);
+                if (RET_OK == status && r%2 != c%2) {
+                    result.data[r][c] *= -1.0;
+                }
+            }
+        }
+    }
+    if (RET_OK == status) {
+        status = matrix_transpose(result, output);
+    }
+    matrix_free(minor);
+    matrix_free(result);
+    return status;
+}
+
 ERROR_CODE matrix_inverse(MATRIX a, MATRIX *output) {
+    ERROR_CODE status = RET_OK;
+    MATRIX result;
+    double determinant;
+
+    int size = a.rows;
+    // Check arguments
+    if (NULL == output)   return RET_ARG_ERROR;
+    if (false == a.allocated) return RET_ARG_ERROR;
+    if (false == output->allocated) return RET_ARG_ERROR;
+    if (a.rows != a.cols) return RET_ARG_ERROR;
+
+    result = matrix_identity_allocate(size);
+
+    status = matrix_determinant(a, &determinant);
+    if (RET_OK == status && EPSI > fabs(determinant)) {
+        status = RET_ERROR;
+        err_str("Failed to invert, matrix is singular");
+        matrix_print(a, "Singular matrix");
+    }
+    if (RET_OK == status) {
+        status = matrix_adjoint(a, &result);
+    }
+    if (RET_OK == status) {
+        status = matrix_scale(result, 1.0/determinant, &result);
+    }
+
+    if (RET_OK == status) {
+        status = matrix_copy(result, output);
+    }
+    matrix_free(result);
+    return status;
+}
+
+ERROR_CODE matrix_inverse_gauss_jordan(MATRIX a, MATRIX *output) {
     ERROR_CODE status = RET_OK;
     MATRIX aux;
     MATRIX result;
