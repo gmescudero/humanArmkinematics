@@ -236,13 +236,13 @@ ERROR_CODE matrix_determinant(MATRIX a, double *output) {
     }
     else {
         double partialDet = 0;
-        MATRIX cofactor = matrix_allocate(size-1,size-1);
+        MATRIX minor = matrix_allocate(size-1,size-1);
         *output = 0.0;
         for (int i = 0; RET_OK == status && i < size; i++) {
             if (EPSI < fabs(a.data[0][i])) {
-                status = matrix_minor(a, 0, i, &cofactor);
+                status = matrix_minor(a, 0, i, &minor);
                 if (RET_OK == status) {
-                    status = matrix_determinant(cofactor, &partialDet);
+                    status = matrix_determinant(minor, &partialDet);
                 }
                 if (RET_OK == status) {
                     if (0 == i%2) {
@@ -254,7 +254,7 @@ ERROR_CODE matrix_determinant(MATRIX a, double *output) {
                 }
             }
         }
-        matrix_free(cofactor);
+        matrix_free(minor);
     }
 
     return status;
@@ -368,6 +368,7 @@ ERROR_CODE matrix_inverse_gauss_jordan(MATRIX a, MATRIX *output) {
     if (RET_OK == status) {
         status = matrix_copy(result, output);
     }
+    matrix_free(aux);
     matrix_free(result);
     return status;
 }
