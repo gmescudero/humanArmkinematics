@@ -122,7 +122,6 @@ int imu_number_get() {
  * @param id (input) COM port
  */
 static void simu_callback_new_data_update(ImuData d, const char *id) {
-    dbg_str("%s -> Updating IMU data in port %s",__FUNCTION__, id);
     // Update database fields
     ERROR_CODE status;
     int comparison = -1;
@@ -142,6 +141,8 @@ static void simu_callback_new_data_update(ImuData d, const char *id) {
     else {
         index = imu-1;
     }
+
+    dbg_str("%s -> Updating IMU %d data in port %s",__FUNCTION__, index, id);
     // Update database
     status = simu_database_update(d, index);
     if (RET_OK != status) {
@@ -157,7 +158,6 @@ static void simu_callback_new_data_update(ImuData d, const char *id) {
  * @param id (input) COM port
  */
 static void simu_callback_new_data_update_and_dump(ImuData d, const char *id) {
-    dbg_str("%s -> Updating and dumping IMU data in port %s",__FUNCTION__, id);
     // Update database fields
     ERROR_CODE status;
     int comparison = -1;
@@ -177,6 +177,8 @@ static void simu_callback_new_data_update_and_dump(ImuData d, const char *id) {
     else {
         index = imu-1;
     }
+
+    dbg_str("%s -> Updating and dumping IMU %d data in port %s",__FUNCTION__, index, id);
     // Update database
     status = simu_database_update(d, index);
     if (RET_OK != status) {
@@ -392,6 +394,7 @@ static ERROR_CODE simu_database_update(ImuData d, int index) {
     double linAcc[3] = {(double)d.linAcc[0],(double)d.linAcc[1],(double)d.linAcc[2]};
     double angVel[3] = {(double)d.w[0],(double)d.w[1],(double)d.w[2]};
     double quat[4]   = {(double)d.q[0],(double)d.q[1],(double)d.q[2],(double)d.q[3]};
+    int newData      = (int)true;
 
     status = db_write(DB_IMU_TIMESTAMP, index, &timestamp);
 
@@ -412,6 +415,9 @@ static ERROR_CODE simu_database_update(ImuData d, int index) {
     }
     if (RET_OK == status) {
         status = db_write(DB_IMU_QUATERNION, index, &quat);
+    }
+    if (RET_OK == status) {
+        status = db_write(DB_IMU_NEW_DATA, index, &newData);
     }
     return status;
 }

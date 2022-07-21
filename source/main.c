@@ -130,7 +130,28 @@ int main(int argc, char **argv) {
     if (RET_OK == status) {
         log_str("Start loop procedure");
         do {
-            sleep_ms(100);
+            if (RET_NO_EXEC == status) {
+                status = RET_OK;
+            }
+            if (RET_OK == status) {
+                int hasNewData;
+                sleep_ms(100);
+                // Check there is new data from the IMU sensors and reset heartbeat
+                dbg_str("Checking for imu data in database");
+                for (int i = 0; RET_OK == status && i < IMUS_NUM; i++) {
+                    status = db_read(DB_IMU_NEW_DATA, i, &hasNewData);
+                    STATUS_EVAL(status);
+                    if (RET_OK == status && (int)false == hasNewData) {
+                        wrn_str("Imu sensor %d data retrieving timeout", i);
+                        status = RET_NO_EXEC;
+                    }
+                    if (RET_OK == status) {
+                        hasNewData = (int)false;
+                        status = db_write(DB_IMU_NEW_DATA, i, &hasNewData);
+                        STATUS_EVAL(status);
+                    }
+                }
+            }
 
             if (RET_OK == status) {
                 // Update current time
@@ -163,13 +184,16 @@ int main(int argc, char **argv) {
             if (RET_OK == status) {
                 // Calibration of rotation axes
                 double omega1[3], omega2[3];
-                status = db_write(DB_IMU_ANGULAR_VELOCITY,0,omega1);
+                status = db_read(DB_IMU_ANGULAR_VELOCITY,0,omega1);
+                STATUS_EVAL(status);
                 if (RET_OK == status) {
-                    status = db_write(DB_IMU_ANGULAR_VELOCITY,1,omega2);
+                    status = db_read(DB_IMU_ANGULAR_VELOCITY,1,omega2);
+                    STATUS_EVAL(status);
                 }
                 if (RET_OK == status) {
                     // status = cal_automatic_two_rotation_axis_calibrate(omega1, omega2, imus_quat[0], imus_quat[1], rotVector1, rotVector2);
                     status = cal_automatic_rotation_axis_calibrate(omega1, omega2, imus_quat[0], imus_quat[1], rotVector1);
+                    STATUS_EVAL(status);
                 }
             }
 
@@ -192,5 +216,6 @@ int main(int argc, char **argv) {
     log_str("Clean memory and environment");
     status += db_terminate();
 
+    log_str("Final return code: %d", status);
     return (RET_OK == status)? RET_OK:RET_ERROR;
 }
