@@ -104,6 +104,14 @@ ERROR_CODE matrix_substract(MATRIX a, MATRIX b, MATRIX *output);
  */
 ERROR_CODE matrix_multiply(MATRIX a, MATRIX b, MATRIX *output);
 /**
+ * @brief Compute the matrix trace
+ * 
+ * @param a (input) Matrix to compute trace from
+ * @param output (output) Value of the trace
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_trace(MATRIX a, double *output);
+/**
  * @brief Compute a minor of a matrix for a given element
  * 
  * @param a (input) Matrix to get minor from

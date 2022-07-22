@@ -58,11 +58,11 @@ void matrix_free(MATRIX a) {
 
 ERROR_CODE matrix_copy(MATRIX a, MATRIX *output) {
     // Check arguments
-    if (NULL == output) return RET_ARG_ERROR;
-    if (false == a.allocated) return RET_ARG_ERROR;
+    if (NULL == output)             return RET_ARG_ERROR;
+    if (false == a.allocated)       return RET_ARG_ERROR;
     if (false == output->allocated) return RET_ARG_ERROR;
-    if (output->rows != a.rows) return RET_ARG_ERROR;
-    if (output->cols != a.cols) return RET_ARG_ERROR;
+    if (output->rows != a.rows)     return RET_ARG_ERROR;
+    if (output->cols != a.cols)     return RET_ARG_ERROR;
 
     for (int r = 0; r<a.rows; r++) {
         for (int c = 0; c<a.cols; c++) {
@@ -77,8 +77,8 @@ ERROR_CODE matrix_transpose(MATRIX a, MATRIX *output) {
     ERROR_CODE status;
     MATRIX result;
     // Check arguments
-    if (NULL == output) return RET_ARG_ERROR;
-    if (false == a.allocated) return RET_ARG_ERROR;
+    if (NULL == output)             return RET_ARG_ERROR;
+    if (false == a.allocated)       return RET_ARG_ERROR;
     if (false == output->allocated) return RET_ARG_ERROR;
 
     result = matrix_allocate(a.cols, a.rows);
@@ -98,8 +98,8 @@ ERROR_CODE matrix_scale(MATRIX a, double scale, MATRIX *output) {
     ERROR_CODE status;
     MATRIX result;
     // Check arguments
-    if (NULL == output) return RET_ARG_ERROR;
-    if (false == a.allocated) return RET_ARG_ERROR;
+    if (NULL == output)             return RET_ARG_ERROR;
+    if (false == a.allocated)       return RET_ARG_ERROR;
     if (false == output->allocated) return RET_ARG_ERROR;
 
     result = matrix_allocate(a.rows, a.cols);
@@ -118,12 +118,12 @@ ERROR_CODE matrix_add(MATRIX a, MATRIX b, MATRIX *output) {
     ERROR_CODE status;
     MATRIX result;
     // Check arguments
-    if (NULL == output)   return RET_ARG_ERROR;
-    if (false == a.allocated) return RET_ARG_ERROR;
-    if (false == b.allocated) return RET_ARG_ERROR;
+    if (NULL == output)             return RET_ARG_ERROR;
+    if (false == a.allocated)       return RET_ARG_ERROR;
+    if (false == b.allocated)       return RET_ARG_ERROR;
     if (false == output->allocated) return RET_ARG_ERROR;
-    if (a.rows != b.rows) return RET_ARG_ERROR;
-    if (a.cols != b.cols) return RET_ARG_ERROR;
+    if (a.rows != b.rows)           return RET_ARG_ERROR;
+    if (a.cols != b.cols)           return RET_ARG_ERROR;
 
     result = matrix_allocate(a.rows, a.cols);
     for (int r = 0; r < a.rows; r++) {
@@ -141,12 +141,12 @@ ERROR_CODE matrix_substract(MATRIX a, MATRIX b, MATRIX *output) {
     ERROR_CODE status;
     MATRIX result;
     // Check arguments
-    if (NULL == output)   return RET_ARG_ERROR;
-    if (false == a.allocated) return RET_ARG_ERROR;
-    if (false == b.allocated) return RET_ARG_ERROR;
+    if (NULL == output)             return RET_ARG_ERROR;
+    if (false == a.allocated)       return RET_ARG_ERROR;
+    if (false == b.allocated)       return RET_ARG_ERROR;
     if (false == output->allocated) return RET_ARG_ERROR;
-    if (a.rows != b.rows) return RET_ARG_ERROR;
-    if (a.cols != b.cols) return RET_ARG_ERROR;
+    if (a.rows != b.rows)           return RET_ARG_ERROR;
+    if (a.cols != b.cols)           return RET_ARG_ERROR;
 
     result = matrix_allocate(a.rows, a.cols);
     for (int r = 0; r < a.rows; r++) {
@@ -164,11 +164,11 @@ ERROR_CODE matrix_multiply(MATRIX a, MATRIX b, MATRIX *output) {
     ERROR_CODE status = RET_OK;
     MATRIX result;
     // Check arguments
-    if (NULL == output)   return RET_ARG_ERROR;
-    if (false == a.allocated) return RET_ARG_ERROR;
-    if (false == b.allocated) return RET_ARG_ERROR;
+    if (NULL == output)             return RET_ARG_ERROR;
+    if (false == a.allocated)       return RET_ARG_ERROR;
+    if (false == b.allocated)       return RET_ARG_ERROR;
     if (false == output->allocated) return RET_ARG_ERROR;
-    if (a.cols != b.rows) return RET_ARG_ERROR;
+    if (a.cols != b.rows)           return RET_ARG_ERROR;
 
     result = matrix_allocate(a.rows, b.cols);
     for (int i = 0; i < a.rows; ++i) {
@@ -182,6 +182,22 @@ ERROR_CODE matrix_multiply(MATRIX a, MATRIX b, MATRIX *output) {
 
     status = matrix_copy(result, output);
     matrix_free(result);
+    return status;
+}
+
+ERROR_CODE matrix_trace(MATRIX a, double *output) {
+    ERROR_CODE status = RET_OK;
+    int size = a.rows;
+    // Check arguments
+    if (NULL == output)         return RET_ARG_ERROR;
+    if (false == a.allocated)   return RET_ARG_ERROR;
+    if (a.rows != a.cols)       return RET_ARG_ERROR;
+
+    *output = 0.0;
+    for (int i = 0; i < size; i++) {
+        *output += a.data[i][i];
+    }
+
     return status;
 }
 
@@ -260,17 +276,16 @@ ERROR_CODE matrix_determinant(MATRIX a, double *output) {
     return status;
 }
 
-
 ERROR_CODE matrix_adjoint(MATRIX a, MATRIX *output) {
     ERROR_CODE status = RET_OK;
     MATRIX result;
     MATRIX minor;
     int size = a.rows;
     // Check arguments
-    if (NULL == output)   return RET_ARG_ERROR;
-    if (false == a.allocated) return RET_ARG_ERROR;
+    if (NULL == output)             return RET_ARG_ERROR;
+    if (false == a.allocated)       return RET_ARG_ERROR;
     if (false == output->allocated) return RET_ARG_ERROR;
-    if (a.rows != a.cols) return RET_ARG_ERROR;
+    if (a.rows != a.cols)           return RET_ARG_ERROR;
 
     result = matrix_allocate(size, size);
     minor  = matrix_allocate(size-1,size-1);
@@ -293,17 +308,17 @@ ERROR_CODE matrix_adjoint(MATRIX a, MATRIX *output) {
     return status;
 }
 
-ERROR_CODE matrix_inverse(MATRIX a, MATRIX *output) {
+ERROR_CODE matrix_inverse_standard(MATRIX a, MATRIX *output) {
     ERROR_CODE status = RET_OK;
     MATRIX result;
     double determinant;
 
     int size = a.rows;
     // Check arguments
-    if (NULL == output)   return RET_ARG_ERROR;
-    if (false == a.allocated) return RET_ARG_ERROR;
+    if (NULL == output)             return RET_ARG_ERROR;
+    if (false == a.allocated)       return RET_ARG_ERROR;
     if (false == output->allocated) return RET_ARG_ERROR;
-    if (a.rows != a.cols) return RET_ARG_ERROR;
+    if (a.rows != a.cols)           return RET_ARG_ERROR;
 
     result = matrix_identity_allocate(size);
 
@@ -334,10 +349,10 @@ ERROR_CODE matrix_inverse_gauss_jordan(MATRIX a, MATRIX *output) {
     double temp;
     int size = a.rows;
     // Check arguments
-    if (NULL == output)   return RET_ARG_ERROR;
-    if (false == a.allocated) return RET_ARG_ERROR;
+    if (NULL == output)             return RET_ARG_ERROR;
+    if (false == a.allocated)       return RET_ARG_ERROR;
     if (false == output->allocated) return RET_ARG_ERROR;
-    if (a.rows != a.cols) return RET_ARG_ERROR;
+    if (a.rows != a.cols)           return RET_ARG_ERROR;
     
     result = matrix_identity_allocate(size);
     aux = matrix_from_matrix_allocate(a);
@@ -373,6 +388,13 @@ ERROR_CODE matrix_inverse_gauss_jordan(MATRIX a, MATRIX *output) {
     return status;
 }
 
+ERROR_CODE matrix_inverse(MATRIX a, MATRIX *output) {
+#if 1
+    return matrix_inverse_gauss_jordan(a, output);
+#else
+    return matrix_inverse_standard(a, output);
+#endif
+}
 
 ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
     ERROR_CODE status;
@@ -381,7 +403,7 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
     MATRIX aat;
     MATRIX aatinv;
 
-    if (false == a.allocated) return RET_ARG_ERROR;
+    if (false == a.allocated)       return RET_ARG_ERROR;
     if (false == output->allocated) return RET_ARG_ERROR;
 
     // (Jt*J)^-1
@@ -414,7 +436,10 @@ void matrix_print(MATRIX a, const char *name) {
     char string[512] = "";
     char part_string[32] = "";  
 
-    if (false == a.allocated) wrn_str("Failed to print matrix. Not allocated!");
+    if (false == a.allocated) {
+        wrn_str("Failed to print matrix. Not allocated!");
+        return;
+    }
 
     for (int r = 0; r < a.rows; r ++) {
         strcat(string, "\n\t\t");
