@@ -750,6 +750,41 @@ bool tst_math_019()
     return ok;
 }
 
+bool tst_math_020() 
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    double v1[] = {1.0, 0.0, 0.0};
+    double v2[] = {0.0, 0.0, 1.0};
+    double v3[] = {M_SQRT1_2, M_SQRT1_2, 0.0};
+    double v4[] = {M_SQRT1_2, -M_SQRT1_2, 0.0};
+    double angle;
+    double angle_expected1 = M_PI_2;
+    double angle_expected2 = M_PI_4;
+    double angle_expected3 = M_PI_4;
+
+    testDescription(__FUNCTION__, "Check the angle calcualtion between two vectors");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret = vector3_angleBetweenTwoVectorsCalculate(v1, v2, &angle);
+    ok &= assert_OK(ret,"vector3_angleBetweenTwoVectorsCalculate 1");
+    ok &= assert_double(angle,angle_expected1, EPSI, "vector3_angleBetweenTwoVectorsCalculate result 1");
+
+    ret = vector3_angleBetweenTwoVectorsCalculate(v1, v3, &angle);
+    ok &= assert_OK(ret,"vector3_angleBetweenTwoVectorsCalculate 2");
+    ok &= assert_double(angle,angle_expected2, EPSI, "vector3_angleBetweenTwoVectorsCalculate result 2");
+
+    ret = vector3_angleBetweenTwoVectorsCalculate(v1, v4, &angle);
+    ok &= assert_OK(ret,"vector3_angleBetweenTwoVectorsCalculate 3");
+    ok &= assert_double(angle,angle_expected3, EPSI, "vector3_angleBetweenTwoVectorsCalculate result 3");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+
 bool tst_db_001()
 {
     bool ok = true;
@@ -2078,6 +2113,7 @@ bool tst_battery_all()
     ok &= tst_math_017();
     ok &= tst_math_018();
     ok &= tst_math_019();
+    ok &= tst_math_020();
 
     ok &= tst_db_001();
     ok &= tst_db_002();
@@ -2135,7 +2171,7 @@ int main(int argc, char **argv)
     // ok &= tst_cal_xxx();
     // ok &= tst_cal_005();
     // ok &= tst_arm_015();
-    ok &= tst_cal_004();
+    // ok &= tst_cal_004();
 
     return (ok)? RET_OK : RET_ERROR;
 }

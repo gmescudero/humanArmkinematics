@@ -159,3 +159,27 @@ ERROR_CODE vector3_normalize(double a[3], double output[3]) {
 
     return status;
 }
+
+ERROR_CODE vector3_angleBetweenTwoVectorsCalculate(double a[3], double b[3], double *output) {
+    ERROR_CODE status;
+    double aux[3];
+    double sinAngle;
+    double cosAngle;
+    // Check arguments
+    if (NULL == a)      return RET_ARG_ERROR;
+    if (NULL == b)      return RET_ARG_ERROR;
+    if (NULL == output) return RET_ARG_ERROR;
+
+    status = vector3_dot(a,b, &cosAngle);
+    if (RET_OK == status) {
+        status = vector3_cross(a,b,aux);
+    }
+    if (RET_OK == status) {
+        status = vector3_norm(aux, &sinAngle);
+    }
+    if (RET_OK == status) {
+        *output = atan2(sinAngle, cosAngle);
+    }
+
+    return status;
+}

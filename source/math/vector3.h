@@ -98,5 +98,14 @@ ERROR_CODE vector3_norm(double a[3], double *output);
  * @return ERROR_CODE: RET_OK on succes
  */
 ERROR_CODE vector3_normalize(double a[3], double output[3]);
+/**
+ * @brief Compute the angle between two vectors
+ * 
+ * @param a (input) First vector
+ * @param b (input) Second vector
+ * @param output (output) The angle between both given vectors
+ * @return ERROR_CODE 
+ */
+ERROR_CODE vector3_angleBetweenTwoVectorsCalculate(double a[3], double b[3], double *output);
 
 #endif

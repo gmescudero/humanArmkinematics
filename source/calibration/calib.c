@@ -213,8 +213,8 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
 
         // Gradient descent 
         if (RET_OK == status) {
-            newT = t + lambda*dJk_t_current;
-            newR = r + lambda*dJk_r_current;
+            newT = t - lambda*dJk_t_current;
+            newR = r - lambda*dJk_r_current;
         }
 
         // Set the output vector
