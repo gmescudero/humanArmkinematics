@@ -745,6 +745,10 @@ bool tst_math_019()
 
     matrix_free(m1);
     matrix_free(m2);
+    matrix_free(m1adj);
+    matrix_free(m2adj);
+    matrix_free(m1exp);
+    matrix_free(m2exp);
     testCleanUp();
     testReport(ok);
     return ok;
@@ -2171,7 +2175,7 @@ int main(int argc, char **argv)
     // ok &= tst_cal_xxx();
     // ok &= tst_cal_005();
     // ok &= tst_arm_015();
-    // ok &= tst_cal_004();
+    ok &= tst_cal_004();
 
     return (ok)? RET_OK : RET_ERROR;
 }

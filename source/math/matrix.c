@@ -396,7 +396,7 @@ ERROR_CODE matrix_inverse(MATRIX a, MATRIX *output) {
 #endif
 }
 
-ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
+ERROR_CODE matrix_pseudoinverse_alt1(MATRIX a, MATRIX *output) {
     ERROR_CODE status;
     MATRIX result;
     MATRIX at;
@@ -406,7 +406,7 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
     if (false == a.allocated)       return RET_ARG_ERROR;
     if (false == output->allocated) return RET_ARG_ERROR;
 
-    // (Jt*J)^-1
+    // Jt*(J*Jt)^-1
     at      = matrix_allocate(a.cols, a.rows);
     aat     = matrix_allocate(a.rows, at.cols);
     aatinv  = matrix_allocate(aat.rows, aat.cols);
@@ -432,21 +432,86 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
     return status;
 }
 
+ERROR_CODE matrix_pseudoinverse_alt2(MATRIX a, MATRIX *output) {
+    ERROR_CODE status;
+    MATRIX result;
+    MATRIX at;
+    MATRIX ata;
+    MATRIX atainv;
+
+    if (false == a.allocated)       return RET_ARG_ERROR;
+    if (false == output->allocated) return RET_ARG_ERROR;
+
+    // (Jt*J)^-1*Jt
+    at      = matrix_allocate(a.cols, a.rows);
+    ata     = matrix_allocate(at.rows, a.cols);
+    atainv  = matrix_allocate(ata.rows, ata.cols);
+    result  = matrix_allocate(atainv.rows, at.cols);
+
+    status = matrix_transpose(a, &at);
+    if (RET_OK == status) {
+        status = matrix_multiply(at, a, &ata);
+    }
+    if (RET_OK == status) {
+        status = matrix_inverse(ata, &atainv);
+    }
+    if (RET_OK == status) {
+        status = matrix_multiply(atainv, at, &result);
+    }
+    if (RET_OK == status) {
+        status = matrix_copy(result, output);
+    }
+    matrix_free(result);
+    matrix_free(atainv);
+    matrix_free(ata);
+    matrix_free(at);
+    return status;
+}
+
+ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
+    ERROR_CODE status;
+
+    if (a.rows <= a.cols) {
+        status = matrix_pseudoinverse_alt1(a,output);
+        if (RET_OK != status) {
+            status = matrix_pseudoinverse_alt2(a,output);
+        }
+    }
+    else {
+        status = matrix_pseudoinverse_alt2(a,output);
+        if (RET_OK != status) {
+            status = matrix_pseudoinverse_alt1(a,output);
+        }
+    }
+
+    return status;
+}
+
 void matrix_print(MATRIX a, const char *name) {
-    char string[512] = "";
-    char part_string[32] = "";  
+    char string[2048] = "";
+    char part_string[16] = "";  
 
     if (false == a.allocated) {
         wrn_str("Failed to print matrix. Not allocated!");
         return;
     }
 
-    for (int r = 0; r < a.rows; r ++) {
+    for (int r = 0; r < MIN(a.rows,10); r ++) {
         strcat(string, "\n\t\t");
-        for (int c = 0; c < a.cols; c ++) {
+        for (int c = 0; c < MIN(a.cols,10); c ++) {
             sprintf(part_string,"%f\t",a.data[r][c]);
             strcat(string, part_string);
         }
+        if (10 < a.cols) {
+            // Print a maximum of 10 columns
+            sprintf(part_string,"... +%d", a.cols-10);
+            strcat(string, part_string);
+        }
+    }
+    if (10 < a.rows) {
+        // Print a maximum of 10 rows
+        sprintf(part_string,"\n\t\t... +%d\n",a.rows-10);
+        strcat(string, part_string);
     }
     log_str("%dx%d Matrix (%s): %s",a.rows, a.cols, (NULL!=name)?name:"-", string);
 }
