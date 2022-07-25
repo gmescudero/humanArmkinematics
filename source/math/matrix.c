@@ -7,6 +7,16 @@
 #include <stdio.h>
 #include <math.h>
 
+#define INVERSE_ALGORITHM (0) // 0 for standard algorithm and 1 for gauss jordan approach
+
+#if (0 == INVERSE_ALGORITHM)
+static ERROR_CODE smatrix_inverse_standard(MATRIX a, MATRIX *output);
+#else
+static ERROR_CODE smatrix_inverse_gauss_jordan(MATRIX a, MATRIX *output);
+#endif
+static ERROR_CODE smatrix_pseudoinverse_alt1(MATRIX a, MATRIX *output);
+static ERROR_CODE smatrix_pseudoinverse_alt2(MATRIX a, MATRIX *output);
+
 
 MATRIX matrix_allocate(unsigned rows, unsigned cols) {
     MATRIX result;
@@ -308,10 +318,11 @@ ERROR_CODE matrix_adjoint(MATRIX a, MATRIX *output) {
     return status;
 }
 
-ERROR_CODE matrix_inverse_standard(MATRIX a, MATRIX *output) {
+#if (0 == INVERSE_ALGORITHM)
+static ERROR_CODE smatrix_inverse_standard(MATRIX a, MATRIX *output) {
     ERROR_CODE status = RET_OK;
     MATRIX result;
-    double determinant;
+    double determinant = 0.0;
 
     int size = a.rows;
     // Check arguments
@@ -320,16 +331,18 @@ ERROR_CODE matrix_inverse_standard(MATRIX a, MATRIX *output) {
     if (false == output->allocated) return RET_ARG_ERROR;
     if (a.rows != a.cols)           return RET_ARG_ERROR;
 
-    result = matrix_identity_allocate(size);
+    result = matrix_allocate(size,size);
 
-    status = matrix_determinant(a, &determinant);
+    if (RET_OK == status) {
+        status = matrix_adjoint(a, &result);
+    }
+    for (int i = 0; RET_OK == status && i < size; i++) {
+        determinant += a.data[0][i]*result.data[i][0];
+    }
     if (RET_OK == status && EPSI > fabs(determinant)) {
         status = RET_ERROR;
         err_str("Failed to invert, matrix is singular");
         matrix_print(a, "Singular matrix");
-    }
-    if (RET_OK == status) {
-        status = matrix_adjoint(a, &result);
     }
     if (RET_OK == status) {
         status = matrix_scale(result, 1.0/determinant, &result);
@@ -341,8 +354,10 @@ ERROR_CODE matrix_inverse_standard(MATRIX a, MATRIX *output) {
     matrix_free(result);
     return status;
 }
+#endif
 
-ERROR_CODE matrix_inverse_gauss_jordan(MATRIX a, MATRIX *output) {
+#if (1 == INVERSE_ALGORITHM)
+static ERROR_CODE smatrix_inverse_gauss_jordan(MATRIX a, MATRIX *output) {
     ERROR_CODE status = RET_OK;
     MATRIX aux;
     MATRIX result;
@@ -354,7 +369,7 @@ ERROR_CODE matrix_inverse_gauss_jordan(MATRIX a, MATRIX *output) {
     if (false == output->allocated) return RET_ARG_ERROR;
     if (a.rows != a.cols)           return RET_ARG_ERROR;
     
-    result = matrix_identity_allocate(size);
+    result = matrix_allocate(size,size);
     aux = matrix_from_matrix_allocate(a);
 
     for(int k=0; RET_OK == status && k<size; k++) {
@@ -387,16 +402,17 @@ ERROR_CODE matrix_inverse_gauss_jordan(MATRIX a, MATRIX *output) {
     matrix_free(result);
     return status;
 }
+#endif
 
 ERROR_CODE matrix_inverse(MATRIX a, MATRIX *output) {
-#if 1
-    return matrix_inverse_gauss_jordan(a, output);
+#if (0 == INVERSE_ALGORITHM)
+    return smatrix_inverse_standard(a, output);
 #else
-    return matrix_inverse_standard(a, output);
+    return smatrix_inverse_gauss_jordan(a, output);
 #endif
 }
 
-ERROR_CODE matrix_pseudoinverse_alt1(MATRIX a, MATRIX *output) {
+static ERROR_CODE smatrix_pseudoinverse_alt1(MATRIX a, MATRIX *output) {
     ERROR_CODE status;
     MATRIX result;
     MATRIX at;
@@ -432,7 +448,7 @@ ERROR_CODE matrix_pseudoinverse_alt1(MATRIX a, MATRIX *output) {
     return status;
 }
 
-ERROR_CODE matrix_pseudoinverse_alt2(MATRIX a, MATRIX *output) {
+static ERROR_CODE smatrix_pseudoinverse_alt2(MATRIX a, MATRIX *output) {
     ERROR_CODE status;
     MATRIX result;
     MATRIX at;
@@ -472,15 +488,15 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
     ERROR_CODE status;
 
     if (a.rows <= a.cols) {
-        status = matrix_pseudoinverse_alt1(a,output);
+        status = smatrix_pseudoinverse_alt1(a,output);
         if (RET_OK != status) {
-            status = matrix_pseudoinverse_alt2(a,output);
+            status = smatrix_pseudoinverse_alt2(a,output);
         }
     }
     else {
-        status = matrix_pseudoinverse_alt2(a,output);
+        status = smatrix_pseudoinverse_alt2(a,output);
         if (RET_OK != status) {
-            status = matrix_pseudoinverse_alt1(a,output);
+            status = smatrix_pseudoinverse_alt1(a,output);
         }
     }
 
