@@ -21,8 +21,7 @@
  */
 void cal_static_imu_quat_calibration_set(
     Quaternion known_quat[IMU_MAX_NUMBER],
-    Quaternion imus_quat[IMU_MAX_NUMBER],
-    int number_of_imus);
+    Quaternion imus_quat[IMU_MAX_NUMBER]);
 
 /**
  * @brief Retrieve the IMUs quaternion calibrated with the static value

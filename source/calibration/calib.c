@@ -29,9 +29,9 @@ static CAL_STATIC_CALIBRATION cal_imus_calibration_data[IMU_MAX_NUMBER] = {
     {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
     {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
     {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
-    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
-    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
-    {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
+    // {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
+    // {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
+    // {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
 };
 
 static CAL_ROT_AXIS_CALIB_CONFIG cal_rot_axis_autocalib_config = { 
@@ -42,15 +42,14 @@ static CAL_ROT_AXIS_CALIB_CONFIG cal_rot_axis_autocalib_config = {
 
 void cal_static_imu_quat_calibration_set(
     Quaternion known_quat[IMU_MAX_NUMBER],
-    Quaternion imus_quat[IMU_MAX_NUMBER],
-    int number_of_imus)
+    Quaternion imus_quat[IMU_MAX_NUMBER])
 {
     Quaternion imu_quat_conj;
-    int i;
+    int number_of_imus = imu_number_get();
     
     if (number_of_imus > 0) log_str("Calibrating quaternion data of %d IMU sensors", number_of_imus);
 
-    for (i = 0; i < number_of_imus; i++) {
+    for (int i = 0; i < number_of_imus; i++) {
         // Conjugate the imu reading
         Quaternion_conjugate(&imus_quat[i], &imu_quat_conj);
         // Compute the raw to calibrated quaternion
@@ -62,13 +61,12 @@ void cal_static_imu_quat_calibration_set(
 
 ERROR_CODE cal_static_imu_quat_calibration_apply(
     Quaternion imus_quat[IMU_MAX_NUMBER],
-    int number_of_imus,
     Quaternion calibrated_data[IMU_MAX_NUMBER])
 {
     ERROR_CODE status = RET_OK;
-    int i;
+    int number_of_imus = imu_number_get();
 
-    for (i = 0; RET_OK == status && i < number_of_imus; i++) {
+    for (int i = 0; RET_OK == status && i < number_of_imus; i++) {
         if (false == cal_imus_calibration_data[i].calibration_done) {
             err_str("Imu %d not calibrated!", i);
             status = RET_ERROR;

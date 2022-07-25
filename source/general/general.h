@@ -10,11 +10,11 @@
 /**
  * @brief Maximum number of COM ports to be discovered
  */
-#define COM_PORTS_MAX_NUM (7)
+#define COM_PORTS_MAX_NUM (4)
 /**
  * @brief The maximum number of values to log to the csv file
  */
-#define CSV_FILE_VALUES_NUMBER (50)
+#define CSV_FILE_VALUES_NUMBER (100)
 /**
  * @brief The maximum length of a CSV header
  */
