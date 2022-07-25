@@ -35,6 +35,8 @@ char log_file_name[LOG_FILE_NAME_LENGTH] = {'\0'};
 char csv_file_name_forced[CSV_FILE_NAME_LENGTH] = {'\0'};
 char log_file_name_forced[LOG_FILE_NAME_LENGTH] = {'\0'};
 
+int log_init = 0;
+
 ERROR_CODE log_file_initalize(){
     ERROR_CODE status;
 
@@ -57,6 +59,9 @@ ERROR_CODE log_file_initalize(){
         if (RET_OK == status) {
             scsv_default_headers_set();
         }
+    }
+    if (RET_OK == status) {
+        log_init = 1;
     }
     return status;
 }
@@ -94,7 +99,7 @@ void dbg_str(const char *text, ...){
         sstr_console_print(LOG_FILE_TRACE_DEBUG, text, args);
         va_end(args);
     }
-    if (DEBUG <= trace_file_level) {
+    if (DEBUG <= trace_file_level && 1 == log_init) {
         va_start(args, text);
         sstr_file_print(log_file_name, LOG_FILE_TRACE_DEBUG, text, args);
         va_end(args);
@@ -108,7 +113,7 @@ void log_str(const char *text, ...){
         sstr_console_print(LOG_FILE_TRACE_INFO, text, args);
         va_end(args);
     }
-    if (INFO <= trace_file_level) {
+    if (INFO <= trace_file_level && 1 == log_init) {
         va_start(args, text);
         sstr_file_print(log_file_name, LOG_FILE_TRACE_INFO, text, args);
         va_end(args);
@@ -122,7 +127,7 @@ void wrn_str(const char *text, ...){
         sstr_console_print(LOG_FILE_TRACE_WARNING, text, args);
         va_end(args);
     }
-    if (WARNING <= trace_file_level) {
+    if (WARNING <= trace_file_level && 1 == log_init) {
         va_start(args, text);
         sstr_file_print(log_file_name, LOG_FILE_TRACE_WARNING, text, args);
         va_end(args);
@@ -136,7 +141,7 @@ void err_str(const char *text, ...){
         sstr_console_print(LOG_FILE_TRACE_ERROR, text, args);
         va_end(args);
     }
-    if (ERROR <= trace_file_level) {
+    if (ERROR <= trace_file_level && 1 == log_init) {
         va_start(args, text);
         sstr_file_print(log_file_name, LOG_FILE_TRACE_ERROR, text, args);
         va_end(args);
