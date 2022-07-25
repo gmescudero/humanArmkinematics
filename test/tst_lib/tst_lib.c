@@ -74,6 +74,16 @@ void tstRandomUnitVector3Generate(double vector[3]) {
     vector3_normalize(vector, vector);
 }
 
+MATRIX tstRandomMatrixAllocateAndGenerate(unsigned rows, unsigned columns) {
+    MATRIX gen = matrix_allocate(rows,columns);
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < columns; c++) {
+            gen.data[r][c] = tstRandomDoubleGenerate();
+        }
+    }
+    return gen;
+}
+
 // * PRECONDITIONS ************************************************************
 
 bool preconditions_initArm()

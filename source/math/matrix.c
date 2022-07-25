@@ -7,7 +7,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#define INVERSE_ALGORITHM (0) // 0 for standard algorithm and 1 for gauss jordan approach
+#define INVERSE_ALGORITHM (1) // 0 for standard algorithm and 1 for gauss jordan approach
+// Gauss Jordan algorithm is way faster than the standard method
 
 #if (0 == INVERSE_ALGORITHM)
 static ERROR_CODE smatrix_inverse_standard(MATRIX a, MATRIX *output);
@@ -34,8 +35,8 @@ MATRIX matrix_allocate(unsigned rows, unsigned cols) {
         if (NULL == result.data[i]) result.allocated = false;
     }
 
-    if (false == result.allocated) {
-        err_str("Failed to allocate matrix");
+    if (false == result.allocated || 0 >= rows || 0>= cols) {
+        err_str("Failed to allocate matrix %ux%u",rows,cols);
     }
     return result;
 }
@@ -297,24 +298,30 @@ ERROR_CODE matrix_adjoint(MATRIX a, MATRIX *output) {
     if (false == output->allocated) return RET_ARG_ERROR;
     if (a.rows != a.cols)           return RET_ARG_ERROR;
 
-    result = matrix_allocate(size, size);
-    minor  = matrix_allocate(size-1,size-1);
-    for (int r = 0; RET_OK == status && r < size; r++) {
-        for (int c = 0; RET_OK == status && c < size; c++) {
-            status = matrix_minor(a,r,c,&minor);
-            if (RET_OK == status) {
-                status = matrix_determinant(minor, &result.data[r][c]);
-                if (RET_OK == status && r%2 != c%2) {
-                    result.data[r][c] *= -1.0;
+    if (1 == size) {
+        // Determinant of a 0x0 matrix is 1
+        output->data[0][0] = 1;
+    }
+    else {
+        result = matrix_allocate(size, size);
+        minor  = matrix_allocate(size-1,size-1);
+        for (int r = 0; RET_OK == status && r < size; r++) {
+            for (int c = 0; RET_OK == status && c < size; c++) {
+                status = matrix_minor(a,r,c,&minor);
+                if (RET_OK == status) {
+                    status = matrix_determinant(minor, &result.data[r][c]);
+                    if (RET_OK == status && r%2 != c%2) {
+                        result.data[r][c] *= -1.0;
+                    }
                 }
             }
         }
+        if (RET_OK == status) {
+            status = matrix_transpose(result, output);
+        }
+        matrix_free(minor);
+        matrix_free(result);
     }
-    if (RET_OK == status) {
-        status = matrix_transpose(result, output);
-    }
-    matrix_free(minor);
-    matrix_free(result);
     return status;
 }
 

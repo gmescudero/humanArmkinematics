@@ -26,6 +26,7 @@ void tst_str(const char *text, ...);
 double tstRandomDoubleGenerate();
 Quaternion tstRandomQuaternionGenerate();
 void tstRandomUnitVector3Generate(double vector[3]);
+MATRIX tstRandomMatrixAllocateAndGenerate(unsigned rows, unsigned columns);
 // * PRECONDITIONS ************************************************************
 bool preconditions_initArm();
 bool preconditions_initTraces(const char *test_name);
