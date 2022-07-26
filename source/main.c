@@ -19,9 +19,15 @@
 #include "calib.h"
 #include <string.h>
 
-#define IMUS_NUM (2) // Set the expected minimum imu sensors for the program to work
-#define UPPER_ARM_LENGTH (10.0)
-#define FOREARM_LENGTH (5.0)
+/******************************/
+/** CONFIG ********************/
+/******************************/
+#define USE_IMU_CALIB (0)           // Set whether to use the IMUs offset calibration or the integrated one (1 use imu, 0 use app)
+#define USE_AUTO_CALIB (2)          // Set whether or not to use autocalibration of rotation axis (0 no autocalib, 1 one axis, 2 two axes)
+#define IMUS_NUM (2)                // Set the expected minimum imu sensors for the program to work
+#define UPPER_ARM_LENGTH (10.0)     // Set the Upper-arm length
+#define FOREARM_LENGTH (5.0)        // Set the Forearm length
+/******************************/
 
 #define STATUS_EVAL(code) {if (RET_OK != code && RET_NO_EXEC != status) err_str("[%d] Failed: %d ",__LINE__, code);}
 
@@ -48,10 +54,14 @@ int main(int argc, char **argv) {
     double buffTime;
     double startTime   = -1.0;
     double currentTime = -1.0;
-    
-    // double rotVector1[3] = {1.0,0.0,0.0};
-    // double rotVector2[3] = {0.0,0.0,1.0};
     int iteration_count = 3000;
+
+#if   1 <= USE_AUTO_CALIB
+    double rotVector1[3] = {1.0,0.0,0.0};
+#endif
+#if   2 <= USE_AUTO_CALIB
+    double rotVector2[3] = {0.0,0.0,1.0};
+#endif
 
     /* Initialize all packages */
     log_str("Initialize");
@@ -121,17 +131,20 @@ int main(int argc, char **argv) {
         log_str("STAND IN T-POSE TO CALIBRATE");
         sleep_ms(2000);
         if (RET_OK == status) {
-            // Quaternion known_quats[IMUS_NUM] = {
-            //     {.w = 1.0, .v={0.0, 0.0, 0.0}},
-            //     {.w = 1.0, .v={0.0, 0.0, 0.0}},
-            // };
-            // Quaternion read_quats[IMUS_NUM];
-            // for (int i = 0; RET_OK == status && i < IMUS_NUM; i++) {
-            //     quaternion_from_float_buffer_build(data[i].q, &read_quats[i]);
-            // }
-            // cal_static_imu_quat_calibration_set(known_quats, read_quats);
+#if USE_IMU_CALIB
             status = imu_orientation_offset_set(1);
             STATUS_EVAL(status);
+#else
+            Quaternion known_quats[IMUS_NUM] = {
+                {.w = 1.0, .v={0.0, 0.0, 0.0}},
+                {.w = 1.0, .v={0.0, 0.0, 0.0}},
+            };
+            Quaternion read_quats[IMUS_NUM];
+            for (int i = 0; RET_OK == status && i < IMUS_NUM; i++) {
+                quaternion_from_float_buffer_build(data[i].q, &read_quats[i]);
+            }
+            cal_static_imu_quat_calibration_set(known_quats, read_quats);
+#endif
         }
         if (RET_OK == status) {
             log_str("CALIBRATION_DONE");
@@ -178,7 +191,7 @@ int main(int argc, char **argv) {
                     currentTime = buffTime - startTime;
                 }
             }
-#if 1
+#if USE_IMU_CALIB // Using imus simple calibration
             if (RET_OK == status) {
                 // Get the calibrated quaternions from IMU data
                 double quat_buff[4] = {0.0};
@@ -205,7 +218,7 @@ int main(int argc, char **argv) {
                 status = arm_direct_kinematics_compute(joints, NULL);
                 STATUS_EVAL(status);
             }
-#if 0 
+#if 0 != USE_AUTO_CALIB // Using auto-calibration
             if (RET_OK == status) {
                 // Calibration of rotation axes
                 double omega1[3], omega2[3];
@@ -216,8 +229,11 @@ int main(int argc, char **argv) {
                     STATUS_EVAL(status);
                 }
                 if (RET_OK == status) {
-                    // status = cal_automatic_two_rotation_axis_calibrate(omega1, omega2, imus_quat[0], imus_quat[1], rotVector1, rotVector2);
+    #if   1 == USE_AUTO_CALIB
                     status = cal_automatic_rotation_axis_calibrate(omega1, omega2, imus_quat[0], imus_quat[1], rotVector1);
+    #elif 2 == USE_AUTO_CALIB
+                    status = cal_automatic_two_rotation_axis_calibrate(omega1, omega2, imus_quat[0], imus_quat[1], rotVector1, rotVector2);
+    #endif
                     STATUS_EVAL(status);
                 }
             }
