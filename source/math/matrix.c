@@ -376,7 +376,7 @@ static ERROR_CODE smatrix_inverse_gauss_jordan(MATRIX a, MATRIX *output) {
     if (false == output->allocated) return RET_ARG_ERROR;
     if (a.rows != a.cols)           return RET_ARG_ERROR;
     
-    result = matrix_allocate(size,size);
+    result = matrix_identity_allocate(size);
     aux = matrix_from_matrix_allocate(a);
 
     for(int k=0; RET_OK == status && k<size; k++) {
