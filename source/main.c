@@ -81,19 +81,20 @@ int main(int argc, char **argv) {
         // status += db_csv_field_add(DB_IMU_TIMESTAMP,1);
         status += db_csv_field_add(DB_IMU_QUATERNION,0);
         status += db_csv_field_add(DB_IMU_QUATERNION,1);
-        status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,0);
-        status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,1);
-        status += db_csv_field_add(DB_IMU_GYROSCOPE,0);
-        status += db_csv_field_add(DB_IMU_GYROSCOPE,1);
-        status += db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
-        status += db_csv_field_add(DB_ARM_ELBOW_POSITION,0);
-        status += db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
-        status += db_csv_field_add(DB_ARM_WRIST_POSITION,0);
-        // status += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
-        // status += db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
-        // status += db_csv_field_add(DB_CALIB_ERROR,0);
-        // status += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
-        // status += db_csv_field_add(DB_CALIB_OMEGA,0);
+        // status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,0);
+        // status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,1);
+        // status += db_csv_field_add(DB_IMU_GYROSCOPE,0);
+        // status += db_csv_field_add(DB_IMU_GYROSCOPE,1);
+        // status += db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
+        // status += db_csv_field_add(DB_ARM_ELBOW_POSITION,0);
+        // status += db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
+        // status += db_csv_field_add(DB_ARM_WRIST_POSITION,0);
+        status += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
+        status += db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
+        status += db_csv_field_add(DB_CALIB_ERROR,0);
+        status += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
+        status += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,1);
+        status += db_csv_field_add(DB_CALIB_OMEGA,0);
         STATUS_EVAL(status);
     }
 
@@ -245,11 +246,15 @@ int main(int argc, char **argv) {
             }
             dbg_str("time: %f",currentTime);
             iteration_count--;
-        } while ((RET_OK == status || RET_NO_EXEC == status) && 50 > currentTime && 0 < iteration_count);
+        } while ((RET_OK == status || RET_NO_EXEC == status) && 30 > currentTime && 0 < iteration_count);
     } 
 
-    // log_str("Rotation vector 1:[%f,%f,%f]", rotVector1[0],rotVector1[1], rotVector1[2]);
-    // log_str("Rotation vector 2:[%f,%f,%f]", rotVector2[0],rotVector2[1], rotVector2[2]);
+#if   1 <= USE_AUTO_CALIB
+    log_str("Rotation vector 1:[%f,%f,%f]", rotVector1[0],rotVector1[1], rotVector1[2]);
+#endif
+#if   2 <= USE_AUTO_CALIB
+    log_str("Rotation vector 2:[%f,%f,%f]", rotVector2[0],rotVector2[1], rotVector2[2]);
+#endif
 
     log_str("Terminate all IMU connections");
     imu_terminate();

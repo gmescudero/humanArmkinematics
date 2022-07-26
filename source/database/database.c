@@ -73,7 +73,7 @@ static DB_FIELD database[DB_NUMBER_OF_ENTRIES] = {
     DB_FIELD_INIT(DB_CALIB_OMEGA,                "CALIB_OMEGA",                 DB_REAL,1,3),
     DB_FIELD_INIT(DB_CALIB_OMEGA_NORM,           "CALIB_OMEGA_NORM",            DB_REAL,1,1),
     DB_FIELD_INIT(DB_CALIB_SPHERICAL_COORDS,     "CALIB_SPHERICAL_COORDS",      DB_REAL,2,2),
-    DB_FIELD_INIT(DB_CALIB_COST_DERIVATIVE,      "CALIB_COST_DERIVATIVE",       DB_REAL,1,2),
+    DB_FIELD_INIT(DB_CALIB_COST_DERIVATIVE,      "CALIB_COST_DERIVATIVE",       DB_REAL,2,2),
     /* Arm positions and orientations */
     DB_FIELD_INIT(DB_ARM_SHOULDER_POSITION,    "ARM_SHOULDER_POSITION",    DB_REAL,1,3),
     DB_FIELD_INIT(DB_ARM_SHOULDER_ORIENTATION, "ARM_SHOULDER_ORIENTATION", DB_REAL,1,4),
@@ -336,8 +336,8 @@ ERROR_CODE db_csv_dump(void) {
         instance        = csv_logging_fields.instances[ind];
         index           = csv_logging_fields.indexes[ind];
         status = db_index_read(current_field, instance, index, &(csv_buff[ind]));
-        dbg_str("\t -> Retrieve data from field %s(%d)_%d -> %f",
-            database[current_field].name, instance, index, csv_buff[ind]);
+        // dbg_str("\t -> Retrieve data from field %s(%d)_%d -> %f",
+            // database[current_field].name, instance, index, csv_buff[ind]);
     }
 
     dbg_str("%s -> Write CSV data row",__FUNCTION__);

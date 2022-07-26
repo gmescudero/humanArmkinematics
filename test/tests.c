@@ -1857,7 +1857,7 @@ bool tst_cal_004()
     double time = 0.0;
 
     double omega1[] = {500.0,0.0,0.0};
-    double omega2[] = {500.0,0.0,1000.0};
+    double omega2[] = {1000.0,0.0,500.0};
     double omega3[] = {500.0,0.0,0.0};
     double omega4[] = {1500.0,0.0,0.0};
     double omega1_noise[3];
@@ -1908,6 +1908,8 @@ bool tst_cal_004()
             omega2_noise[1] = omega4[1] + 100.0*tstRandomDoubleGenerate();
             omega2_noise[2] = omega4[2] + 100.0*tstRandomDoubleGenerate();
         }
+        quaternion_ang_vel_apply(q_sensor1,timeInc,omega1,&q_sensor1);
+        quaternion_ang_vel_apply(q_sensor2,timeInc,omega2,&q_sensor2);
         // tst_str("Time %f (iterations %d)", time, (int)(time/timeInc));
         ret = cal_automatic_two_rotation_axis_calibrate(omega1_noise,omega2_noise,q_sensor1,q_sensor2,rotVector1,rotVector2);
         // tst_str("V1: <%f, %f, %f>, V2: <%f, %f, %f>", 

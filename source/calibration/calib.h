@@ -6,11 +6,14 @@
 #include "Quaternion.h"
 #include "imu.h"
 
+#define CALIB_MIN_VEL (5e1)
 
-#define DEFAULT_ROT_AXIS_CALIB_WINDOW  (30)
-#define DEFAULT_ROT_AXIS_CALIB_STEP_SZ (0.03)
-#define DEFAULT_ROT_AXIS_CALIB_MIN_VEL (5e1)
+#define DEFAULT_ROT_AXIS_CALIB_WINDOW  (3)
+#define DEFAULT_ROT_AXIS_CALIB_STEP_SZ (0.3)
 
+#define CALIB_TWO_ROT_AXIS_WINDOW (200)
+#define CALIB_TWO_ROT_AXIS_MAX_ITERATIONS (30)
+#define CALIB_TWO_ROT_AXIS_MAX_ERROR (1e-1)
 
 /**
  * @brief Set the calibration data from a given set of IMU sensor readings
