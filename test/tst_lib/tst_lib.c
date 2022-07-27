@@ -84,6 +84,12 @@ MATRIX tstRandomMatrixAllocateAndGenerate(unsigned rows, unsigned columns) {
     return gen;
 }
 
+void tstVector3RandomNoiseAdd(double vector[3], double scale, double output[3]) {
+    output[0] = vector[0] + scale*tstRandomDoubleGenerate();
+    output[1] = vector[1] + scale*tstRandomDoubleGenerate();
+    output[2] = vector[2] + scale*tstRandomDoubleGenerate();
+}
+
 // * PRECONDITIONS ************************************************************
 
 bool preconditions_initArm()
