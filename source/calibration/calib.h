@@ -19,6 +19,7 @@
 #define CALIB_TWO_ROT_AXIS_WINDOW (100)
 #define CALIB_TWO_ROT_AXIS_MAX_ITERATIONS (20)
 #define CALIB_TWO_ROT_AXIS_MAX_ERROR (1e-1)
+#define CALIB_TWO_ROT_AXIS_STEP_SZ (1)
 
 /**
  * @brief Set the calibration data from a given set of IMU sensor readings

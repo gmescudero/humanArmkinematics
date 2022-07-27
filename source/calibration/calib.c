@@ -745,6 +745,9 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
             // dbg_str("%s -> q%d: [%f, %f, %f, %f]",__FUNCTION__,i, qi.w,qi.v[0],qi.v[1],qi.v[2]);
             // Compute rotation vector 2 from 1
             Quaternion_rotate(&qi, rotationV2, rotationV2_from1);
+
+            // Compute phi values
+            scal_vector3_to_spherical_coordinates_convert(rotationV1, &phi.data[0][0], &phi.data[1][0], &sph_alt1);
             scal_vector3_to_forced_spherical_coordinates_convert(rotationV2_from1, sph_alt2, &phi.data[2][0], &phi.data[3][0]);
             scal_spherical_coordinates_derivatives(phi.data[2][0], phi.data[3][0], sph_alt2, dpart_th2, dpart_rh2);
 
@@ -795,7 +798,7 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
             }
         }
         error = squared_error/run_iterations;
-        // dbg_str("%s -> Current calib error: %f",__FUNCTION__, error);
+        dbg_str("%s -> Current calib error: %f (%d iterations remaining)",__FUNCTION__, error, iterations);
         if (CALIB_TWO_ROT_AXIS_MAX_ERROR < error) {
             MATRIX Jpinv            = matrix_allocate(4,run_iterations);
             MATRIX phi_correction   = matrix_allocate(4,1);
@@ -804,6 +807,9 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
             }
             if (RET_OK == status) {
                 status = matrix_multiply(Jpinv, errorV, &phi_correction);
+            }
+            if (RET_OK == status) {
+                status = matrix_scale(phi_correction, CALIB_TWO_ROT_AXIS_STEP_SZ, &phi_correction);
             }
             if (RET_OK == status) {
                 status = matrix_substract(phi, phi_correction, &phi);

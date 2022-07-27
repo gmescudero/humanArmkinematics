@@ -1908,8 +1908,8 @@ bool tst_cal_004()
         tstVector3RandomNoiseAdd(omega1, 50.0, omega1_noise);
         tstVector3RandomNoiseAdd(omega2, 50.0, omega2_noise);
         // Set new quaternions
-        quaternion_ang_vel_apply(q_sensor1,timeInc*0.001,omega1,&q_sensor1);
-        quaternion_ang_vel_apply(q_sensor2,timeInc*0.001,omega2,&q_sensor2);
+        quaternion_ang_vel_apply(q_sensor1,timeInc,omega1,&q_sensor1);
+        quaternion_ang_vel_apply(q_sensor2,timeInc,omega2,&q_sensor2);
         quaternion_print(q_sensor1,"q_sensor1");
         quaternion_print(q_sensor2,"q_sensor2");
         // Execute arm calibration of a single rotation axis
