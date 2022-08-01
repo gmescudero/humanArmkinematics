@@ -1910,15 +1910,15 @@ bool tst_cal_004()
         // Set new quaternions
         quaternion_ang_vel_apply(q_sensor1,timeInc,omega1,&q_sensor1);
         quaternion_ang_vel_apply(q_sensor2,timeInc,omega2,&q_sensor2);
-        quaternion_print(q_sensor1,"q_sensor1");
-        quaternion_print(q_sensor2,"q_sensor2");
+        // quaternion_print(q_sensor1,"q_sensor1");
+        // quaternion_print(q_sensor2,"q_sensor2");
         // Execute arm calibration of a single rotation axis
         // tst_str("Time %f (iterations %d)", time, (int)(time/timeInc));
-        ret = cal_automatic_two_rotation_axis_calibrate(omega1_noise,omega2_noise,q_sensor1,q_sensor2,rotVector1,rotVector2);
+        ret = cal_automatic_two_rotation_axes_calibrate(omega1_noise,omega2_noise,q_sensor1,q_sensor2,rotVector1,rotVector2);
         // tst_str("V1: <%f, %f, %f>, V2: <%f, %f, %f>", 
         //     rotVector1[0],rotVector1[1], rotVector1[2],
         //     rotVector2[0],rotVector2[1], rotVector2[2]);
-        ok &= assert_OK(ret, "cal_automatic_two_rotation_axis_calibrate");
+        ok &= assert_OK(ret, "cal_automatic_two_rotation_axes_calibrate");
         // Dump database data
         ret = db_csv_dump();
         ok &= assert_OK(ret, "db_csv_dump");

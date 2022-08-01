@@ -69,7 +69,7 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
  * @param rotationV2 (input/output) Second rotation vector
  * @return ERROR_CODE 
  */
-ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
+ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
     double omega1_from1[3],
     double omega2_from2[3],
     Quaternion q_sensor1,

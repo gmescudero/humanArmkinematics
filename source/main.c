@@ -233,7 +233,7 @@ int main(int argc, char **argv) {
     #if   1 == USE_AUTO_CALIB
                     status = cal_automatic_rotation_axis_calibrate(omega1, omega2, imus_quat[0], imus_quat[1], rotVector1);
     #elif 2 == USE_AUTO_CALIB
-                    status = cal_automatic_two_rotation_axis_calibrate(omega1, omega2, imus_quat[0], imus_quat[1], rotVector1, rotVector2);
+                    status = cal_automatic_two_rotation_axes_calibrate(omega1, omega2, imus_quat[0], imus_quat[1], rotVector1, rotVector2);
     #endif
                     STATUS_EVAL(status);
                 }
