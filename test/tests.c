@@ -149,7 +149,7 @@ bool tst_math_005()
     Quaternion q1 = {.w = 1.0, .v = {0.0,0.0,0.0}};
     Quaternion q1_exp_expected = {.w = E, .v = {0.0,0.0,0.0}};
 
-    Quaternion q2 = { .w = SQRT_2/2, .v = {SQRT_2/2, 0.0, 0.0} };
+    Quaternion q2 = { .w = M_SQRT1_2, .v = {M_SQRT1_2, 0.0, 0.0} };
     Quaternion q2_exp_expected = {.w = 1.541863, .v = {1.317538,0.0,0.0}};
 
     Quaternion q3 = { .w = 0.0, .v = {0.0, 0.0, M_PI} };
@@ -170,7 +170,7 @@ bool tst_math_005()
     ret = quaternion_exponential(q2, &q_result);
     ok &= assert_OK(ret, "quaternion_exponential");
     ok &= assert_quaternion(q_result,q2_exp_expected,"quaternion_exponential result");
-    ok &= assert_double(Quaternion_norm(&q_result), pow(E,SQRT_2/2), EPSI, "quaternion_exponential result norm");
+    ok &= assert_double(Quaternion_norm(&q_result), pow(E,M_SQRT1_2), EPSI, "quaternion_exponential result norm");
 
     ret = quaternion_exponential(q3, &q_result);
     ok &= assert_OK(ret, "quaternion_exponential");
@@ -206,7 +206,7 @@ bool tst_math_006()
     Quaternion q2_exp_expected = {.w = 1.0, .v = {0.0,0.0,0.0}};
 
     double T3 = 0.5;
-    Quaternion q3_exp_expected = {.w = M_SQRT2, .v = {0.0,0.0,M_SQRT2}};
+    Quaternion q3_exp_expected = {.w = M_SQRT1_2, .v = {0.0,0.0,M_SQRT1_2}};
 
     double T4 = 2.0;
     Quaternion q4_exp_expected = {.w = -1.0, .v = {0.0,0.0,0.0}};
@@ -259,7 +259,7 @@ bool tst_math_007()
     Quaternion q2_exp_expected = {.w = 1.0, .v = {0.0,0.0,0.0}};
 
     double T3 = 0.5;
-    Quaternion q3_exp_expected = {.w = SQRT_2/2, .v = {0.0,SQRT_2/2,0.0}};
+    Quaternion q3_exp_expected = {.w = M_SQRT1_2, .v = {0.0,M_SQRT1_2,0.0}};
 
     double T4 = 2.0;
     Quaternion q4_exp_expected = {.w = -1.0, .v = {0.0,0.0,0.0}};
@@ -303,7 +303,7 @@ bool tst_math_008()
     Quaternion q2_exp_expected = {.w = 1.0, .v = {0.0,0.0,0.0}};
 
     double T3 = 0.5;
-    Quaternion q3_exp_expected = {.w = SQRT_2/2, .v = {SQRT_2/2,0.0,0.0}};
+    Quaternion q3_exp_expected = {.w = M_SQRT1_2, .v = {M_SQRT1_2,0.0,0.0}};
 
     double T4 = 2.0;
     Quaternion q4_exp_expected = {.w = -1.0, .v = {0.0,0.0,0.0}};

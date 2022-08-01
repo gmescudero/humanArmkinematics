@@ -749,6 +749,7 @@ ERROR_CODE cal_automatic_two_rotation_axis_calibrate(
             // Compute phi values
             scal_vector3_to_spherical_coordinates_convert(rotationV1, &phi.data[0][0], &phi.data[1][0], &sph_alt1);
             scal_vector3_to_forced_spherical_coordinates_convert(rotationV2_from1, sph_alt2, &phi.data[2][0], &phi.data[3][0]);
+            scal_spherical_coordinates_derivatives(phi.data[0][0], phi.data[1][0], sph_alt1, dpart_th1, dpart_rh1);
             scal_spherical_coordinates_derivatives(phi.data[2][0], phi.data[3][0], sph_alt2, dpart_th2, dpart_rh2);
 
             // Compute error
