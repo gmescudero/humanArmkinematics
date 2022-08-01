@@ -45,6 +45,8 @@ bool assert_string_empty(const char *actual, const char *description);
 bool assert_string_not_empty(const char *actual, const char *description);
 bool assert_vector3EqualThreshold(const double actual[3], const double expected[3], const double threshold, const char *description);
 bool assert_vector3Equal(const double actual[3], const double expected[3], const char *description);
+bool assert_vector3EqualNoSignThreshold(const double actual[3], const double expected[3], const double threshold, const char *description);
+bool assert_vector3EqualNoSign(const double actual[3], const double expected[3], const char *description);
 bool assert_quaternionThreshold(Quaternion actual, Quaternion expected, double threshold, const char *description);
 bool assert_quaternion(Quaternion actual, Quaternion expected, const char *description);
 bool assert_frame(ARM_FRAME actual, ARM_FRAME expected, const char *description);

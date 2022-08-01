@@ -269,8 +269,7 @@ bool assert_string_not_empty(const char *actual, const char *description) {
     return ok;
 }
 
-bool assert_vector3EqualThreshold(const double actual[3], const double expected[3], const double threshold, const char *description)
-{
+bool assert_vector3EqualThreshold(const double actual[3], const double expected[3], const double threshold, const char *description) {
     bool ok = true;
 
     ok &= assert_double(actual[0],expected[0],threshold,NULL);
@@ -283,8 +282,24 @@ bool assert_vector3EqualThreshold(const double actual[3], const double expected[
     return ok;
 }
 
-bool assert_vector3Equal(const double actual[3], const double expected[3], const char *description)
-{
+bool assert_vector3Equal(const double actual[3], const double expected[3], const char *description) {
+    return assert_vector3EqualThreshold(actual,expected,EPSI,description);
+}
+
+bool assert_vector3EqualNoSignThreshold(const double actual[3], const double expected[3], const double threshold, const char *description) {
+    bool ok = true;
+    ERROR_CODE ret;
+    double dotVal = actual[0]*expected[0] + actual[1]*expected[1] + actual[2]*expected[2];
+
+    ok &= assert_double(fabs(dotVal), 1.0, threshold, NULL);
+    if (WILL_PRINT(ok) && (NULL != description)) {
+        printf("\t -> RESULT: %s (%s) | EXPECTED(+-): [%f,%f,%f], ACTUAL: [%f,%f,%f] \n",
+            (true == ok)?"PASSED":"FAILED", description, expected[0],expected[1],expected[2],actual[0],actual[1],actual[2]);
+    }
+    return ok;
+}
+
+bool assert_vector3EqualNoSign(const double actual[3], const double expected[3], const char *description) {
     return assert_vector3EqualThreshold(actual,expected,EPSI,description);
 }
 

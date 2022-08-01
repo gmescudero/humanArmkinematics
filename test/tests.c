@@ -1893,6 +1893,8 @@ bool tst_cal_004()
     ret += db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
     ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,0);
     ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,1);
+    ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
+    ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,1);
     ok &= assert_OK(ret, "db csv fields add");
 
     tstRandomUnitVector3Generate(rotVector1);
@@ -1925,12 +1927,12 @@ bool tst_cal_004()
     }
     ret = vector3_normalize(omega1,v1_expected);
     ok &= assert_OK(ret, "vector3_normalize");
-    ret = vector3_substract(omega2,omega1,omega2);
+    ret = vector3_substract(omega2,omega1,v2_expected);
     ok &= assert_OK(ret, "vector3_substract");
-    ret = vector3_normalize(omega2,v2_expected);
+    ret = vector3_normalize(v2_expected,v2_expected);
     ok &= assert_OK(ret, "vector3_normalize");
-    ok &= assert_vector3EqualThreshold(rotVector1,v1_expected,5e-2,"cal_automatic_rotation_axis_calibrate result1");
-    ok &= assert_vector3EqualThreshold(rotVector2,v2_expected,5e-2,"cal_automatic_rotation_axis_calibrate result2");
+    ok &= assert_vector3EqualNoSignThreshold(rotVector1,v1_expected,5e-2,"cal_automatic_rotation_axis_calibrate result1");
+    ok &= assert_vector3EqualNoSignThreshold(rotVector2,v2_expected,5e-2,"cal_automatic_rotation_axis_calibrate result2");
 
     // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
 
