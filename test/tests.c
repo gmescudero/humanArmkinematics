@@ -2174,25 +2174,32 @@ bool tstPrueba() {
     char headers[TST_MAX_CSV_DATA_VALUES][TST_MAX_CSV_HEADER_LENGTH] = {'\0'};
     double data[TST_MAX_CSV_DATA_VALUES];
     int line = 1;
+    int lines = 10;
+    char line_str[TST_MAX_CSV_LINE_LENGTH] = {'\0'};
 
     tst_str("Load CSV");
     ok &= tstCsvLoad(csvFile);
-    // tst_str("Get Headers");
-    // tstCsvHeadersGet(headers);
-    // tst_str("Print Headers");
-    // for (int i=0; i<TST_MAX_CSV_DATA_VALUES; i++) {
-    //     tst_str("\t->Header%d: %s",i,headers[i]);
-    // } 
-    tst_str("Get data in line %d",line);
-    tstCsvDataLineGet(line,data);
-    tst_str("Print data");
-    for (int i=0; i<TST_MAX_CSV_DATA_VALUES; i++) {
-        tst_str("\t->Data%d: %s",i,data[i]);
+    tst_str("Get Headers");
+    tstCsvHeadersGet(headers);
+    tst_str("Print Headers");
+    for (int i=0; i < tstCsvColumnsGet(); i++) {
+        tst_str("\t->Header%d: %s",i,headers[i]);
     } 
+    tst_str("Get data in line %d",line);
+    ok &= tstCsvDataLineGet(line,data);
+    tst_str("Print data");
+    for (int i=0; i < tstCsvColumnsGet(); i++) {
+        tst_str("\t->Data%d: %f",i,data[i]);
+    } 
+
+    tst_str("Print %d lines",lines);
+    for (int i = 0; i < lines; i++) {
+        ok &= tstCsvRawLineGet(i,line_str);
+        tst_str("\t->line%d: %s",i,line_str);
+    }
 
     return ok;
 }
-
 
 int main(int argc, char **argv)
 {

@@ -36,10 +36,10 @@ void tstRandomUnitVector3Generate(double vector[3]);
 MATRIX tstRandomMatrixAllocateAndGenerate(unsigned rows, unsigned columns);
 void tstVector3RandomNoiseAdd(double vector[3], double scale, double output[3]);
 bool tstCsvLoad(const char* csvPath);
-int tstCsvLinesGet();
+int tstCsvColumnsGet();
 bool tstCsvRawLineGet(int line, char line_str[TST_MAX_CSV_LINE_LENGTH]);
 void tstCsvHeadersGet(char headers[TST_MAX_CSV_DATA_VALUES][TST_MAX_CSV_HEADER_LENGTH]);
-void tstCsvDataLineGet(int line, double data[TST_MAX_CSV_DATA_VALUES]);
+bool tstCsvDataLineGet(int line, double data[TST_MAX_CSV_DATA_VALUES]);
 // * PRECONDITIONS ************************************************************
 bool preconditions_initArm();
 bool preconditions_initTraces(const char *test_name);
