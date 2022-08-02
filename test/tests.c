@@ -2168,6 +2168,32 @@ bool tst_battery_all()
 }
 
 
+bool tstPrueba() {
+    bool ok = true;
+    const char csvFile[] = "test/tst_data/data2_zRotations.csv";
+    char headers[TST_MAX_CSV_DATA_VALUES][TST_MAX_CSV_HEADER_LENGTH] = {'\0'};
+    double data[TST_MAX_CSV_DATA_VALUES];
+    int line = 1;
+
+    tst_str("Load CSV");
+    ok &= tstCsvLoad(csvFile);
+    // tst_str("Get Headers");
+    // tstCsvHeadersGet(headers);
+    // tst_str("Print Headers");
+    // for (int i=0; i<TST_MAX_CSV_DATA_VALUES; i++) {
+    //     tst_str("\t->Header%d: %s",i,headers[i]);
+    // } 
+    tst_str("Get data in line %d",line);
+    tstCsvDataLineGet(line,data);
+    tst_str("Print data");
+    for (int i=0; i<TST_MAX_CSV_DATA_VALUES; i++) {
+        tst_str("\t->Data%d: %s",i,data[i]);
+    } 
+
+    return ok;
+}
+
+
 int main(int argc, char **argv)
 {
     bool ok = true;
@@ -2175,14 +2201,15 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    ok &= tst_battery_all();
+    // ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
     // ok &= tst_cal_xxx();
     // ok &= tst_cal_005();
     // ok &= tst_arm_015();
-    ok &= tst_cal_004();
+    // ok &= tst_cal_004();
+    tstPrueba();
 
     return (ok)? RET_OK : RET_ERROR;
 }

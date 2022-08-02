@@ -5,7 +5,6 @@
 #include "tst_lib.h"
 #include "arm.h"
 #include "vector3.h"
-#include "general.h"
 #include "errors.h"
 #include "imu.h"
 
@@ -88,6 +87,92 @@ void tstVector3RandomNoiseAdd(double vector[3], double scale, double output[3]) 
     output[0] = vector[0] + scale*tstRandomDoubleGenerate();
     output[1] = vector[1] + scale*tstRandomDoubleGenerate();
     output[2] = vector[2] + scale*tstRandomDoubleGenerate();
+}
+
+int number_of_lines = 0;
+char lines[TST_MAX_CSV_LINES][TST_MAX_CSV_LINE_LENGTH] = {{'\0'}};
+
+bool tstCsvLoad(const char* csvPath) {
+    bool ok = true;
+    FILE *fd = NULL;
+    fd = fopen(csvPath,"r");
+    if (NULL == fd) {
+        tst_str("Failed to read file: %s",csvPath);
+        ok = false;
+    }
+    else {
+        int lnInd;
+        for (lnInd = 0; lnInd < TST_MAX_CSV_LINES && ok; lnInd++) {
+            if (fgets(lines[lnInd], TST_MAX_CSV_LINE_LENGTH, fd) == NULL) {
+                break;
+            }
+        }
+        if (ok && TST_MAX_CSV_LINES == lnInd) { 
+            tst_str("File too long");
+            ok = false; 
+        }
+        else {
+            number_of_lines = lnInd;
+        }
+        fclose(fd);
+    }
+    return ok;
+}
+
+int tstCsvLinesGet() {
+    return number_of_lines;
+}
+
+bool tstCsvRawLineGet(int line, char line_str[TST_MAX_CSV_LINE_LENGTH]) {
+    if (line < number_of_lines) {
+        strcpy(line_str,lines[line]);
+        return true;
+    }
+    return false;
+}
+
+void tstCsvHeadersGet(char headers[TST_MAX_CSV_DATA_VALUES][TST_MAX_CSV_HEADER_LENGTH]) {
+    char singleChar = '\0';
+    char singleHeader[TST_MAX_CSV_HEADER_LENGTH] = {'\0'};
+    int lastIndex = 0;
+    int headerIndex = 0;
+    for (int i = 0; i < TST_MAX_CSV_LINE_LENGTH; i++) {
+        singleChar = lines[0][i];
+        if ('\n' == singleChar || '\0' == singleChar) {
+            break;
+        }
+        else if (',' == singleChar) {
+            singleHeader[i] = '\0';
+            strcpy(headers[headerIndex], singleHeader);
+            lastIndex = i+1;
+        }
+        else {
+            singleHeader[i-lastIndex] = singleChar;
+        }
+    }
+}
+
+void tstCsvDataLineGet(int line, double data[TST_MAX_CSV_DATA_VALUES]) {
+    char singleChar = '\0';
+    char singleDataStr[CSV_HEADER_MAX_LENGTH] = {'\0'};
+    int lastIndex = 0;
+    int dataIndex = 0;
+    printf("Retrieving data in line: %s\n",lines[line]);
+    for (int i = 0; i < TST_MAX_CSV_LINE_LENGTH; i++) {
+        singleChar = lines[line][i];
+        if ('\n' == singleChar || '\0' == singleChar) {
+            break;
+        }
+        else if (',' == singleChar) {
+            singleDataStr[i] = '\0';
+            printf("singleDataStr: %s\n",singleDataStr);
+            data[dataIndex] = atof(singleDataStr);
+            lastIndex = i+1;
+        }
+        else {
+            singleDataStr[i-lastIndex] = singleChar;
+        }
+    }
 }
 
 // * PRECONDITIONS ************************************************************
