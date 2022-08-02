@@ -95,40 +95,34 @@ char csv_headers[TST_MAX_CSV_DATA_VALUES][TST_MAX_CSV_HEADER_LENGTH] = {{'\0'}};
 
 bool tstCsvLoad(const char* csvPath) {
     bool ok = true;
-    FILE *fd = fopen(csvPath,"r");
 
-    if (NULL == fd) {
-        tst_str("Failed to read file: %s",csvPath);
-        ok = false;
-    }
-    else {
-        char singleChar = '\0';
-        char singleHeader[TST_MAX_CSV_HEADER_LENGTH] = {'\0'};
-        int lastIndex = 0;
-        int headerIndex = 0;
-        char line_str[TST_MAX_CSV_LINE_LENGTH];
+    char singleChar = '\0';
+    char singleHeader[TST_MAX_CSV_HEADER_LENGTH] = {'\0'};
+    int lastIndex = 0;
+    int headerIndex = 0;
+    char line_str[TST_MAX_CSV_LINE_LENGTH];
 
-        strcpy(csv_file_path, csvPath);
+    strcpy(csv_file_path, csvPath);
 
-        ok &= tstCsvRawLineGet(0, line_str);
-        for (int i = 0; ok & i < TST_MAX_CSV_LINE_LENGTH; i++) {
-            singleChar = line_str[i];
-            if ('\n' == singleChar || '\0' == singleChar || ',' == singleChar) {
-                singleHeader[i] = '\0';
-                strcpy(csv_headers[headerIndex], singleHeader);
-                lastIndex = i+1;
-                headerIndex++;
-                if (',' != singleChar) {
-                    break;
-                }
-            }
-            else {
-                singleHeader[i-lastIndex] = singleChar;
+    ok &= tstCsvRawLineGet(0, line_str);
+    
+    for (int i = 0; ok & i < TST_MAX_CSV_LINE_LENGTH; i++) {
+        singleChar = line_str[i];
+        if ('\n' == singleChar || '\0' == singleChar || ',' == singleChar) {
+            singleHeader[i] = '\0';
+            strcpy(csv_headers[headerIndex], singleHeader);
+            lastIndex = i+1;
+            headerIndex++;
+            if (',' != singleChar) {
+                break;
             }
         }
-        csv_columns = headerIndex;
-        fclose(fd);
+        else {
+            singleHeader[i-lastIndex] = singleChar;
+        }
     }
+    csv_columns = headerIndex;
+    
     return ok;
 }
 
