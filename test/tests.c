@@ -1999,7 +1999,7 @@ bool tst_cal_005()
 
     tstRandomUnitVector3Generate(rotVector1);
     tstRandomUnitVector3Generate(rotVector2);
-
+    bool once = true;
     while (ok && time<timeout)
     {
         // Set timestamp
@@ -2016,6 +2016,13 @@ bool tst_cal_005()
         // quaternion_print(q_sensor2,"q_sensor2");
         // Execute arm calibration of a single rotation axis
         // tst_str("Time %f (iterations %d)", time, (int)(time/timeInc));
+        if (time>timeout/2 && once) {
+            rotVector1[0]=0.0;          rotVector1[1]=0.0;  rotVector1[2]=-1.0;
+            rotVector2[0]=M_SQRT1_2;    rotVector2[1]=0.0;  rotVector2[2]=M_SQRT1_2;
+            dbg_str("HERE");
+            once = false;
+        }
+        
         ret = cal_automatic_two_rotation_axes_calibrate(omega1_noise,omega2_noise,q_sensor1,q_sensor2,rotVector1,rotVector2);
         // tst_str("V1: <%f, %f, %f>, V2: <%f, %f, %f>", 
         //     rotVector1[0],rotVector1[1], rotVector1[2],
@@ -2031,8 +2038,8 @@ bool tst_cal_005()
     ok &= assert_OK(ret, "vector3_substract");
     ret = vector3_normalize(v2_expected,v2_expected);
     ok &= assert_OK(ret, "vector3_normalize");
-    ok &= assert_vector3EqualNoSignThreshold(rotVector1,v1_expected,5e-2,"cal_automatic_rotation_axis_calibrate result1");
-    ok &= assert_vector3EqualNoSignThreshold(rotVector2,v2_expected,5e-2,"cal_automatic_rotation_axis_calibrate result2");
+    ok &= assert_vector3EqualNoSignThreshold(rotVector1,v1_expected,1e-2,"cal_automatic_rotation_axis_calibrate result1");
+    ok &= assert_vector3EqualNoSignThreshold(rotVector2,v2_expected,1e-2,"cal_automatic_rotation_axis_calibrate result2");
 
     // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
 
@@ -2268,39 +2275,6 @@ bool tst_battery_all()
 }
 
 
-bool tstPrueba() {
-    bool ok = true;
-    const char csvFile[] = "test/tst_data/data2_zRotations.csv";
-    char headers[TST_MAX_CSV_DATA_VALUES][TST_MAX_CSV_HEADER_LENGTH] = {'\0'};
-    double data[TST_MAX_CSV_DATA_VALUES];
-    int line = 1;
-    int lines = 10;
-    char line_str[TST_MAX_CSV_LINE_LENGTH] = {'\0'};
-
-    tst_str("Load CSV");
-    ok &= tstCsvLoad(csvFile);
-    tst_str("Get Headers");
-    tstCsvHeadersGet(headers);
-    tst_str("Print Headers");
-    for (int i=0; i < tstCsvColumnsGet(); i++) {
-        tst_str("\t->Header%d: %s",i,headers[i]);
-    } 
-    tst_str("Get data in line %d",line);
-    ok &= tstCsvDataLineGet(line,data);
-    tst_str("Print data");
-    for (int i=0; i < tstCsvColumnsGet(); i++) {
-        tst_str("\t->Data%d: %f",i,data[i]);
-    } 
-
-    tst_str("Print %d lines",lines);
-    for (int i = 0; i < lines; i++) {
-        ok &= tstCsvRawLineGet(i,line_str);
-        tst_str("\t->line%d: %s",i,line_str);
-    }
-
-    return ok;
-}
-
 int main(int argc, char **argv)
 {
     bool ok = true;
@@ -2315,8 +2289,7 @@ int main(int argc, char **argv)
     // ok &= tst_cal_xxx();
     // ok &= tst_cal_005();
     // ok &= tst_arm_015();
-    // ok &= tst_cal_004();
-    tstPrueba();
+    ok &= tst_cal_005();
 
     return (ok)? RET_OK : RET_ERROR;
 }

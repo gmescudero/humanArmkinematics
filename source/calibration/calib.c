@@ -662,8 +662,10 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
 
     // Get the relative agular velocity and quaternion
     Quaternion q2_1 = arm_quaternion_between_two_get(q_sensor1, q_sensor2); // Quaternion to move from sensor 2 to 1
+    Quaternion q1_2;                                                        // Quaternion to move from sensor 1 to 2
     double omegaR[3];                                                       // Relative angular velocity
 
+    Quaternion_conjugate(&q2_1,&q1_2);                                      
     status = arm_relative_angular_vel_compute(q_sensor1, q_sensor2, omega1_from1, omega2_from2, omegaR);
 
     // Shift observation buffers and add new measures
@@ -808,6 +810,9 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
         }
         dbg_str("%s -> [it: %d] Current calib error: %f (best error: %f)",__FUNCTION__, 
             CALIB_TWO_ROT_AXES_MAX_ITERATIONS-iterations, error, bestError);
+        // dbg_str("%s -> v1 <%f,%f,%f> v2 <%f,%f,%f> phi <%f,%f,%f,%f>",__FUNCTION__,
+        //     tempV1[0],tempV1[1],tempV1[2],tempV2[0],tempV2[1],tempV2[2],
+        //     phi.data[0][0],phi.data[1][0],phi.data[2][0],phi.data[3][0]);
 
         // Apply Gauss-Newton algorithm to update Phi values
         if (RET_OK == status && CALIB_TWO_ROT_AXES_MAX_ERROR < error) {
@@ -826,10 +831,8 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
             matrix_free(phi_correction); 
             // Set new vectors
             if (RET_OK == status) {
-                Quaternion q1_2;    // Quaternion to move from sensor 1 to 2
                 scal_spherical_coordinates_to_vector3_convert(phi.data[0][0], phi.data[1][0], sph_alt1, tempV1);
                 scal_spherical_coordinates_to_vector3_convert(phi.data[2][0], phi.data[3][0], sph_alt2, rotationV2_from1);
-                Quaternion_conjugate(&q2_1, &q1_2);
                 Quaternion_rotate(&q1_2, rotationV2_from1, tempV2);
             }
         }
