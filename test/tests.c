@@ -1859,8 +1859,108 @@ bool tst_cal_003()
     return ok;
 }
 
-
 bool tst_cal_004() 
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+
+    const char csvFile[] = "test/tst_data/data2_zRotations.csv";
+    char headers[TST_MAX_CSV_DATA_VALUES][TST_MAX_CSV_HEADER_LENGTH] = {'\0'};
+    double data[TST_MAX_CSV_DATA_VALUES];
+
+    double rotVector1[3];
+    double rotVector2[3];
+
+    double omega1[3] = {0.0};
+    double omega2[3] = {0.0};
+
+    double q_buff[4] = {0.0};
+    Quaternion q_sensor1 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
+    Quaternion q_sensor2 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
+
+    double v1_expected[3];
+    double v2_expected[3];
+
+    testDescription(__FUNCTION__, "Test two rotation axis calibration by using real data");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret += db_csv_field_add(DB_IMU_TIMESTAMP,0);
+    ret += db_csv_field_add(DB_CALIB_OMEGA,0);
+    ret += db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
+    ret += db_csv_field_add(DB_CALIB_ERROR,0);
+    ret += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
+    ret += db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
+    ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,0);
+    ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,1);
+    ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
+    ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,1);
+    ok &= assert_OK(ret, "db csv fields add");
+
+    ok &= tstCsvLoad(csvFile);
+    tstCsvHeadersGet(headers);
+
+    tstRandomUnitVector3Generate(rotVector1);
+    tstRandomUnitVector3Generate(rotVector2);
+
+    int line = 1;
+    while (tstCsvDataLineGet(line++, data)) {
+        /*
+        status += db_csv_field_add(DB_IMU_TIMESTAMP,0); 0
+        status += db_csv_field_add(DB_IMU_GYROSCOPE,0); 1 2 3
+        status += db_csv_field_add(DB_IMU_GYROSCOPE,1); 4 5 6
+        status += db_csv_field_add(DB_IMU_ACCELEROMETER,0); 7 8 9
+        status += db_csv_field_add(DB_IMU_ACCELEROMETER,1); 10 11 12
+        status += db_csv_field_add(DB_IMU_MAGNETOMETER,0); 13 14 15
+        status += db_csv_field_add(DB_IMU_MAGNETOMETER,1); 16 17 18
+        status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,0); 19 20 21
+        status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,1); 22 23 24
+        status += db_csv_field_add(DB_IMU_LINEAR_ACCELERATION,0); 25 26 27
+        status += db_csv_field_add(DB_IMU_LINEAR_ACCELERATION,1); 28 29 30
+        status += db_csv_field_add(DB_IMU_QUATERNION,0); 31 32 33 34
+        status += db_csv_field_add(DB_IMU_QUATERNION,1); 35 36 37 38
+        */
+        // Set gyroscope readings
+        omega1[0] = data[1]; omega1[1] = data[2]; omega1[2] = data[3];
+        omega2[0] = data[4]; omega2[1] = data[5]; omega2[2] = data[6];
+
+        // Set quaternion values
+        q_buff[0] = data[31]; q_buff[1] = data[32]; q_buff[2] = data[33]; q_buff[3] = data[34];
+        quaternion_from_buffer_build(q_buff, &q_sensor1);
+        q_buff[0] = data[35]; q_buff[1] = data[36]; q_buff[2] = data[37]; q_buff[3] = data[38];
+        quaternion_from_buffer_build(q_buff, &q_sensor2);
+
+        // Set timestamp
+        ret = db_write(DB_IMU_TIMESTAMP,0,&data[0]);
+        ok &= assert_OK(ret, "db_write");
+
+        // Call autocalibration procedure
+        ret = cal_automatic_two_rotation_axes_calibrate(omega1,omega2,q_sensor1,q_sensor2,rotVector1,rotVector2);
+        ok &= assert_OK(ret, "cal_automatic_two_rotation_axes_calibrate");
+
+        // Dump database data
+        ret = db_csv_dump();
+        ok &= assert_OK(ret, "db_csv_dump");
+    }
+
+    ret = vector3_normalize(omega1,v1_expected);
+    ok &= assert_OK(ret, "vector3_normalize");
+    ret = vector3_substract(omega2,omega1,v2_expected);
+    ok &= assert_OK(ret, "vector3_substract");
+    ret = vector3_normalize(v2_expected,v2_expected);
+    ok &= assert_OK(ret, "vector3_normalize");
+    ok &= assert_vector3EqualNoSignThreshold(rotVector1,v1_expected,5e-2,"cal_automatic_rotation_axis_calibrate result1");
+    ok &= assert_vector3EqualNoSignThreshold(rotVector2,v2_expected,5e-2,"cal_automatic_rotation_axis_calibrate result2");
+
+    // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+
+bool tst_cal_005() 
 {
     bool ok = true;
     ERROR_CODE ret = RET_OK;

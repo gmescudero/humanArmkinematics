@@ -23,10 +23,10 @@
 /** CONFIG ********************/
 /******************************/
 #define USE_IMU_CALIB (0)           // Set whether to use the IMUs offset calibration or the integrated one (1 use imu, 0 use app)
-#define USE_AUTO_CALIB (2)          // Set whether or not to use autocalibration of rotation axis (0 no autocalib, 1 one axis, 2 two axes)
+#define USE_AUTO_CALIB (0)          // Set whether or not to use autocalibration of rotation axis (0 no autocalib, 1 one axis, 2 two axes)
 #define IMUS_NUM (2)                // Set the expected minimum imu sensors for the program to work
-#define UPPER_ARM_LENGTH (10.0)     // Set the Upper-arm length
-#define FOREARM_LENGTH (5.0)        // Set the Forearm length
+#define UPPER_ARM_LENGTH (100.0)     // Set the Upper-arm length
+#define FOREARM_LENGTH (50.0)        // Set the Forearm length
 /******************************/
 
 #define STATUS_EVAL(code) {if (RET_OK != code && RET_NO_EXEC != status) err_str("[%d] Failed: %d ",__LINE__, code);}
@@ -79,22 +79,28 @@ int main(int argc, char **argv) {
         log_str("Set the database fields to track into the csv");
         status += db_csv_field_add(DB_IMU_TIMESTAMP,0);
         // status += db_csv_field_add(DB_IMU_TIMESTAMP,1);
+        status += db_csv_field_add(DB_IMU_GYROSCOPE,0);
+        status += db_csv_field_add(DB_IMU_GYROSCOPE,1);
+        status += db_csv_field_add(DB_IMU_ACCELEROMETER,0);
+        status += db_csv_field_add(DB_IMU_ACCELEROMETER,1);
+        status += db_csv_field_add(DB_IMU_MAGNETOMETER,0);
+        status += db_csv_field_add(DB_IMU_MAGNETOMETER,1);
+        status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,0);
+        status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,1);
+        status += db_csv_field_add(DB_IMU_LINEAR_ACCELERATION,0);
+        status += db_csv_field_add(DB_IMU_LINEAR_ACCELERATION,1);
         status += db_csv_field_add(DB_IMU_QUATERNION,0);
         status += db_csv_field_add(DB_IMU_QUATERNION,1);
-        // status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,0);
-        // status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,1);
-        // status += db_csv_field_add(DB_IMU_GYROSCOPE,0);
-        // status += db_csv_field_add(DB_IMU_GYROSCOPE,1);
         // status += db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
         // status += db_csv_field_add(DB_ARM_ELBOW_POSITION,0);
         // status += db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
         // status += db_csv_field_add(DB_ARM_WRIST_POSITION,0);
-        status += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
-        status += db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
-        status += db_csv_field_add(DB_CALIB_ERROR,0);
-        status += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
-        status += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,1);
-        status += db_csv_field_add(DB_CALIB_OMEGA,0);
+        // status += db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
+        // status += db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
+        // status += db_csv_field_add(DB_CALIB_ERROR,0);
+        // status += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
+        // status += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,1);
+        // status += db_csv_field_add(DB_CALIB_OMEGA,0);
         STATUS_EVAL(status);
     }
 
