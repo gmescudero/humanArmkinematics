@@ -1864,7 +1864,9 @@ bool tst_cal_004()
     bool ok = true;
     ERROR_CODE ret = RET_OK;
 
-    const char csvFile[] = "test/tst_data/data2_zRotations.csv";
+    // const char csvFile[] = "test/tst_data/data5_tst_cal_004_onArmArbitraryMotions.csv";
+    // const char csvFile[] = "test/tst_data/data6_tst_cal_004_onArmArbitraryMotions.csv";
+    const char csvFile[] = "test/tst_data/data7_tst_cal_004_onArmArbitraryMotions.csv";
     char headers[TST_MAX_CSV_DATA_VALUES][TST_MAX_CSV_HEADER_LENGTH] = {'\0'};
     double data[TST_MAX_CSV_DATA_VALUES];
 
@@ -1878,8 +1880,8 @@ bool tst_cal_004()
     Quaternion q_sensor1 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
     Quaternion q_sensor2 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
 
-    double v1_expected[3];
-    double v2_expected[3];
+    double v1_expected[3] = {0.0,0.0,1.0};
+    double v2_expected[3] = {1.0,0.0,0.0};
 
     testDescription(__FUNCTION__, "Test two rotation axis calibration by using real data");
     ok = preconditions_init(__FUNCTION__); 
@@ -1943,12 +1945,9 @@ bool tst_cal_004()
         ok &= assert_OK(ret, "db_csv_dump");
     }
 
-    ret = vector3_normalize(omega1,v1_expected);
-    ok &= assert_OK(ret, "vector3_normalize");
-    ret = vector3_substract(omega2,omega1,v2_expected);
-    ok &= assert_OK(ret, "vector3_substract");
-    ret = vector3_normalize(v2_expected,v2_expected);
-    ok &= assert_OK(ret, "vector3_normalize");
+    tst_str("V1: <%f, %f, %f>, V2: <%f, %f, %f>", 
+        rotVector1[0],rotVector1[1], rotVector1[2],
+        rotVector2[0],rotVector2[1], rotVector2[2]);
     ok &= assert_vector3EqualNoSignThreshold(rotVector1,v1_expected,5e-2,"cal_automatic_rotation_axis_calibrate result1");
     ok &= assert_vector3EqualNoSignThreshold(rotVector2,v2_expected,5e-2,"cal_automatic_rotation_axis_calibrate result2");
 
@@ -2289,7 +2288,8 @@ int main(int argc, char **argv)
     // ok &= tst_cal_xxx();
     // ok &= tst_cal_005();
     // ok &= tst_arm_015();
-    ok &= tst_cal_005();
+    // ok &= tst_cal_005();
+    ok &= tst_cal_004();
 
     return (ok)? RET_OK : RET_ERROR;
 }
