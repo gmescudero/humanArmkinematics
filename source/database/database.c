@@ -13,24 +13,24 @@
 #define DB_MULTIPLICITY_MAX_NUM (10)
 
 typedef struct DB_FIELD_STRUCT {
-    DB_FIELD_IDENTIFIER identifier;
-    char                name[DB_FIELD_NAME_MAX_LENGTH];
-    DB_FIELD_TYPE       type;
-    unsigned int        instances;
-    unsigned int        multiplicity;
-    sem_t               mutex;
-    void                *data_ptr[DB_INSTANCE_MAX_NUM];
-    int                 initialized;
+    DB_FIELD_IDENTIFIER identifier;                     // Field identifier
+    char                name[DB_FIELD_NAME_MAX_LENGTH]; // Field Name
+    DB_FIELD_TYPE       type;                           // Field Type (real, int, etc.)
+    unsigned int        instances;                      // Number of instances
+    unsigned int        multiplicity;                   // Multiplicity of the field
+    sem_t               mutex;                          // Multi thread protection mutex
+    void                *data_ptr[DB_INSTANCE_MAX_NUM]; // Field data
+    int                 initialized;                    // Field initialized flag
 } DB_FIELD;
 
 typedef struct DB_CSV_LOG_STRUCT {
-    int first;
-    int fields_num;
-    int csv_coulmns;
-    DB_FIELD_IDENTIFIER fields[CSV_FILE_VALUES_NUMBER];
-    char headers[CSV_FILE_VALUES_NUMBER][CSV_HEADER_MAX_LENGTH];
-    int instances[CSV_FILE_VALUES_NUMBER];
-    int indexes[CSV_FILE_VALUES_NUMBER];
+    int first;                                                      // First csv file line
+    int fields_num;                                                 // Total number of fields
+    int csv_coulmns;                                                // Total number of data columns taking multiplicity into account
+    DB_FIELD_IDENTIFIER fields[CSV_FILE_VALUES_NUMBER];             // Field identifiers
+    char headers[CSV_FILE_VALUES_NUMBER][CSV_HEADER_MAX_LENGTH];    // Headers strigs
+    int instances[CSV_FILE_VALUES_NUMBER];                          // Each field instance included
+    int indexes[CSV_FILE_VALUES_NUMBER];                            // Field data index for each data column 
 } DB_CSV_LOG_STRUCT;
 
 #define DB_FIELD_INIT(id,n,t,inst,mult) { \
