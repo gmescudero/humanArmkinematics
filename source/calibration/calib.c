@@ -486,16 +486,16 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate_new(
     status = arm_relative_angular_vel_compute(q_sensor1, q_sensor2, omega1_from1, omega2_from2, omegaR);
 
     // Shift observation buffers and add new measures
-    static double w_observations[CALIB_ONE_ROT_AXIS_WINDOW][3] = {{0.0}};
+    static double wr_observations[CALIB_ONE_ROT_AXIS_WINDOW][3] = {{0.0}};
     for (int i = CALIB_ONE_ROT_AXIS_WINDOW-2; RET_OK == status && i >= 0; i--) {
-        w_observations[i+1][0] = w_observations[i][0];
-        w_observations[i+1][1] = w_observations[i][1];
-        w_observations[i+1][2] = w_observations[i][2];
+        wr_observations[i+1][0] = wr_observations[i][0];
+        wr_observations[i+1][1] = wr_observations[i][1];
+        wr_observations[i+1][2] = wr_observations[i][2];
     }
     if (RET_OK == status) {
-        w_observations[0][0] = omegaR[0];
-        w_observations[0][1] = omegaR[1];
-        w_observations[0][2] = omegaR[2];
+        wr_observations[0][0] = omegaR[0];
+        wr_observations[0][1] = omegaR[1];
+        wr_observations[0][2] = omegaR[2];
     }
 
     // Check the moving status
@@ -542,7 +542,7 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate_new(
         // Calculate error and Jacobian
         double squared_error = 0.0;
         for (int i = 0; RET_OK == status && i < observations_num; i++) {
-            double     wi[3] = {w_observations[i][0],w_observations[i][1],w_observations[i][2]};
+            double     wi[3] = {wr_observations[i][0],wr_observations[i][1],wr_observations[i][2]};
             // dbg_str("%s -> w%d: [%f, %f, %f]",__FUNCTION__,i, wi[0],wi[1],wi[2]);
             // Compute error
             double aux[3]; 
@@ -661,33 +661,46 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
     if (NULL == rotationV2)         return RET_ARG_ERROR;
 
     // Get the relative agular velocity and quaternion
-    Quaternion q2_1 = arm_quaternion_between_two_get(q_sensor1, q_sensor2); // Quaternion to move from sensor 2 to 1
-    Quaternion q1_2;                                                        // Quaternion to move from sensor 1 to 2
-    double omegaR[3];                                                       // Relative angular velocity
+    Quaternion q1_conj, q2_conj;    // Quaternion that converts from sensor frame to global frame
+    Quaternion_conjugate(&q_sensor1,&q1_conj);
+    Quaternion_conjugate(&q_sensor2,&q2_conj);
 
-    Quaternion_conjugate(&q2_1,&q1_2);                                      
-    status = arm_relative_angular_vel_compute(q_sensor1, q_sensor2, omega1_from1, omega2_from2, omegaR);
+    double omega1[3], omega2[3];    // Angular velocities in the global frame  
+    Quaternion_rotate(&q1_conj, omega1_from1, omega1);
+    Quaternion_rotate(&q2_conj, omega2_from2, omega2);
+
+    double omegaR[3];   // Relative angular velocity
+    status = vector3_substract(omega2, omega1, omegaR);
 
     // Shift observation buffers and add new measures
-    static double w_observations[CALIB_TWO_ROT_AXES_WINDOW][3] = {{0.0}};   // Angular velocities observations
-    static double q_observations[CALIB_TWO_ROT_AXES_WINDOW][4] = {{0.0}};   // Quaternion observations
+    static double wr_observations[CALIB_TWO_ROT_AXES_WINDOW][3] = {{0.0}};   // Angular velocities observations
+    static double q1_observations[CALIB_TWO_ROT_AXES_WINDOW][4] = {{0.0}};   // Quaternion observations
+    static double q2_observations[CALIB_TWO_ROT_AXES_WINDOW][4] = {{0.0}};   // Quaternion observations
     for (int i = CALIB_TWO_ROT_AXES_WINDOW-2; RET_OK == status && i >= 0; i--) {
-        w_observations[i+1][0] = w_observations[i][0];
-        w_observations[i+1][1] = w_observations[i][1];
-        w_observations[i+1][2] = w_observations[i][2];
-        q_observations[i+1][0] = q_observations[i][0];
-        q_observations[i+1][1] = q_observations[i][1];
-        q_observations[i+1][2] = q_observations[i][2];
-        q_observations[i+1][3] = q_observations[i][3];
+        wr_observations[i+1][0] = wr_observations[i][0];
+        wr_observations[i+1][1] = wr_observations[i][1];
+        wr_observations[i+1][2] = wr_observations[i][2];
+        q1_observations[i+1][0] = q1_observations[i][0];
+        q1_observations[i+1][1] = q1_observations[i][1];
+        q1_observations[i+1][2] = q1_observations[i][2];
+        q1_observations[i+1][3] = q1_observations[i][3];
+        q2_observations[i+1][0] = q2_observations[i][0];
+        q2_observations[i+1][1] = q2_observations[i][1];
+        q2_observations[i+1][2] = q2_observations[i][2];
+        q2_observations[i+1][3] = q2_observations[i][3];
     }
     if (RET_OK == status) {
-        w_observations[0][0] = omegaR[0];
-        w_observations[0][1] = omegaR[1];
-        w_observations[0][2] = omegaR[2];
-        q_observations[0][0] = q2_1.w;
-        q_observations[0][1] = q2_1.v[0];
-        q_observations[0][2] = q2_1.v[1];
-        q_observations[0][3] = q2_1.v[2];
+        wr_observations[0][0] = omegaR[0];
+        wr_observations[0][1] = omegaR[1];
+        wr_observations[0][2] = omegaR[2];
+        q1_observations[0][0] = q1_conj.w;
+        q1_observations[0][1] = q1_conj.v[0];
+        q1_observations[0][2] = q1_conj.v[1];
+        q1_observations[0][3] = q1_conj.v[2];
+        q2_observations[0][0] = q2_conj.w;
+        q2_observations[0][1] = q2_conj.v[0];
+        q2_observations[0][2] = q2_conj.v[1];
+        q2_observations[0][3] = q2_conj.v[2];
     }
 
     // Check the moving status
@@ -723,27 +736,33 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
     while (RET_OK == status && CALIB_TWO_ROT_AXES_MAX_ERROR < error && 0 < iterations) {
         iterations--;
 
-        // Calculate error and Jacobian
         double squared_error = 0.0;                                     // Squared error value
         double dpart_th1[3], dpart_rh1[3], dpart_th2[3], dpart_rh2[3];  // Derivatives of each vector wrt each spherical coordinate
         int sph_alt1, sph_alt2;                                         // Spherical coordinate convention in use
-        double rotationV2_from1[3];                                     // Second rotation vector from the first sensor
 
+        double rotationV1_globalFrame[3];                               // First rotation vector from the first sensor
+        double rotationV2_globalFrame[3];                               // Second rotation vector from the first sensor
+
+        // Calculate error and Jacobian
         for (int i = 0; RET_OK == status && i < observations_num; i++) {
             double     wi[3] = {            // The ith observation of angular velocity
-                w_observations[i][0],w_observations[i][1],w_observations[i][2]};
-            Quaternion qi    = {            // The ith observation of quaternion
-                .w=q_observations[i][0],
-                .v={q_observations[i][1],q_observations[i][2],q_observations[i][3]}}; 
-        
+                wr_observations[i][0],wr_observations[i][1],wr_observations[i][2]};
+            Quaternion q1_i    = {            // The ith observation of quaternion
+                .w=q1_observations[i][0],
+                .v={q1_observations[i][1],q1_observations[i][2],q1_observations[i][3]}}; 
+            Quaternion q2_i    = {            // The ith observation of quaternion
+                .w=q2_observations[i][0],
+                .v={q2_observations[i][1],q2_observations[i][2],q2_observations[i][3]}}; 
+
             // dbg_str("%s -> w%d: [%f, %f, %f]",__FUNCTION__,i, wi[0],wi[1],wi[2]);
-            // dbg_str("%s -> q%d: [%f, %f, %f, %f]",__FUNCTION__,i, qi.w,qi.v[0],qi.v[1],qi.v[2]);
-            // Compute rotation vector 2 from 1
-            Quaternion_rotate(&qi, tempV2, rotationV2_from1);
+            // dbg_str("%s -> q%d: [%f, %f, %f, %f]",__FUNCTION__,i, q1_i.w,q1_i.v[0],q1_i.v[1],q1_i.v[2]);
+            // Compute rotation vectors in global frame
+            Quaternion_rotate(&q1_i, tempV1, rotationV1_globalFrame);
+            Quaternion_rotate(&q2_i, tempV2, rotationV2_globalFrame);
 
             // Compute phi values
-            scal_vector3_to_spherical_coordinates_convert(tempV1,           &phi.data[0][0], &phi.data[1][0], &sph_alt1);
-            scal_vector3_to_spherical_coordinates_convert(rotationV2_from1, &phi.data[2][0], &phi.data[3][0], &sph_alt2);
+            scal_vector3_to_spherical_coordinates_convert(rotationV1_globalFrame, &phi.data[0][0], &phi.data[1][0], &sph_alt1);
+            scal_vector3_to_spherical_coordinates_convert(rotationV2_globalFrame, &phi.data[2][0], &phi.data[3][0], &sph_alt2);
 
             // Compute derivatives of each phi parameter
             scal_spherical_coordinates_derivatives(phi.data[0][0], phi.data[1][0], sph_alt1, dpart_th1, dpart_rh1);
@@ -752,7 +771,7 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
             // Compute error
             double rotationVn[3];   // Normal vector to both rotation vectors
             if (RET_OK == status) {
-                status = vector3_cross(tempV1, rotationV2_from1, rotationVn);
+                status = vector3_cross(rotationV1_globalFrame, rotationV2_globalFrame, rotationVn);
             }
             if (RET_OK == status) {
                 status = vector3_dot(wi, rotationVn, &error);
@@ -765,25 +784,25 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
             // Build Jacobian matrix row calculating each partial of the error
             double aux_vector[3];   // Auxiliary 3D vector to be used by operations
             if (RET_OK == status) { // d(err)/d(theta1)
-                status = vector3_cross(dpart_th1,rotationV2_from1, aux_vector);
+                status = vector3_cross(dpart_th1, rotationV2_globalFrame, aux_vector);
                 if (RET_OK == status) {
                     status = vector3_dot(wi, aux_vector, &Jacobian.data[i][0]);
                 }
             }
             if (RET_OK == status) { // d(err)/d(rho1)
-                status = vector3_cross(dpart_rh1,rotationV2_from1, aux_vector);
+                status = vector3_cross(dpart_rh1, rotationV2_globalFrame, aux_vector);
                 if (RET_OK == status) {
                     status = vector3_dot(wi, aux_vector, &Jacobian.data[i][1]);
                 }
             }
             if (RET_OK == status) { // d(err)/d(theta2)
-                status = vector3_cross(tempV1,dpart_th2, aux_vector);
+                status = vector3_cross(rotationV1_globalFrame, dpart_th2, aux_vector);
                 if (RET_OK == status) {
                     status = vector3_dot(wi, aux_vector, &Jacobian.data[i][2]);
                 }
             }
             if (RET_OK == status) { // d(err)/d(rho2)
-                status = vector3_cross(tempV1,dpart_rh2, aux_vector);
+                status = vector3_cross(rotationV1_globalFrame, dpart_rh2, aux_vector);
                 if (RET_OK == status) {
                     status = vector3_dot(wi, aux_vector, &Jacobian.data[i][3]);
                 }
@@ -794,6 +813,14 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
         if (RET_OK == status) {
             error = squared_error/observations_num;
         }
+
+        // Compute rotation vectors in global frame
+        Quaternion_rotate(&q1_conj, tempV1, rotationV1_globalFrame);
+        Quaternion_rotate(&q2_conj, tempV2, rotationV2_globalFrame);
+
+        // Compute phi values
+        scal_vector3_to_spherical_coordinates_convert(rotationV1_globalFrame, &phi.data[0][0], &phi.data[1][0], &sph_alt1);
+        scal_vector3_to_spherical_coordinates_convert(rotationV2_globalFrame, &phi.data[2][0], &phi.data[3][0], &sph_alt2);
 
         // Use only the best set of rotation axes
         if (bestError > error) {
@@ -819,7 +846,7 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
             MATRIX Jpinv            = matrix_allocate(4,observations_num);  // Pseudoinverse of the Jacobian
             MATRIX phi_correction   = matrix_allocate(4,1);                 // Parameters delta
             if (RET_OK == status) {
-                status = matrix_pseudoinverse(Jacobian,&Jpinv);
+                status = matrix_pseudoinverse(Jacobian, &Jpinv);
             }
             if (RET_OK == status) {
                 status = matrix_multiply(Jpinv, errorV, &phi_correction);
@@ -827,13 +854,22 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
             if (RET_OK == status) {
                 status = matrix_substract(phi, phi_correction, &phi);
             }
+            // dbg_str("%s -> Phi correction <%f,%f,%f,%f> norm: %f",__FUNCTION__, 
+            //     phi_correction.data[0][0],
+            //     phi_correction.data[1][0],
+            //     phi_correction.data[2][0],
+            //     phi_correction.data[3][0],
+            //     sqrt(   phi_correction.data[0][0]*phi_correction.data[0][0] + phi_correction.data[1][0]*phi_correction.data[1][0] +
+            //             phi_correction.data[2][0]*phi_correction.data[2][0] + phi_correction.data[3][0]*phi_correction.data[3][0]   )
+            // );
             matrix_free(Jpinv);
             matrix_free(phi_correction); 
             // Set new vectors
             if (RET_OK == status) {
-                scal_spherical_coordinates_to_vector3_convert(phi.data[0][0], phi.data[1][0], sph_alt1, tempV1);
-                scal_spherical_coordinates_to_vector3_convert(phi.data[2][0], phi.data[3][0], sph_alt2, rotationV2_from1);
-                Quaternion_rotate(&q1_2, rotationV2_from1, tempV2);
+                scal_spherical_coordinates_to_vector3_convert(phi.data[0][0], phi.data[1][0], sph_alt1, rotationV1_globalFrame);
+                scal_spherical_coordinates_to_vector3_convert(phi.data[2][0], phi.data[3][0], sph_alt2, rotationV2_globalFrame);
+                Quaternion_rotate(&q_sensor1, rotationV1_globalFrame, tempV1);
+                Quaternion_rotate(&q_sensor2, rotationV2_globalFrame, tempV2);
             }
         }
     }
