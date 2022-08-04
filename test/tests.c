@@ -2288,7 +2288,7 @@ int main(int argc, char **argv)
     // ok &= tst_cal_xxx();
     // ok &= tst_cal_005();
     // ok &= tst_arm_015();
-    // ok &= tst_cal_005();
+    ok &= tst_cal_005();
     ok &= tst_cal_004();
 
     return (ok)? RET_OK : RET_ERROR;

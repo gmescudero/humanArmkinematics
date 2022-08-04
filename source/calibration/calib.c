@@ -795,6 +795,13 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
             error = squared_error/observations_num;
         }
 
+        // Compute rotation vector 2 from 1
+        Quaternion_rotate(&q2_1, tempV2, rotationV2_from1);
+
+        // Compute phi values
+        scal_vector3_to_spherical_coordinates_convert(tempV1,           &phi.data[0][0], &phi.data[1][0], &sph_alt1);
+        scal_vector3_to_spherical_coordinates_convert(rotationV2_from1, &phi.data[2][0], &phi.data[3][0], &sph_alt2);
+
         // Use only the best set of rotation axes
         if (bestError > error) {
             // dbg_str("%s -> Updated best achieved rotation vectors error: %f -> %f",__FUNCTION__, bestError, error);
