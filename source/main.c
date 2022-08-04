@@ -22,11 +22,11 @@
 /******************************/
 /** CONFIG ********************/
 /******************************/
-#define USE_IMU_CALIB (0)           // Set whether to use the IMUs offset calibration or the integrated one (1 use imu, 0 use app)
+#define USE_IMU_CALIB (1)           // Set whether to use the IMUs offset calibration or the integrated one (1 use imu, 0 use app)
 #define USE_AUTO_CALIB (0)          // Set whether or not to use autocalibration of rotation axis (0 no autocalib, 1 one axis, 2 two axes)
 #define IMUS_NUM (2)                // Set the expected minimum imu sensors for the program to work
-#define UPPER_ARM_LENGTH (100.0)     // Set the Upper-arm length
-#define FOREARM_LENGTH (50.0)        // Set the Forearm length
+#define UPPER_ARM_LENGTH (10.0)     // Set the Upper-arm length
+#define FOREARM_LENGTH (5.0)        // Set the Forearm length
 /******************************/
 
 #define STATUS_EVAL(code) {if (RET_OK != code && RET_NO_EXEC != status) err_str("[%d] Failed: %d ",__LINE__, code);}

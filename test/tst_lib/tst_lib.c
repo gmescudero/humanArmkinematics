@@ -116,6 +116,9 @@ bool tstCsvLoad(const char* csvPath) {
             if (',' != singleChar) {
                 break;
             }
+            else {
+                memset(singleHeader,'\0',sizeof(char)*TST_MAX_CSV_HEADER_LENGTH);
+            }
         }
         else {
             singleHeader[i-lastIndex] = singleChar;
@@ -178,12 +181,18 @@ bool tstCsvDataLineGet(int line, double data[TST_MAX_CSV_DATA_VALUES]) {
             if (',' != singleChar) {
                 break;
             }
+            else {
+                memset(singleDataStr,'\0',sizeof(char)*TST_MAX_CSV_HEADER_LENGTH);
+            }
         }
         else {
             singleDataStr[i-lastIndex] = singleChar;
         }
     }
-    if (dataIndex < csv_columns) ok = false;
+    if (dataIndex < csv_columns) {
+        ok = false;
+        tst_str("Expected to read %d columns but only read %d instead",csv_columns, dataIndex);
+    }
     return ok;
 }
 
