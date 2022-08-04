@@ -376,3 +376,17 @@ void quaternion_print(Quaternion q, const char *name) {
     else
         log_str("Quaternion: %f, [%f, %f, %f]", q.w, q.v[0], q.v[1], q.v[2]);
 }
+
+void quaternion_toEulerZXY(Quaternion* q, double output[3]) {
+    assert(output != NULL);
+
+    // Yaw (z-axis rotation)
+    output[0] = atan2(  2.0*(q->v[0]*q->v[2] - q->w*q->v[1]), q->w*q->w - q->v[0]*q->v[0] - q->v[1]*q->v[1] + q->v[2]*q->v[2] );
+
+    // Roll (x-axis rotation)
+    output[1] = asin (  2.0*(q->v[1]*q->v[2] + q->w*q->v[0]) );
+
+    // Pitch (y-axis rotation)
+    output[2] = atan2( -2.0*(q->v[0]*q->v[1] - q->w*q->v[2]), q->w*q->w - q->v[0]*q->v[0] + q->v[1]*q->v[1] - q->v[2]*q->v[2] );
+}
+

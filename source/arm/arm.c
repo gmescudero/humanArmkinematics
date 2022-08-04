@@ -311,3 +311,71 @@ static ERROR_CODE sarm_current_position_update(ARM_POSE pose) {
     }
     return status;
 }
+
+ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
+    Quaternion q_sensor1, 
+    Quaternion q_sensor2, 
+    double rotationV1[3], 
+    double rotationV2[3],
+    double angleFE,
+    double anglePS,
+    double carryingAngle) 
+{
+    ERROR_CODE status = RET_OK;
+
+    // Check arguments
+    if (NULL == rotationV1)         return RET_ARG_ERROR;
+    if (NULL == rotationV2)         return RET_ARG_ERROR;
+
+    Quaternion q1bs, q2bs;
+    double x_vector[] = {1.0,0.0,0.0};
+    double y_vector[] = {0.0,1.0,0.0};
+    double z_vector[] = {0.0,0.0,1.0};
+    double dotVal;
+    double crossVal[3];
+    
+    // Segment to sensor 1 compute 
+    status = vector3_dot(z_vector, rotationV1, &dotVal);
+    if (RET_OK == status) {
+        status = vector3_cross(z_vector, rotationV1, crossVal);
+    }
+    if (RET_OK == status) {
+        q1bs.w    = acos(dotVal);
+        q1bs.v[0] = crossVal[0];
+        q1bs.v[1] = crossVal[1];
+        q1bs.v[2] = crossVal[2];
+    }
+
+    // Segment to sensor 2 compute 
+    status = vector3_dot(y_vector, rotationV2, &dotVal);
+    if (RET_OK == status) {
+        status = vector3_cross(y_vector, rotationV2, crossVal);
+    }
+    if (RET_OK == status) {
+        q2bs.w    = acos(dotVal);
+        q2bs.v[0] = crossVal[0];
+        q2bs.v[1] = crossVal[1];
+        q2bs.v[2] = crossVal[2];
+    }
+
+    // Compute relative segment orientation
+    Quaternion q_relative;
+    if (RET_OK == status) {
+        Quaternion q_aux1, q_aux2, q_aux3;
+
+        Quaternion_multiply(&q_sensor1, &q1bs, &q_aux1);
+        Quaternion_conjugate(&q_aux1, &q_aux2);
+        Quaternion_multiply(&q_aux2, &q_sensor2, &q_aux3);
+        Quaternion_multiply(&q_aux3, &q2bs, &q_relative);
+    }
+
+    // Compute Euler angles ZXY to get FE and PS angles
+    if (RET_OK == status) {
+        double eulerZXY[3];
+        quaternion_toEulerZXY(&q_relative, eulerZXY);
+        angleFE         = eulerZXY[0];
+        carryingAngle   = eulerZXY[1];
+        anglePS         = eulerZXY[2];
+    }
+    return status;
+}

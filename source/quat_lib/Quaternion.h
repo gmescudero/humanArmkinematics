@@ -210,3 +210,10 @@ void quaternion_from_float_buffer_build(float buffer[4], Quaternion *q);
  * @param name (input) Quaternion name
  */
 void quaternion_print(Quaternion q, const char *name);
+/**
+ * @brief Calculates the euler angles of a quaternion in zxy order.
+ * 
+ * @param output 
+ *      Euler angles in ZYX, but stored in array as [z, x', y''].
+ */
+void quaternion_toEulerZXY(Quaternion* q, double output[3]);
