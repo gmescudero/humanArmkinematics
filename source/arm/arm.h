@@ -142,5 +142,25 @@ ERROR_CODE arm_relative_angular_vel_compute(
  */
 Quaternion arm_quaternion_between_two_get(Quaternion q1, Quaternion q2);
 
+/**
+ * @brief Compute the elbow angles from quaternion orientations and rotation vecors
+ * 
+ * @param q_sensor1 (input) Orientation of the first imu
+ * @param q_sensor2 (input) Orientation of the second imu
+ * @param rotationV1 (input) Rotation vector of the FE axis
+ * @param rotationV2 (input) Rotation vector of the PS axis
+ * @param angleFE (output) Flexion-Extension angle
+ * @param anglePS (output) Pronation-Supination angle
+ * @param carryingAngle (output) Carrying angle (should be constant)
+ * @return ERROR_CODE 
+ */
+ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
+    Quaternion q_sensor1, 
+    Quaternion q_sensor2, 
+    double rotationV1[3], 
+    double rotationV2[3],
+    double *angleFE,
+    double *anglePS,
+    double *carryingAngle);
 
 #endif

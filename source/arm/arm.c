@@ -317,9 +317,9 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     Quaternion q_sensor2, 
     double rotationV1[3], 
     double rotationV2[3],
-    double angleFE,
-    double anglePS,
-    double carryingAngle) 
+    double *angleFE,
+    double *anglePS,
+    double *carryingAngle) 
 {
     ERROR_CODE status = RET_OK;
 
@@ -328,34 +328,32 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     if (NULL == rotationV2)         return RET_ARG_ERROR;
 
     Quaternion q1bs, q2bs;
-    double x_vector[] = {1.0,0.0,0.0};
+    // double x_vector[] = {1.0,0.0,0.0};
     double y_vector[] = {0.0,1.0,0.0};
     double z_vector[] = {0.0,0.0,1.0};
     double dotVal;
     double crossVal[3];
     
     // Segment to sensor 1 compute 
-    status = vector3_dot(z_vector, rotationV1, &dotVal);
+    if (RET_OK == status) {
+        status = vector3_dot(z_vector, rotationV1, &dotVal);
+    }
     if (RET_OK == status) {
         status = vector3_cross(z_vector, rotationV1, crossVal);
     }
     if (RET_OK == status) {
-        q1bs.w    = acos(dotVal);
-        q1bs.v[0] = crossVal[0];
-        q1bs.v[1] = crossVal[1];
-        q1bs.v[2] = crossVal[2];
+        Quaternion_fromAxisAngle(crossVal,acos(dotVal),&q1bs);
     }
 
     // Segment to sensor 2 compute 
-    status = vector3_dot(y_vector, rotationV2, &dotVal);
+    if (RET_OK == status) {
+        status = vector3_dot(y_vector, rotationV2, &dotVal);
+    }
     if (RET_OK == status) {
         status = vector3_cross(y_vector, rotationV2, crossVal);
     }
     if (RET_OK == status) {
-        q2bs.w    = acos(dotVal);
-        q2bs.v[0] = crossVal[0];
-        q2bs.v[1] = crossVal[1];
-        q2bs.v[2] = crossVal[2];
+        Quaternion_fromAxisAngle(crossVal,acos(dotVal),&q2bs);
     }
 
     // Compute relative segment orientation
@@ -373,9 +371,12 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     if (RET_OK == status) {
         double eulerZXY[3];
         quaternion_toEulerZXY(&q_relative, eulerZXY);
-        angleFE         = eulerZXY[0];
-        carryingAngle   = eulerZXY[1];
-        anglePS         = eulerZXY[2];
+        *angleFE         = eulerZXY[0];
+        *carryingAngle   = eulerZXY[1];
+        *anglePS         = eulerZXY[2];
+        dbg_str("%s -> quat <%f,%f,%f,%f>, eulerZXY <%f,%f,%f>",__FUNCTION__,
+            q_relative.w,q_relative.v[0],q_relative.v[1],q_relative.v[2],
+            eulerZXY[0],eulerZXY[1],eulerZXY[2]);
     }
     return status;
 }
