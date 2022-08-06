@@ -368,8 +368,8 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     }
 
     // Compute Euler angles ZXY to get FE and PS angles
+    double eulerZXY[3];
     if (RET_OK == status) {
-        double eulerZXY[3];
         quaternion_toEulerZXY(&q_relative, eulerZXY);
         *angleFE         = eulerZXY[0];
         *carryingAngle   = eulerZXY[1];
@@ -378,5 +378,12 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
             q_relative.w,q_relative.v[0],q_relative.v[1],q_relative.v[2],
             eulerZXY[0],eulerZXY[1],eulerZXY[2]);
     }
+
+    // Update database
+    if (RET_OK == status) {
+        /*DB_ARM_ELBOW_ANGLES*/
+        status = db_write(DB_ARM_ELBOW_ANGLES,0,eulerZXY);
+    }
+    
     return status;
 }

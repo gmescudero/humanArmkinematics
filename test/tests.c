@@ -1843,8 +1843,6 @@ bool tst_arm_016()
 {
     bool ok = true;
     ERROR_CODE ret = RET_OK;
-    Quaternion q_sensor1 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
-    Quaternion q_sensor2 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
     double omega1[] = {0.0,0.0,50.0};
     double omega2[] = {50.0,0.0,100.0};
     double rotVector1[3] = {0.0,0.0,1.0};
@@ -1855,16 +1853,21 @@ bool tst_arm_016()
     ok = preconditions_init(__FUNCTION__); 
 
     // Test Steps
-    for (int i = 0; ok && i < 100; i++) {
-        quaternion_ang_vel_apply(q_sensor1,0.01,omega1,&q_sensor1);
-        quaternion_ang_vel_apply(q_sensor2,0.01,omega2,&q_sensor2);
-        // quaternion_print(q_sensor1,"q_sensor1");
-        // quaternion_print(q_sensor2,"q_sensor2");
+    for (double ang1 = 0; ok & ang1 < 2.0*M_PI; ang1 += M_PI/6) {
+        for (double ang2 = 0; ok & ang2 < 2.0*M_PI; ang2 += M_PI/6) {
+            Quaternion q1, q2;
+            Quaternion_fromZRotation(ang1, &q1);
+            Quaternion_fromXRotation(ang2, &q2);
+            Quaternion q1_2 = arm_quaternion_between_two_get(q1,q2);
+            Quaternion q1_into2;
+            Quaternion_multiply(&q1_2, &q1, &q1_into2);
+            Quaternion_multiply(&q2,&q1_into2,&q2);
 
-        ret = arm_elbow_angles_from_rotation_vectors_get(q_sensor1, q_sensor2, rotVector1, rotVector2,
-            &fe, &ps, &carryingAngle);
-        ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get");
-        tst_str("Angles: fe <%f>, ps <%f>, beta <%f>",fe,ps,carryingAngle);
+            ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2,
+                &fe, &ps, &carryingAngle);
+            ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get");
+            // tst_str("[%f,%f] Angles: fe <%f>, ps <%f>, beta <%f>",ang1,ang2,fe,ps,carryingAngle);
+        }
     }
     
     testCleanUp();
@@ -2087,6 +2090,7 @@ bool tst_cal_004()
     ret += db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,1);
     ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
     ret += db_csv_field_add(DB_CALIB_COST_DERIVATIVE,1);
+    ret += db_csv_field_add(DB_ARM_ELBOW_ANGLES,0);
     ok &= assert_OK(ret, "db csv fields add");
 
     ok &= tstCsvLoad(csvFile);
@@ -2140,6 +2144,32 @@ bool tst_cal_004()
         rotVector2[0],rotVector2[1], rotVector2[2]);
     ok &= assert_vector3EqualNoSignThreshold(rotVector1,v1_expected,5e-2,"cal_automatic_rotation_axis_calibrate result1");
     ok &= assert_vector3EqualNoSignThreshold(rotVector2,v2_expected,5e-2,"cal_automatic_rotation_axis_calibrate result2");
+
+    line = 1;
+    double lastTimestamp = data[0];
+    while (tstCsvDataLineGet(line++, data)) {
+        // Set quaternion values
+        q_buff[0] = data[31]; q_buff[1] = data[32]; q_buff[2] = data[33]; q_buff[3] = data[34];
+        quaternion_from_buffer_build(q_buff, &q_sensor1);
+        q_buff[0] = data[35]; q_buff[1] = data[36]; q_buff[2] = data[37]; q_buff[3] = data[38];
+        quaternion_from_buffer_build(q_buff, &q_sensor2);
+
+        double timestamp = lastTimestamp + data[0];
+        // Set timestamp
+        ret = db_write(DB_IMU_TIMESTAMP,0,&timestamp);
+        ok &= assert_OK(ret, "db_write");
+
+        // Calculate elbow angles
+        double fe, ps, carryingAngle;
+        ret = arm_elbow_angles_from_rotation_vectors_get(q_sensor1, q_sensor2, rotVector1, rotVector2,
+            &fe, &ps, &carryingAngle);
+        ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get");
+        // tst_str("[Angles: fe <%f>, ps <%f>, beta <%f>",fe,ps,carryingAngle);
+
+        // Dump database data
+        ret = db_csv_dump();
+        ok &= assert_OK(ret, "db_csv_dump");
+    }
 
     // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
 
@@ -2474,7 +2504,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    ok &= tst_battery_all();
+    // ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
@@ -2482,8 +2512,8 @@ int main(int argc, char **argv)
     // ok &= tst_cal_005();
     // ok &= tst_arm_015();
     // ok &= tst_cal_005();
-    // ok &= tst_cal_004();
-    ok &= tst_arm_016();
+    ok &= tst_cal_004();
+    // ok &= tst_arm_016();
 
     return (ok)? RET_OK : RET_ERROR;
 }
