@@ -788,6 +788,162 @@ bool tst_math_020()
     return ok;
 }
 
+bool tst_math_021()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    double euler[3];
+
+    Quaternion q1 = {.w = 1.0, .v = {0.0,0.0,0.0}};
+    double expected_1[3] = {0.0,0.0,0.0};
+
+    Quaternion q2 = {.w = M_SQRT1_2, .v = {0.0,0.0,M_SQRT1_2}};
+    double expected_2[3] = {M_PI_2,0.0,0.0};
+
+    Quaternion q3 = {.w = M_SQRT1_2, .v = {0.0,M_SQRT1_2,0.0}};
+    double expected_3[3] = {0.0,0.0,M_PI_2};
+
+    Quaternion q4 = {.w = M_SQRT1_2, .v = {M_SQRT1_2,0.0,0.0}};
+    double expected_4[3] = {0.0,M_PI_2,0.0};
+
+    Quaternion q5 = {.w = 0.5, .v = {-0.5,0.5,0.5}};
+    double expected_5[3] = {M_PI_2,0.0,M_PI_2};
+
+    testDescription(__FUNCTION__, "Check the conversion from quaternion to EulerZXY");
+    ok = preconditions_init(__FUNCTION__); 
+    
+    // Test steps
+    quaternion_toEulerZXY(&q1,euler);
+    ok &= assert_vector3Equal(euler, expected_1, "quaternion_toEulerZXY result 1");
+
+    quaternion_toEulerZXY(&q2,euler);
+    ok &= assert_vector3Equal(euler, expected_2, "quaternion_toEulerZXY result 2");
+
+    quaternion_toEulerZXY(&q3,euler);
+    ok &= assert_vector3Equal(euler, expected_3, "quaternion_toEulerZXY result 3");
+
+    quaternion_toEulerZXY(&q4,euler);
+    ok &= assert_vector3Equal(euler, expected_4, "quaternion_toEulerZXY result 4");
+
+    quaternion_toEulerZXY(&q5,euler);
+    ok &= assert_vector3Equal(euler, expected_5, "quaternion_toEulerZXY result 5");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_math_022()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    double v1[] = {1.0, 0.0, 0.0};
+    double v2[] = {0.0, 1.0, 0.0};
+    double v3[] = {0.0, 0.0, 1.0};
+    double dotVal;
+    double expected123 = 1.0;
+    double expected456 = 0.0;
+
+    testDescription(__FUNCTION__, "Check the vector dot product");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test steps
+    ret = vector3_dot(v1,v1,&dotVal);
+    ok &= assert_OK(ret, "vector3_dot 1");
+    ok &= assert_double(dotVal,expected123,EPSI,"vector3_dot result 1");
+
+    ret = vector3_dot(v2,v2,&dotVal);
+    ok &= assert_OK(ret, "vector3_dot 2");
+    ok &= assert_double(dotVal,expected123,EPSI,"vector3_dot result 2");
+
+    ret = vector3_dot(v3,v3,&dotVal);
+    ok &= assert_OK(ret, "vector3_dot 3");
+    ok &= assert_double(dotVal,expected123,EPSI,"vector3_dot result 3");
+
+    ret = vector3_dot(v1,v2,&dotVal);
+    ok &= assert_OK(ret, "vector3_dot 4");
+    ok &= assert_double(dotVal,expected456,EPSI,"vector3_dot result 4");
+
+    ret = vector3_dot(v2,v3,&dotVal);
+    ok &= assert_OK(ret, "vector3_dot 5");
+    ok &= assert_double(dotVal,expected456,EPSI,"vector3_dot result 5");
+
+    ret = vector3_dot(v3,v1,&dotVal);
+    ok &= assert_OK(ret, "vector3_dot 6");
+    ok &= assert_double(dotVal,expected456,EPSI,"vector3_dot result 6");
+
+    for (double ang = 0; ok & ang < 2.0*M_PI; ang += M_PI/6) {
+        Quaternion q;
+        double rotV[3];
+        Quaternion_fromXRotation(ang,&q);
+        Quaternion_rotate(&q,v3,rotV);
+
+        ret = vector3_dot(v3,rotV,&dotVal);
+        ok &= assert_OK(ret, "vector3_dot 7");
+        ok &= assert_double(dotVal,cos(ang),EPSI,"vector3_dot result 7");
+        if (!ok) tst_str("Failed for angle %f, with dot val %d, when expected was %d",ang,dotVal,cos(ang));
+    }
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_math_023()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    double v1[] = {1.0, 0.0, 0.0};
+    double v2[] = {0.0, 1.0, 0.0};
+    double v3[] = {0.0, 0.0, 1.0};
+    double crossVal[3];
+    double expected123 = 0.0;
+    double expected456 = 1.0;
+
+    testDescription(__FUNCTION__, "Check the vector cross product");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test steps
+    ret = vector3_cross(v1,v1,crossVal);
+    ok &= assert_OK(ret, "vector3_cross 1");
+    ok &= assert_vector3Norm(crossVal,expected123,EPSI,"vector3_cross result 1");
+
+    ret = vector3_cross(v2,v2,crossVal);
+    ok &= assert_OK(ret, "vector3_cross 2");
+    ok &= assert_vector3Norm(crossVal,expected123,EPSI,"vector3_cross result 2");
+
+    ret = vector3_cross(v3,v3,crossVal);
+    ok &= assert_OK(ret, "vector3_cross 3");
+    ok &= assert_vector3Norm(crossVal,expected123,EPSI,"vector3_cross result 3");
+
+    ret = vector3_cross(v1,v2,crossVal);
+    ok &= assert_OK(ret, "vector3_cross 4");
+    ok &= assert_vector3Norm(crossVal,expected456,EPSI,"vector3_cross result 4");
+
+    ret = vector3_cross(v2,v3,crossVal);
+    ok &= assert_OK(ret, "vector3_cross 5");
+    ok &= assert_vector3Norm(crossVal,expected456,EPSI,"vector3_cross result 5");
+
+    ret = vector3_cross(v3,v1,crossVal);
+    ok &= assert_OK(ret, "vector3_cross 6");
+    ok &= assert_vector3Norm(crossVal,expected456,EPSI,"vector3_cross result 6");
+
+    for (double ang = 0; ok & ang < 2.0*M_PI; ang += M_PI/6) {
+        Quaternion q;
+        double rotV[3];
+        Quaternion_fromXRotation(ang,&q);
+        Quaternion_rotate(&q,v3,rotV);
+
+        ret = vector3_cross(v3,rotV,crossVal);
+        ok &= assert_OK(ret, "vector3_cross 7");
+        ok &= assert_vector3Norm(crossVal,fabs(sin(ang)),EPSI,"vector3_cross result 7");
+        if (!ok) tst_str("Failed for angle %f",ang);
+    }
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
 
 bool tst_db_001()
 {
@@ -1682,6 +1838,40 @@ bool tst_arm_015()
     return ok;
 }
 
+
+bool tst_arm_016() 
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    Quaternion q_sensor1 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
+    Quaternion q_sensor2 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
+    double omega1[] = {0.0,0.0,50.0};
+    double omega2[] = {50.0,0.0,100.0};
+    double rotVector1[3] = {0.0,0.0,1.0};
+    double rotVector2[3] = {1.0,0.0,0.0};
+    double fe, ps, carryingAngle;
+
+    testDescription(__FUNCTION__, "Compute elbow angles from rotation vectors and quaternion");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    for (int i = 0; ok && i < 100; i++) {
+        quaternion_ang_vel_apply(q_sensor1,0.01,omega1,&q_sensor1);
+        quaternion_ang_vel_apply(q_sensor2,0.01,omega2,&q_sensor2);
+        // quaternion_print(q_sensor1,"q_sensor1");
+        // quaternion_print(q_sensor2,"q_sensor2");
+
+        ret = arm_elbow_angles_from_rotation_vectors_get(q_sensor1, q_sensor2, rotVector1, rotVector2,
+            &fe, &ps, &carryingAngle);
+        ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get");
+        tst_str("Angles: fe <%f>, ps <%f>, beta <%f>",fe,ps,carryingAngle);
+    }
+    
+    testCleanUp();
+    testReport(ok);
+    return ok;
+} 
+
 bool tst_cal_001() 
 {
     bool ok = true;
@@ -2231,6 +2421,9 @@ bool tst_battery_all()
     ok &= tst_math_018();
     ok &= tst_math_019();
     ok &= tst_math_020();
+    ok &= tst_math_021();
+    ok &= tst_math_022();
+    ok &= tst_math_023();
 
     ok &= tst_db_001();
     ok &= tst_db_002();
@@ -2281,15 +2474,16 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    // ok &= tst_battery_all();
+    ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
     // ok &= tst_cal_xxx();
     // ok &= tst_cal_005();
     // ok &= tst_arm_015();
-    ok &= tst_cal_005();
-    ok &= tst_cal_004();
+    // ok &= tst_cal_005();
+    // ok &= tst_cal_004();
+    ok &= tst_arm_016();
 
     return (ok)? RET_OK : RET_ERROR;
 }

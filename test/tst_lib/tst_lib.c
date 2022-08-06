@@ -409,6 +409,22 @@ bool assert_vector3EqualNoSign(const double actual[3], const double expected[3],
     return assert_vector3EqualThreshold(actual,expected,EPSI,description);
 }
 
+bool assert_vector3Norm(double actual[3], double expected, const double threshold, const char *description) {
+    bool ok = true;
+    ERROR_CODE ret;
+    double norm;
+
+    ret = vector3_norm(actual, &norm);
+    ok &= assert_OK(ret, NULL);
+    ok &= assert_double(norm,expected,threshold,NULL);
+
+    if (WILL_PRINT(ok) && (NULL != description)) {
+        printf("\t -> RESULT: %s (%s) | EXPECTED: %f, ACTUAL: %f\n", 
+            (true == ok)?"PASSED":"FAILED", description, expected, norm);
+    }
+    return ok;
+}
+
 bool assert_quaternionThreshold(Quaternion actual, Quaternion expected, double threshold, const char *description){
     bool ok = true;
 
