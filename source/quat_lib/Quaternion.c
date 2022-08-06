@@ -381,12 +381,19 @@ void quaternion_toEulerZXY(Quaternion* q, double output[3]) {
     assert(output != NULL);
 
     // Yaw (z-axis rotation)
-    output[0] = atan2(  2.0*(q->v[0]*q->v[2] - q->w*q->v[1]), q->w*q->w - q->v[0]*q->v[0] - q->v[1]*q->v[1] + q->v[2]*q->v[2] );
+    output[0] = atan2(  
+        -2.0*(q->v[0]*q->v[1] - q->w*q->v[2]), 
+        q->w*q->w - q->v[0]*q->v[0] + q->v[1]*q->v[1] - q->v[2]*q->v[2] );
 
     // Roll (x-axis rotation)
-    output[1] = asin (  2.0*(q->v[1]*q->v[2] + q->w*q->v[0]) );
+    double sin1 = 2.0*(q->v[1]*q->v[2] + q->w*q->v[0]);
+    if (fabs(sin1) > 1.0-EPSI)
+        output[1] = copysign(M_PI / 2, sin1); // use 90 degrees if out of range
+    else
+        output[1] = asin(sin1);
 
     // Pitch (y-axis rotation)
-    output[2] = atan2( -2.0*(q->v[0]*q->v[1] - q->w*q->v[2]), q->w*q->w - q->v[0]*q->v[0] + q->v[1]*q->v[1] - q->v[2]*q->v[2] );
+    output[2] = atan2( 
+        -2.0*(q->v[0]*q->v[2] - q->w*q->v[1]), 
+        q->w*q->w - q->v[0]*q->v[0] - q->v[1]*q->v[1] + q->v[2]*q->v[2] );
 }
-
