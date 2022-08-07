@@ -12,6 +12,17 @@
 
 #define DB_MULTIPLICITY_MAX_NUM (10)
 
+#define DB_MAX_BUFFER_SIZE (500)
+#define DB_MAX_BUFFER_FIELDS (4)
+
+typedef struct DB_BUFFER_STRUCT {
+    int size;
+    int current_size;
+    int first_index;
+    int last_index;
+    double *buff[DB_MAX_BUFFER_SIZE];
+} DB_BUFFER;
+
 typedef struct DB_FIELD_STRUCT {
     DB_FIELD_IDENTIFIER identifier;                     // Field identifier
     char                name[DB_FIELD_NAME_MAX_LENGTH]; // Field Name
@@ -21,6 +32,7 @@ typedef struct DB_FIELD_STRUCT {
     sem_t               mutex;                          // Multi thread protection mutex
     void                *data_ptr[DB_INSTANCE_MAX_NUM]; // Field data
     int                 initialized;                    // Field initialized flag
+    DB_BUFFER           *buffer[DB_INSTANCE_MAX_NUM];   // Buffer of data
 } DB_FIELD;
 
 typedef struct DB_CSV_LOG_STRUCT {
@@ -41,10 +53,12 @@ typedef struct DB_CSV_LOG_STRUCT {
     .multiplicity=mult,\
     .mutex={{0}},\
     .data_ptr={NULL},\
-    .initialized=0 }
+    .initialized=0,\
+    .buffer={NULL} }
 
 
 static size_t sdb_field_size_get(const DB_FIELD_IDENTIFIER field);
+static void sdb_field_buffer_data_add(const DB_FIELD_IDENTIFIER field, int instance, const double *data);
 
 /*
     DB_FIELD_IDENTIFIER identifier;
@@ -99,6 +113,9 @@ static DB_CSV_LOG_STRUCT csv_logging_fields = {
     .instances = {0}
 };
 
+static int field_buffers_num = 0;
+static DB_BUFFER field_buffers[DB_MAX_BUFFER_FIELDS];
+
 ERROR_CODE db_initialize(void) {
     ERROR_CODE status = RET_OK;
 
@@ -138,6 +155,18 @@ ERROR_CODE db_initialize(void) {
             database[field_id].initialized = 1;
         }
     }
+
+    log_str("Initielize field buffers");
+    for(int i = 0; RET_OK == status && i < DB_MAX_BUFFER_FIELDS; i++) {
+        field_buffers[i].size = 0;
+        field_buffers[i].current_size = 0;
+        field_buffers[i].first_index = 0;
+        field_buffers[i].last_index = 0;
+        for (int j = 0; RET_OK == status && j < DB_MAX_BUFFER_SIZE; j++) {
+            field_buffers[i].buff[j] = NULL;
+        }
+    }
+
     return status;
 }
 
@@ -160,12 +189,21 @@ ERROR_CODE db_terminate(void) {
             for (int inst = 0; inst < database[field_id].instances; inst++) {
                 // Free allocated memory
                 free(database[field_id].data_ptr[inst]);
+                // Free data buffer
+                if (NULL != database[field_id].buffer[inst]) {
+                    status += db_field_buffer_clear(field_id, inst);
+                    for (int i = 0; i < database[field_id].buffer[inst]->size; i++) {
+                        free(database[field_id].buffer[inst]->buff[i]);
+                        database[field_id].buffer[inst]->buff[i] = NULL;
+                    }
+                    database[field_id].buffer[inst]->size = 0;
+                }
             }
             // Terminate database entry mutex
             if (0 != sem_destroy(&(database[field_id].mutex))) {
                 status += RET_ERROR;
                 err_str("Falied to destroy semaphore for database entry");
-            };
+            }
             // Mark the field as not initialized
             database[field_id].initialized = 0;
         }
@@ -206,6 +244,11 @@ ERROR_CODE db_write(DB_FIELD_IDENTIFIER field, int instance, const void *data) {
     // Copy data
     memcpy(database[field].data_ptr[instance], data, sdb_field_size_get(field));
 
+    // Buffer data if set up
+    if (DB_REAL == database[field].type) {
+        sdb_field_buffer_data_add(field, instance, data);
+    }
+
     if (0 != sem_post(&(database[field].mutex))) {
         err_str("Could not release semaphore");
         return RET_ERROR;
@@ -239,6 +282,11 @@ ERROR_CODE db_index_write(DB_FIELD_IDENTIFIER field, int instance, int index, co
         return RET_ERROR;
     }
 
+    // Buffer data if set up
+    if (DB_REAL == database[field].type) {
+        sdb_field_buffer_data_add(field, instance, (double*) database[field].data_ptr[instance]);
+    }
+    
     return RET_OK;
 }
 
@@ -378,4 +426,148 @@ static size_t sdb_field_size_get(const DB_FIELD_IDENTIFIER field) {
         type_size = sizeof(double);
     }
     return (type_size * (size_t)database[field].multiplicity);
+}
+
+ERROR_CODE db_field_buffer_setup(const DB_FIELD_IDENTIFIER field, int instance, int size){
+    ERROR_CODE status = RET_OK;
+    // Check arguments
+    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
+    if (DB_MAX_BUFFER_SIZE < size) return RET_ARG_ERROR;
+    // Check availability
+    if (DB_MAX_BUFFER_FIELDS <= field_buffers_num) return RET_ERROR;
+
+    int index = field_buffers_num;
+
+    for (int i = 0; RET_OK == status && i < size; i++) {
+        field_buffers[index].buff[i] = malloc( sdb_field_size_get(field) );
+        if (NULL == field_buffers[index].buff[i]) {
+            err_str("Failed to allocate buffer for database field %s",database[field].name);
+            status = RET_ERROR;
+        }
+    }
+    if (0 != sem_wait(&(database[field].mutex))) {
+        err_str("Could not retrieve semaphore");
+        return RET_ERROR;
+    }
+    if (RET_OK == status) {
+        field_buffers[index].size        = size;
+        database[field].buffer[instance] = &field_buffers[index];
+        field_buffers_num++;   
+    }
+    if (0 != sem_post(&(database[field].mutex))) {
+        err_str("Could not release semaphore");
+        return RET_ERROR;
+    }
+
+    return status;
+}
+
+/**
+ * @brief Add new data to a buffer 
+ * 
+ * @param field (input) Field identifier
+ * @param data (input) Data to add
+ */
+static void sdb_field_buffer_data_add(const DB_FIELD_IDENTIFIER field, int instance, const double *data) {
+    // Check arguments
+    if (NULL == database[field].buffer[instance]) return;
+    if (NULL == data) return;
+
+    DB_BUFFER *buffer = (database[field].buffer[instance]);
+
+    if (buffer->current_size < buffer->size) {
+        buffer->last_index = buffer->current_size;
+        buffer->current_size++;
+    }
+    else {
+        buffer->last_index += 1;
+        buffer->last_index %= buffer->size;
+        buffer->first_index = (buffer->last_index+1) % buffer->size;
+    }
+
+    memcpy(&buffer->buff[buffer->last_index], data, sdb_field_size_get(field));
+
+}
+
+ERROR_CODE db_field_buffer_from_tail_data_get(const DB_FIELD_IDENTIFIER field, int instance, int offset, double *data) {
+    ERROR_CODE status = RET_OK;
+    // Check arguments
+    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
+    if (NULL == database[field].buffer[instance]) return RET_ARG_ERROR;
+    if (0 > offset || database[field].buffer[instance]->size < offset) return RET_ARG_ERROR;
+    if (NULL == data) return RET_ARG_ERROR;
+
+    DB_BUFFER *buffer = (database[field].buffer[instance]);
+
+    if (0 != sem_wait(&(database[field].mutex))) {
+        err_str("Could not retrieve semaphore");
+        return RET_ERROR;
+    }
+
+    int buffer_data_index = buffer->first_index + offset;
+    // Adjust offset to circular buffer
+    if (buffer->size <= buffer_data_index) buffer_data_index -= buffer->size;
+
+    memcpy(data, buffer->buff[buffer_data_index], sdb_field_size_get(field));
+
+    if (0 != sem_post(&(database[field].mutex))) {
+        err_str("Could not release semaphore");
+        return RET_ERROR;
+    }
+
+    return status;
+}
+
+ERROR_CODE db_field_buffer_from_head_data_get(const DB_FIELD_IDENTIFIER field, int instance, int offset, double *data) {
+    ERROR_CODE status = RET_OK;
+    // Check arguments
+    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
+    if (NULL == database[field].buffer[instance]) return RET_ARG_ERROR;
+    if (0 > offset || database[field].buffer[instance]->size < offset) return RET_ARG_ERROR;
+    if (NULL == data) return RET_ARG_ERROR;
+
+    DB_BUFFER *buffer = (database[field].buffer[instance]);
+
+    if (0 != sem_wait(&(database[field].mutex))) {
+        err_str("Could not retrieve semaphore");
+        return RET_ERROR;
+    }
+
+    int buffer_data_index = buffer->last_index - offset;
+    // Adjust offset to circular buffer
+    if (0 > buffer_data_index) buffer_data_index += buffer->size;
+
+    memcpy(data, buffer->buff[buffer_data_index], sdb_field_size_get(field));
+
+    if (0 != sem_post(&(database[field].mutex))) {
+        err_str("Could not release semaphore");
+        return RET_ERROR;
+    }
+
+    return status;
+}
+
+ERROR_CODE db_field_buffer_clear(const DB_FIELD_IDENTIFIER field, int instance) {
+    ERROR_CODE status = RET_OK;
+    // Check arguments
+    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
+    if (NULL == database[field].buffer[instance]) return RET_ARG_ERROR;
+
+    DB_BUFFER *buffer = (database[field].buffer[instance]);
+
+    if (0 != sem_wait(&(database[field].mutex))) {
+        err_str("Could not retrieve semaphore");
+        return RET_ERROR;
+    }
+
+    buffer->current_size = 0;
+    buffer->first_index = 0;
+    buffer->last_index = 0;
+
+    if (0 != sem_post(&(database[field].mutex))) {
+        err_str("Could not release semaphore");
+        return RET_ERROR;
+    }
+
+    return status;
 }

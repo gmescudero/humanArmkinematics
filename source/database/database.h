@@ -125,5 +125,42 @@ ERROR_CODE db_csv_dump(void);
  */
 ERROR_CODE db_field_print(DB_FIELD_IDENTIFIER field, int instance);
 
+/**
+ * @brief Set up a buffer for a specific field
+ * 
+ * @param field (input) Field identifier
+ * @param instance (input) Field instance
+ * @param size (input) Size of the buffer
+ * @return ERROR_CODE 
+ */
+ERROR_CODE db_field_buffer_setup(const DB_FIELD_IDENTIFIER field, int instance, int size);
+/**
+ * @brief Retrieve data from the tail of the buffer (the oldest data)
+ * 
+ * @param field (input) Field identifier
+ * @param instance (input) Field instance
+ * @param offset (input) The offset from the tail of the buffer towards the newest data
+ * @param data (output) The data to be retrieved
+ * @return ERROR_CODE 
+ */
+ERROR_CODE db_field_buffer_from_tail_data_get(const DB_FIELD_IDENTIFIER field, int instance, int offset, double *data);
+/**
+ * @brief Retrieve data from the head of the buffer (the newest data)
+ * 
+ * @param field (input) Field identifier
+ * @param instance (input) Field instance
+ * @param offset (input) The offset from the head of the buffer towards the oldest data
+ * @param data (output) The data to be retrieved
+ * @return ERROR_CODE 
+ */
+ERROR_CODE db_field_buffer_from_head_data_get(const DB_FIELD_IDENTIFIER field, int instance, int offset, double *data);
+/**
+ * @brief Empty the data in a field buffer
+ * 
+ * @param instance (input) Field instance
+ * @param field (input) Field identifier
+ * @return ERROR_CODE 
+ */
+ERROR_CODE db_field_buffer_clear(const DB_FIELD_IDENTIFIER field, int instance);
 
 #endif /* __database_h__ */
