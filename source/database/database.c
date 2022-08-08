@@ -593,3 +593,7 @@ ERROR_CODE db_field_buffer_clear(const DB_FIELD_IDENTIFIER field, int instance) 
 
     return status;
 }
+
+int db_field_buffer_current_size_get(const DB_FIELD_IDENTIFIER field, int instance) {
+    return (database[field].buffer[instance]->current_size);
+}

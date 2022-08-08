@@ -157,10 +157,18 @@ ERROR_CODE db_field_buffer_from_head_data_get(const DB_FIELD_IDENTIFIER field, i
 /**
  * @brief Empty the data in a field buffer
  * 
- * @param instance (input) Field instance
  * @param field (input) Field identifier
+ * @param instance (input) Field instance
  * @return ERROR_CODE 
  */
 ERROR_CODE db_field_buffer_clear(const DB_FIELD_IDENTIFIER field, int instance);
+/**
+ * @brief Retrieve the current number of data in the buffer
+ * 
+ * @param field (input) Field identifier
+ * @param instance (input) Field instance
+ * @return int 
+ */
+int db_field_buffer_current_size_get(const DB_FIELD_IDENTIFIER field, int instance);
 
 #endif /* __database_h__ */

@@ -1267,6 +1267,7 @@ bool tst_db_009()
         ok &= assert_OK(ret, "db_field_buffer_from_head_data_get");
         ok &= assert_vector3Equal(buffer1, gyrData_expected2, "db_field_buffer_from_head_data_get result");
     }
+    ok &= assert_int(db_field_buffer_current_size_get(field, 0),size/2,"db_field_buffer_current_size_get");
     // Fill and read the Full buffer
     for (int i = 0; ok && i < size/2; i++) {
         gyrData[0] += 0.1;
@@ -1284,13 +1285,14 @@ bool tst_db_009()
         ok &= assert_OK(ret, "db_field_buffer_from_head_data_get");
         ok &= assert_vector3Equal(buffer1, gyrData_expected2, "db_field_buffer_from_head_data_get result");
     }
+    ok &= assert_int(db_field_buffer_current_size_get(field, 0),size,"db_field_buffer_current_size_get");
     // Fill and read in and form the buffer after overwriting it
     for (int i = 0; ok && i < size; i++) {
         gyrData[0] += 0.1;
         ret = db_write(field, 0, gyrData);
         ok &= assert_OK(ret, "db_write");
     }
-    for (int i = 0; /* ok && */ i < size; i++) {
+    for (int i = 0; ok && i < size; i++) {
         gyrData_expected1[0] = 0.1*(size+i+1);
         ret = db_field_buffer_from_tail_data_get(field, 0, i, buffer1);
         ok &= assert_OK(ret, "db_field_buffer_from_tail_data_get");
@@ -1301,6 +1303,7 @@ bool tst_db_009()
         ok &= assert_OK(ret, "db_field_buffer_from_head_data_get");
         ok &= assert_vector3Equal(buffer1, gyrData_expected2, "db_field_buffer_from_head_data_get result");
     }
+    ok &= assert_int(db_field_buffer_current_size_get(field, 0),size,"db_field_buffer_current_size_get");
 
     testCleanUp();
     testReport(ok);
