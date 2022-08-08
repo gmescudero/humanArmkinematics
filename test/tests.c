@@ -1220,13 +1220,10 @@ bool tst_db_009()
     DB_FIELD_IDENTIFIER field = DB_IMU_GYROSCOPE;
     int size = 30;
     double gyrDataSingle[3] = {1.0,2.0,3.0};
-    double gyrData[3] = {0.0,0.0,0.0};
-    double gyrData_expected1[3] = {0.0,0.0,0.0};
-    double gyrData_expected2[3] = {0.0,0.0,0.0};
     double buffer1[3] = {0.0,0.0,0.0};
     double buffer2[3] = {0.0,0.0,0.0};
 
-    testDescription(__FUNCTION__, "Check buffering of database fields");
+    testDescription(__FUNCTION__, "Check simple buffering of database fields and ");
     ok = preconditions_init(__FUNCTION__); 
 
     // Test Steps
@@ -1250,6 +1247,30 @@ bool tst_db_009()
     ret = db_field_buffer_from_head_data_get(field, 0, 0, buffer2);
     ok &= assert_ERROR(ret, "db_field_buffer_from_head_data_get");
 
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_db_010()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    DB_FIELD_IDENTIFIER field = DB_IMU_GYROSCOPE;
+    int size = 30;
+    double gyrData[3] = {0.0,0.0,0.0};
+    double gyrData_expected1[3] = {0.0,0.0,0.0};
+    double gyrData_expected2[3] = {0.0,0.0,0.0};
+    double buffer1[3] = {0.0,0.0,0.0};
+    double buffer2[3] = {0.0,0.0,0.0};
+
+    testDescription(__FUNCTION__, "Fill and read half of a database field buffer");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret = db_field_buffer_setup(field, 0, size);
+    ok &= assert_OK(ret, "db_field_buffer_setup");
+
     // Fill and read half of the buffer
     for (int i = 0; ok && i < size/2; i++) {
         gyrData[0] += 0.1;
@@ -1263,45 +1284,94 @@ bool tst_db_009()
         ok &= assert_vector3Equal(buffer1, gyrData_expected1, "db_field_buffer_from_tail_data_get result");
 
         gyrData_expected2[0] = 0.1*(size/2-i);
-        ret = db_field_buffer_from_head_data_get(field, 0, i, buffer1);
+        ret = db_field_buffer_from_head_data_get(field, 0, i, buffer2);
         ok &= assert_OK(ret, "db_field_buffer_from_head_data_get");
-        ok &= assert_vector3Equal(buffer1, gyrData_expected2, "db_field_buffer_from_head_data_get result");
+        ok &= assert_vector3Equal(buffer2, gyrData_expected2, "db_field_buffer_from_head_data_get result");
     }
     ok &= assert_int(db_field_buffer_current_size_get(field, 0),size/2,"db_field_buffer_current_size_get");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_db_011()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    DB_FIELD_IDENTIFIER field = DB_IMU_GYROSCOPE;
+    int size = 30;
+    double gyrData[3] = {0.0,0.0,0.0};
+    double gyrData_expected1[3] = {0.0,0.0,0.0};
+    double gyrData_expected2[3] = {0.0,0.0,0.0};
+    double buffer1[3] = {0.0,0.0,0.0};
+    double buffer2[3] = {0.0,0.0,0.0};
+
+    testDescription(__FUNCTION__, "Fill and read a full database field buffer");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret = db_field_buffer_setup(field, 0, size);
+    ok &= assert_OK(ret, "db_field_buffer_setup");
+
     // Fill and read the Full buffer
-    for (int i = 0; ok && i < size/2; i++) {
+    for (int i = 0; ok && i < size; i++) {
         gyrData[0] += 0.1;
         ret = db_write(field, 0, gyrData);
         ok &= assert_OK(ret, "db_write");
     }
-    for (int i = size/2; ok && i < size; i++) {
+    for (int i = size; ok && i < size; i++) {
         gyrData_expected1[0] = 0.1*(i+1);
         ret = db_field_buffer_from_tail_data_get(field, 0, i, buffer1);
         ok &= assert_OK(ret, "db_field_buffer_from_tail_data_get");
         ok &= assert_vector3Equal(buffer1, gyrData_expected1, "db_field_buffer_from_tail_data_get result");
 
         gyrData_expected2[0] = 0.1*(size-i);
-        ret = db_field_buffer_from_head_data_get(field, 0, i, buffer1);
+        ret = db_field_buffer_from_head_data_get(field, 0, i, buffer2);
         ok &= assert_OK(ret, "db_field_buffer_from_head_data_get");
-        ok &= assert_vector3Equal(buffer1, gyrData_expected2, "db_field_buffer_from_head_data_get result");
+        ok &= assert_vector3Equal(buffer2, gyrData_expected2, "db_field_buffer_from_head_data_get result");
     }
     ok &= assert_int(db_field_buffer_current_size_get(field, 0),size,"db_field_buffer_current_size_get");
-    // Fill and read in and form the buffer after overwriting it
-    for (int i = 0; ok && i < size; i++) {
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_db_012()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    DB_FIELD_IDENTIFIER field = DB_IMU_GYROSCOPE;
+    int size = 30;
+    double gyrData[3] = {0.0,0.0,0.0};
+    double gyrData_expected1[3] = {0.0,0.0,0.0};
+    double gyrData_expected2[3] = {0.0,0.0,0.0};
+    double buffer1[3] = {0.0,0.0,0.0};
+    double buffer2[3] = {0.0,0.0,0.0};
+
+    testDescription(__FUNCTION__, "Check filling and reading in and form the buffer after overwriting some data on it");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret = db_field_buffer_setup(field, 0, size);
+    ok &= assert_OK(ret, "db_field_buffer_setup");
+
+    for (int i = 0; ok && i < 1.5*size; i++) {
         gyrData[0] += 0.1;
         ret = db_write(field, 0, gyrData);
         ok &= assert_OK(ret, "db_write");
     }
     for (int i = 0; ok && i < size; i++) {
-        gyrData_expected1[0] = 0.1*(size+i+1);
+        gyrData_expected1[0] = 0.1*(size/2+i+1);
         ret = db_field_buffer_from_tail_data_get(field, 0, i, buffer1);
         ok &= assert_OK(ret, "db_field_buffer_from_tail_data_get");
         ok &= assert_vector3Equal(buffer1, gyrData_expected1, "db_field_buffer_from_tail_data_get result");
 
-        gyrData_expected2[0] = 0.1*(2.0*size-i);
-        ret = db_field_buffer_from_head_data_get(field, 0, i, buffer1);
+        gyrData_expected2[0] = 0.1*(1.5*size-i);
+        ret = db_field_buffer_from_head_data_get(field, 0, i, buffer2);
         ok &= assert_OK(ret, "db_field_buffer_from_head_data_get");
-        ok &= assert_vector3Equal(buffer1, gyrData_expected2, "db_field_buffer_from_head_data_get result");
+        ok &= assert_vector3Equal(buffer2, gyrData_expected2, "db_field_buffer_from_head_data_get result");
     }
     ok &= assert_int(db_field_buffer_current_size_get(field, 0),size,"db_field_buffer_current_size_get");
 
@@ -2561,6 +2631,9 @@ bool tst_battery_all()
     ok &= tst_db_007();
     ok &= tst_db_008();
     ok &= tst_db_009();
+    ok &= tst_db_010();
+    ok &= tst_db_011();
+    ok &= tst_db_012();
 
     ok &= tst_arm_001();
     ok &= tst_arm_002();
