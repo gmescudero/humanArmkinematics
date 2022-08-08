@@ -1213,6 +1213,100 @@ bool tst_db_008()
     return ok;
 }
 
+bool tst_db_009()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    DB_FIELD_IDENTIFIER field = DB_IMU_GYROSCOPE;
+    int size = 30;
+    double gyrDataSingle[3] = {1.0,2.0,3.0};
+    double gyrData[3] = {0.0,0.0,0.0};
+    double gyrData_expected1[3] = {0.0,0.0,0.0};
+    double gyrData_expected2[3] = {0.0,0.0,0.0};
+    double buffer1[3] = {0.0,0.0,0.0};
+    double buffer2[3] = {0.0,0.0,0.0};
+
+    testDescription(__FUNCTION__, "Check buffering of database fields");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret = db_field_buffer_setup(field, 0, size);
+    ok &= assert_OK(ret, "db_field_buffer_setup");
+
+    // Write a single data instance in the buffer and check tail and head match
+    ret = db_write(field, 0, gyrDataSingle);
+    ok &= assert_OK(ret, "db_write");
+    ret = db_field_buffer_from_tail_data_get(field, 0, 0, buffer1);
+    ok &= assert_OK(ret, "db_field_buffer_from_tail_data_get");
+    ret = db_field_buffer_from_head_data_get(field, 0, 0, buffer2);
+    ok &= assert_OK(ret, "db_field_buffer_from_head_data_get");
+    ok &= assert_vector3Equal(buffer1,buffer2,"single data in buffer");
+
+    // Clear the buffer and attempt to read form it
+    ret = db_field_buffer_clear(field, 0);
+    ok &= assert_OK(ret, "db_field_buffer_clear");
+    ret = db_field_buffer_from_tail_data_get(field, 0, 0, buffer1);
+    ok &= assert_ERROR(ret, "db_field_buffer_from_tail_data_get");
+    ret = db_field_buffer_from_head_data_get(field, 0, 0, buffer2);
+    ok &= assert_ERROR(ret, "db_field_buffer_from_head_data_get");
+
+    // Fill and read half of the buffer
+    for (int i = 0; ok && i < size/2; i++) {
+        gyrData[0] += 0.1;
+        ret = db_write(field, 0, gyrData);
+        ok &= assert_OK(ret, "db_write");
+    }
+    for (int i = 0; ok && i < size/2; i++) {
+        gyrData_expected1[0] = 0.1*(i+1);
+        ret = db_field_buffer_from_tail_data_get(field, 0, i, buffer1);
+        ok &= assert_OK(ret, "db_field_buffer_from_tail_data_get");
+        ok &= assert_vector3Equal(buffer1, gyrData_expected1, "db_field_buffer_from_tail_data_get result");
+
+        gyrData_expected2[0] = 0.1*(size/2-i);
+        ret = db_field_buffer_from_head_data_get(field, 0, i, buffer1);
+        ok &= assert_OK(ret, "db_field_buffer_from_head_data_get");
+        ok &= assert_vector3Equal(buffer1, gyrData_expected2, "db_field_buffer_from_head_data_get result");
+    }
+    // Fill and read the Full buffer
+    for (int i = 0; ok && i < size/2; i++) {
+        gyrData[0] += 0.1;
+        ret = db_write(field, 0, gyrData);
+        ok &= assert_OK(ret, "db_write");
+    }
+    for (int i = size/2; ok && i < size; i++) {
+        gyrData_expected1[0] = 0.1*(i+1);
+        ret = db_field_buffer_from_tail_data_get(field, 0, i, buffer1);
+        ok &= assert_OK(ret, "db_field_buffer_from_tail_data_get");
+        ok &= assert_vector3Equal(buffer1, gyrData_expected1, "db_field_buffer_from_tail_data_get result");
+
+        gyrData_expected2[0] = 0.1*(size-i);
+        ret = db_field_buffer_from_head_data_get(field, 0, i, buffer1);
+        ok &= assert_OK(ret, "db_field_buffer_from_head_data_get");
+        ok &= assert_vector3Equal(buffer1, gyrData_expected2, "db_field_buffer_from_head_data_get result");
+    }
+    // Fill and read in and form the buffer after overwriting it
+    for (int i = 0; ok && i < size; i++) {
+        gyrData[0] += 0.1;
+        ret = db_write(field, 0, gyrData);
+        ok &= assert_OK(ret, "db_write");
+    }
+    for (int i = 0; /* ok && */ i < size; i++) {
+        gyrData_expected1[0] = 0.1*(size+i+1);
+        ret = db_field_buffer_from_tail_data_get(field, 0, i, buffer1);
+        ok &= assert_OK(ret, "db_field_buffer_from_tail_data_get");
+        ok &= assert_vector3Equal(buffer1, gyrData_expected1, "db_field_buffer_from_tail_data_get result");
+
+        gyrData_expected2[0] = 0.1*(2.0*size-i);
+        ret = db_field_buffer_from_head_data_get(field, 0, i, buffer1);
+        ok &= assert_OK(ret, "db_field_buffer_from_head_data_get");
+        ok &= assert_vector3Equal(buffer1, gyrData_expected2, "db_field_buffer_from_head_data_get result");
+    }
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
 bool tst_arm_001()
 {
     bool ok = true;
@@ -2463,6 +2557,7 @@ bool tst_battery_all()
     ok &= tst_db_006();
     ok &= tst_db_007();
     ok &= tst_db_008();
+    ok &= tst_db_009();
 
     ok &= tst_arm_001();
     ok &= tst_arm_002();
@@ -2504,7 +2599,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    // ok &= tst_battery_all();
+    ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
@@ -2512,7 +2607,7 @@ int main(int argc, char **argv)
     // ok &= tst_cal_005();
     // ok &= tst_arm_015();
     // ok &= tst_cal_005();
-    ok &= tst_cal_004();
+    // ok &= tst_cal_004();
     // ok &= tst_arm_016();
 
     return (ok)? RET_OK : RET_ERROR;
