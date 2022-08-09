@@ -13,7 +13,7 @@
 #define DB_MULTIPLICITY_MAX_NUM (10)
 
 #define DB_MAX_BUFFER_SIZE (500)
-#define DB_MAX_BUFFER_FIELDS (4)
+#define DB_MAX_BUFFER_FIELDS (10)
 
 typedef struct DB_BUFFER_STRUCT {
     int size;                           // Total size of the buffer
@@ -82,12 +82,13 @@ static DB_FIELD database[DB_NUMBER_OF_ENTRIES] = {
     DB_FIELD_INIT(DB_IMU_ANGULAR_VELOCITY,        "IMU_ANGULAR_VELOCITY",       DB_REAL,IMU_MAX_NUMBER,3),
     DB_FIELD_INIT(DB_IMU_NEW_DATA,                "IMU_NEW_DATA",               DB_INTEGER,IMU_MAX_NUMBER,1),
     /* Online rotation axis calibration data */
-    DB_FIELD_INIT(DB_CALIB_ERROR,                "CALIB_ERROR",                 DB_REAL,1,1),
-    DB_FIELD_INIT(DB_CALIB_ROT_VECTOR,           "CALIB_ROT_VECTOR",            DB_REAL,2,3),
-    DB_FIELD_INIT(DB_CALIB_OMEGA,                "CALIB_OMEGA",                 DB_REAL,1,3),
-    DB_FIELD_INIT(DB_CALIB_OMEGA_NORM,           "CALIB_OMEGA_NORM",            DB_REAL,1,1),
-    DB_FIELD_INIT(DB_CALIB_SPHERICAL_COORDS,     "CALIB_SPHERICAL_COORDS",      DB_REAL,2,2),
-    DB_FIELD_INIT(DB_CALIB_COST_DERIVATIVE,      "CALIB_COST_DERIVATIVE",       DB_REAL,2,2),
+    DB_FIELD_INIT(DB_CALIB_ERROR,                   "CALIB_ERROR",                 DB_REAL,1,1),
+    DB_FIELD_INIT(DB_CALIB_ROT_VECTOR,              "CALIB_ROT_VECTOR",            DB_REAL,2,3),
+    DB_FIELD_INIT(DB_CALIB_OMEGA,                   "CALIB_OMEGA",                 DB_REAL,1,3),
+    DB_FIELD_INIT(DB_CALIB_OMEGA_NORM,              "CALIB_OMEGA_NORM",            DB_REAL,1,1),
+    DB_FIELD_INIT(DB_CALIB_SPHERICAL_COORDS,        "CALIB_SPHERICAL_COORDS",      DB_REAL,2,2),
+    DB_FIELD_INIT(DB_CALIB_COST_DERIVATIVE,         "CALIB_COST_DERIVATIVE",       DB_REAL,2,2),
+    DB_FIELD_INIT(DB_CALIB_TWO_AXES_OBSERVATIONS,   "CALIB_TWO_AXES_OBSERVATIONS", DB_REAL,1,7),
     /* Arm positions and orientations */
     DB_FIELD_INIT(DB_ARM_SHOULDER_POSITION,    "ARM_SHOULDER_POSITION",    DB_REAL,1,3),
     DB_FIELD_INIT(DB_ARM_SHOULDER_ORIENTATION, "ARM_SHOULDER_ORIENTATION", DB_REAL,1,4),
@@ -438,6 +439,7 @@ ERROR_CODE db_field_buffer_setup(const DB_FIELD_IDENTIFIER field, int instance, 
     if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
     if (DB_MAX_BUFFER_SIZE < size) return RET_ARG_ERROR;
     if (DB_REAL != database[field].type) return RET_ARG_ERROR;
+    if (0 > instance || database[field].instances <= instance) return RET_ARG_ERROR;
     // Check availability
     if (DB_MAX_BUFFER_FIELDS <= field_buffers_num) return RET_ERROR;
 
@@ -509,6 +511,7 @@ ERROR_CODE db_field_buffer_from_tail_data_get(const DB_FIELD_IDENTIFIER field, i
     dbg_str("%s -> Retrieve data at %d positions from tail for field %s_%d",__FUNCTION__, offset, database[field].name, instance);
     // Check arguments
     if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
+    if (0 > instance || database[field].instances <= instance) return RET_ARG_ERROR;
     if (NULL == database[field].buffer[instance]) return RET_ARG_ERROR;
     if (0 > offset || database[field].buffer[instance]->current_size-1 < offset) return RET_ARG_ERROR;
     if (NULL == data) return RET_ARG_ERROR;
@@ -541,6 +544,7 @@ ERROR_CODE db_field_buffer_from_head_data_get(const DB_FIELD_IDENTIFIER field, i
     dbg_str("%s -> Retrieve data at %d positions from head for field %s_%d",__FUNCTION__, offset, database[field].name, instance);
     // Check arguments
     if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
+    if (0 > instance || database[field].instances <= instance) return RET_ARG_ERROR;
     if (NULL == database[field].buffer[instance]) return RET_ARG_ERROR;
     if (0 > offset || database[field].buffer[instance]->current_size-1 < offset) return RET_ARG_ERROR;
     if (NULL == data) return RET_ARG_ERROR;
@@ -573,6 +577,7 @@ ERROR_CODE db_field_buffer_clear(const DB_FIELD_IDENTIFIER field, int instance) 
     dbg_str("%s -> Clear buffer for field %s_%d",__FUNCTION__, database[field].name, instance);
     // Check arguments
     if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
+    if (0 > instance || database[field].instances <= instance) return RET_ARG_ERROR;
     if (NULL == database[field].buffer[instance]) return RET_ARG_ERROR;
 
     DB_BUFFER *buffer = (database[field].buffer[instance]);
@@ -595,5 +600,10 @@ ERROR_CODE db_field_buffer_clear(const DB_FIELD_IDENTIFIER field, int instance) 
 }
 
 int db_field_buffer_current_size_get(const DB_FIELD_IDENTIFIER field, int instance) {
+    // Check arguments
+    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return -1;
+    if (0 > instance || database[field].instances <= instance) return -1;
+    if (NULL == database[field].buffer[instance]) return -1;
+
     return (database[field].buffer[instance]->current_size);
 }

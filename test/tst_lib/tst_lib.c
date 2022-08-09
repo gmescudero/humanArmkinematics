@@ -189,7 +189,7 @@ bool tstCsvDataLineGet(int line, double data[TST_MAX_CSV_DATA_VALUES]) {
             singleDataStr[i-lastIndex] = singleChar;
         }
     }
-    if (dataIndex < csv_columns) {
+    if (ok && dataIndex < csv_columns) {
         ok = false;
         tst_str("Expected to read %d columns but only read %d instead",csv_columns, dataIndex);
     }

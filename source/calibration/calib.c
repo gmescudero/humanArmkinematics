@@ -661,56 +661,50 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
     Quaternion q2_1 = arm_quaternion_between_two_get(q_sensor1, q_sensor2); // Quaternion to move from sensor 2 to 1
     Quaternion q1_2;                                                        // Quaternion to move from sensor 1 to 2
     double omegaR[3];                                                       // Relative angular velocity
-
     Quaternion_conjugate(&q2_1,&q1_2);                                      
     status = arm_relative_angular_vel_compute(q_sensor1, q_sensor2, omega1_from1, omega2_from2, omegaR);
 
-    // Shift observation buffers and add new measures
-    static double w_observations[CALIB_TWO_ROT_AXES_WINDOW][3] = {{0.0}};   // Angular velocities observations
-    static double q_observations[CALIB_TWO_ROT_AXES_WINDOW][4] = {{0.0}};   // Quaternion observations
-    for (int i = CALIB_TWO_ROT_AXES_WINDOW-2; RET_OK == status && i >= 0; i--) {
-        w_observations[i+1][0] = w_observations[i][0];
-        w_observations[i+1][1] = w_observations[i][1];
-        w_observations[i+1][2] = w_observations[i][2];
-        q_observations[i+1][0] = q_observations[i][0];
-        q_observations[i+1][1] = q_observations[i][1];
-        q_observations[i+1][2] = q_observations[i][2];
-        q_observations[i+1][3] = q_observations[i][3];
+    int new_data_num = MIN(
+        MIN(db_field_buffer_current_size_get(DB_IMU_GYROSCOPE,0),  db_field_buffer_current_size_get(DB_IMU_GYROSCOPE,1)),
+        MIN(db_field_buffer_current_size_get(DB_IMU_QUATERNION,0), db_field_buffer_current_size_get(DB_IMU_QUATERNION,1))
+    );
+    for (int i = 0; RET_OK == status && i < new_data_num; i++) {
+        double w1[3], w2[3];
+        double q1[4], q2[4];
+        // Retrieve IMUs data
+        db_field_buffer_from_tail_data_get(DB_IMU_GYROSCOPE, 0,i,w1);
+        db_field_buffer_from_tail_data_get(DB_IMU_GYROSCOPE, 1,i,w2);
+        db_field_buffer_from_tail_data_get(DB_IMU_QUATERNION,0,i,q1);
+        db_field_buffer_from_tail_data_get(DB_IMU_QUATERNION,1,i,q2);
+        // Compute quaternion observation
+        Quaternion q_1, q_2;
+        quaternion_from_buffer_build(q1,&q_1);
+        quaternion_from_buffer_build(q2,&q_2);
+        Quaternion q2_1 = arm_quaternion_between_two_get(q_1, q_2); // Quaternion to move from sensor 2 to 1
+        // Compute angular velocity observation
+        status = arm_relative_angular_vel_compute(q_1, q_2, w1, w2, omegaR);
+        // Write observations to database
+        if (RET_OK == status) {
+            double observations[7] = {
+                omegaR[0], omegaR[1] ,omegaR[2], q2_1.w, q2_1.v[0], q2_1.v[1], q2_1.v[2]
+            };
+            status = db_write(DB_CALIB_TWO_AXES_OBSERVATIONS,0,observations);
+        }
     }
     if (RET_OK == status) {
-        w_observations[0][0] = omegaR[0];
-        w_observations[0][1] = omegaR[1];
-        w_observations[0][2] = omegaR[2];
-        q_observations[0][0] = q2_1.w;
-        q_observations[0][1] = q2_1.v[0];
-        q_observations[0][2] = q2_1.v[1];
-        q_observations[0][3] = q2_1.v[2];
-    }
-
-    // Check the moving status
-    double omegaR_norm; // Norm value of the relative angular velocity
-    if (RET_OK == status) {
-        status = vector3_norm(omegaR, &omegaR_norm);
-    }
-    if (RET_OK == status && omegaR_norm < CALIB_MIN_VEL) {
-        dbg_str("%s -> Not moving. OmegaR: %f",__FUNCTION__,omegaR_norm);
-        return RET_OK;
-    }
-
-    // Check iterations
-    static int observations_num = 0;    // Number of managed observations
-    if (RET_OK == status && observations_num < CALIB_TWO_ROT_AXES_WINDOW) {
-        observations_num++;
-        dbg_str("%s -> Adjusting calibration window. %d/%d observations",
-            __FUNCTION__,observations_num, CALIB_TWO_ROT_AXES_WINDOW);
+        db_field_buffer_clear(DB_IMU_GYROSCOPE,0);
+        db_field_buffer_clear(DB_IMU_GYROSCOPE,1);
+        db_field_buffer_clear(DB_IMU_QUATERNION,0);
+        db_field_buffer_clear(DB_IMU_QUATERNION,1);
     }
 
     // GAUSS-NEWTON
+    int iterations = CALIB_TWO_ROT_AXES_MAX_ITERATIONS;                                         // Iterations of the algorithm
+    int observations_num = db_field_buffer_current_size_get(DB_CALIB_TWO_AXES_OBSERVATIONS,0);  // Number of managed observations
+
     MATRIX errorV   = matrix_allocate(observations_num,1);  // Vector of residuals
     MATRIX Jacobian = matrix_allocate(observations_num,4);  // Jacobian matrix
     MATRIX phi      = matrix_allocate(4, 1);                // Parameters vector: theta1, rho1, theta2, rho2
-
-    int iterations = CALIB_TWO_ROT_AXES_MAX_ITERATIONS;             // Iterations of the algorithm
 
     double error = 1e9;                                             // Last iteration error value
     double bestError = error;                                       // Best achieved error value
@@ -724,32 +718,36 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
         double squared_error = 0.0;                                     // Squared error value
         double dpart_th1[3], dpart_rh1[3], dpart_th2[3], dpart_rh2[3];  // Derivatives of each vector wrt each spherical coordinate
         int sph_alt1, sph_alt2;                                         // Spherical coordinate convention in use
-        double rotationV2_from1[3];                                     // Second rotation vector from the first sensor
+        double tempV2_from1[3];                                         // Second rotation vector from the first sensor
 
         for (int i = 0; RET_OK == status && i < observations_num; i++) {
+            double     observation[7];
+            status = db_field_buffer_from_tail_data_get(DB_CALIB_TWO_AXES_OBSERVATIONS,0, i, observation);
             double     wi[3] = {            // The ith observation of angular velocity
-                w_observations[i][0],w_observations[i][1],w_observations[i][2]};
+                observation[0],observation[1],observation[2]};
             Quaternion qi    = {            // The ith observation of quaternion
-                .w=q_observations[i][0],
-                .v={q_observations[i][1],q_observations[i][2],q_observations[i][3]}}; 
+                .w=observation[3], .v={observation[4],observation[5],observation[6]}}; 
         
             // dbg_str("%s -> w%d: [%f, %f, %f]",__FUNCTION__,i, wi[0],wi[1],wi[2]);
             // dbg_str("%s -> q%d: [%f, %f, %f, %f]",__FUNCTION__,i, qi.w,qi.v[0],qi.v[1],qi.v[2]);
             // Compute rotation vector 2 from 1
-            Quaternion_rotate(&qi, tempV2, rotationV2_from1);
-
+            if (RET_OK == status) {
+                Quaternion_rotate(&qi, tempV2, tempV2_from1);
+            }
             // Compute phi values
-            vector3_to_spherical_coordinates_convert(tempV1,           &phi.data[0][0], &phi.data[1][0], &sph_alt1);
-            vector3_to_spherical_coordinates_convert(rotationV2_from1, &phi.data[2][0], &phi.data[3][0], &sph_alt2);
-
+            if (RET_OK == status) {
+                vector3_to_spherical_coordinates_convert(tempV1,       &phi.data[0][0], &phi.data[1][0], &sph_alt1);
+                vector3_to_spherical_coordinates_convert(tempV2_from1, &phi.data[2][0], &phi.data[3][0], &sph_alt2);
+            }
             // Compute derivatives of each phi parameter
-            vector3_spherical_coordinates_derivatives_compute(phi.data[0][0], phi.data[1][0], sph_alt1, dpart_th1, dpart_rh1);
-            vector3_spherical_coordinates_derivatives_compute(phi.data[2][0], phi.data[3][0], sph_alt2, dpart_th2, dpart_rh2);
-
+            if (RET_OK == status) {
+                vector3_spherical_coordinates_derivatives_compute(phi.data[0][0], phi.data[1][0], sph_alt1, dpart_th1, dpart_rh1);
+                vector3_spherical_coordinates_derivatives_compute(phi.data[2][0], phi.data[3][0], sph_alt2, dpart_th2, dpart_rh2);
+            }
             // Compute error
             double rotationVn[3];   // Normal vector to both rotation vectors
             if (RET_OK == status) {
-                status = vector3_cross(tempV1, rotationV2_from1, rotationVn);
+                status = vector3_cross(tempV1, tempV2_from1, rotationVn);
             }
             if (RET_OK == status) {
                 status = vector3_dot(wi, rotationVn, &error);
@@ -762,13 +760,13 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
             // Build Jacobian matrix row calculating each partial of the error
             double aux_vector[3];   // Auxiliary 3D vector to be used by operations
             if (RET_OK == status) { // d(err)/d(theta1)
-                status = vector3_cross(dpart_th1,rotationV2_from1, aux_vector);
+                status = vector3_cross(dpart_th1,tempV2_from1, aux_vector);
                 if (RET_OK == status) {
                     status = vector3_dot(wi, aux_vector, &Jacobian.data[i][0]);
                 }
             }
             if (RET_OK == status) { // d(err)/d(rho1)
-                status = vector3_cross(dpart_rh1,rotationV2_from1, aux_vector);
+                status = vector3_cross(dpart_rh1,tempV2_from1, aux_vector);
                 if (RET_OK == status) {
                     status = vector3_dot(wi, aux_vector, &Jacobian.data[i][1]);
                 }
@@ -791,14 +789,15 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
         if (RET_OK == status) {
             error = squared_error/observations_num;
         }
-
         // Compute rotation vector 2 from 1
-        Quaternion_rotate(&q2_1, tempV2, rotationV2_from1);
-
+        if (RET_OK == status) {
+            Quaternion_rotate(&q2_1, tempV2, tempV2_from1);
+        }
         // Compute phi values
-        vector3_to_spherical_coordinates_convert(tempV1,           &phi.data[0][0], &phi.data[1][0], &sph_alt1);
-        vector3_to_spherical_coordinates_convert(rotationV2_from1, &phi.data[2][0], &phi.data[3][0], &sph_alt2);
-
+        if (RET_OK == status) {
+            vector3_to_spherical_coordinates_convert(tempV1,       &phi.data[0][0], &phi.data[1][0], &sph_alt1);
+            vector3_to_spherical_coordinates_convert(tempV2_from1, &phi.data[2][0], &phi.data[3][0], &sph_alt2);
+        }
         // Use only the best set of rotation axes
         if (bestError > error) {
             // dbg_str("%s -> Updated best achieved rotation vectors error: %f -> %f",__FUNCTION__, bestError, error);
@@ -836,15 +835,10 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
             // Set new vectors
             if (RET_OK == status) {
                 vector3_from_spherical_coordinates_convert(phi.data[0][0], phi.data[1][0], sph_alt1, tempV1);
-                vector3_from_spherical_coordinates_convert(phi.data[2][0], phi.data[3][0], sph_alt2, rotationV2_from1);
-                Quaternion_rotate(&q1_2, rotationV2_from1, tempV2);
+                vector3_from_spherical_coordinates_convert(phi.data[2][0], phi.data[3][0], sph_alt2, tempV2_from1);
+                Quaternion_rotate(&q1_2, tempV2_from1, tempV2);
             }
         }
-    }
-
-    // Check how good did the fitting algorithm perform
-    if (0 >= iterations || CALIB_TWO_ROT_AXES_MAX_ERROR < bestError) {
-        wrn_str("Could not achieve target error. Achieved error %f > Target error %f",bestError, CALIB_TWO_ROT_AXES_MAX_ERROR);
     }
 
     // Update database
@@ -877,7 +871,11 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
         status = db_write(DB_CALIB_OMEGA, 0, omegaR);
     }
     if (RET_OK == status) {
-        status = db_write(DB_CALIB_OMEGA_NORM, 0, &omegaR_norm);
+        double omegaR_norm;
+        status = vector3_norm(omegaR, &omegaR_norm);
+        if (RET_OK == status) {
+            status = db_write(DB_CALIB_OMEGA_NORM, 0, &omegaR_norm);
+        }
     }
 
     matrix_free(errorV);
@@ -886,7 +884,6 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
 
     return status;
 }
-
 
 /**
  * @brief Insert a new value in the position 0 of a buffer and shift everything else forward

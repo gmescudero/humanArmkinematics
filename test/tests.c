@@ -2243,6 +2243,9 @@ bool tst_cal_004()
     double v1_expected[3] = {0.0,0.0,1.0};
     double v2_expected[3] = {1.0,0.0,0.0};
 
+    int imu_data_window = 20;
+    int observations_window = CALIB_TWO_ROT_AXES_WINDOW;
+
     testDescription(__FUNCTION__, "Test two rotation axis calibration by using real data");
     ok = preconditions_init(__FUNCTION__); 
 
@@ -2260,11 +2263,21 @@ bool tst_cal_004()
     ret += db_csv_field_add(DB_ARM_ELBOW_ANGLES,0);
     ok &= assert_OK(ret, "db csv fields add");
 
-    ok &= tstCsvLoad(csvFile);
-    tstCsvHeadersGet(headers);
+    ret = db_field_buffer_setup(DB_IMU_GYROSCOPE,0,imu_data_window);
+    ok &= assert_OK(ret, "db_field_buffer_setup DB_IMU_GYROSCOPE_0");
+    ret = db_field_buffer_setup(DB_IMU_GYROSCOPE,1,imu_data_window);
+    ok &= assert_OK(ret, "db_field_buffer_setup DB_IMU_GYROSCOPE_1");
+    ret = db_field_buffer_setup(DB_IMU_QUATERNION,0,imu_data_window);
+    ok &= assert_OK(ret, "db_field_buffer_setup DB_IMU_QUATERNION_0");
+    ret = db_field_buffer_setup(DB_IMU_QUATERNION,1,imu_data_window);
+    ok &= assert_OK(ret, "db_field_buffer_setup DB_IMU_QUATERNION_1");
+    ret = db_field_buffer_setup(DB_CALIB_TWO_AXES_OBSERVATIONS,0,observations_window);
+    ok &= assert_OK(ret, "db_field_buffer_setup DB_CALIB_TWO_AXES_OBSERVATIONS");
 
     tstRandomUnitVector3Generate(rotVector1);
     tstRandomUnitVector3Generate(rotVector2);
+    
+    ok &= tstCsvLoad(csvFile);
 
     int line = 1;
     while (tstCsvDataLineGet(line++, data)) {
@@ -2285,21 +2298,31 @@ bool tst_cal_004()
         */
         // Set gyroscope readings
         omega1[0] = data[1]; omega1[1] = data[2]; omega1[2] = data[3];
+        ret = db_write(DB_IMU_GYROSCOPE,0,omega1);
+        ok &= assert_OK(ret, "db_write DB_IMU_GYROSCOPE_0");
         omega2[0] = data[4]; omega2[1] = data[5]; omega2[2] = data[6];
+        ret = db_write(DB_IMU_GYROSCOPE,1,omega2);
+        ok &= assert_OK(ret, "db_write DB_IMU_GYROSCOPE_1");
 
         // Set quaternion values
         q_buff[0] = data[31]; q_buff[1] = data[32]; q_buff[2] = data[33]; q_buff[3] = data[34];
         quaternion_from_buffer_build(q_buff, &q_sensor1);
+        ret = db_write(DB_IMU_QUATERNION,0,q_buff);
+        ok &= assert_OK(ret, "db_write DB_IMU_QUATERNION_0");
         q_buff[0] = data[35]; q_buff[1] = data[36]; q_buff[2] = data[37]; q_buff[3] = data[38];
         quaternion_from_buffer_build(q_buff, &q_sensor2);
+        ret = db_write(DB_IMU_QUATERNION,1,q_buff);
+        ok &= assert_OK(ret, "db_write DB_IMU_QUATERNION_1");
 
         // Set timestamp
         ret = db_write(DB_IMU_TIMESTAMP,0,&data[0]);
         ok &= assert_OK(ret, "db_write");
 
         // Call autocalibration procedure
-        ret = cal_automatic_two_rotation_axes_calibrate(omega1,omega2,q_sensor1,q_sensor2,rotVector1,rotVector2);
-        ok &= assert_OK(ret, "cal_automatic_two_rotation_axes_calibrate");
+        if (0 == line % (imu_data_window/2)) {
+            ret = cal_automatic_two_rotation_axes_calibrate(omega1,omega2,q_sensor1,q_sensor2,rotVector1,rotVector2);
+            ok &= assert_OK(ret, "cal_automatic_two_rotation_axes_calibrate");
+        }
 
         // Dump database data
         ret = db_csv_dump();
@@ -2311,7 +2334,7 @@ bool tst_cal_004()
         rotVector2[0],rotVector2[1], rotVector2[2]);
     ok &= assert_vector3EqualNoSignThreshold(rotVector1,v1_expected,5e-2,"cal_automatic_rotation_axis_calibrate result1");
     ok &= assert_vector3EqualNoSignThreshold(rotVector2,v2_expected,5e-2,"cal_automatic_rotation_axis_calibrate result2");
-
+#if (0)
     line = 1;
     double lastTimestamp = data[0];
     while (tstCsvDataLineGet(line++, data)) {
@@ -2337,8 +2360,7 @@ bool tst_cal_004()
         ret = db_csv_dump();
         ok &= assert_OK(ret, "db_csv_dump");
     }
-
-    // printf("rotv: %f, %f, %f\n",rotVector[0],rotVector[1],rotVector[2]);
+#endif
 
     testCleanUp();
     testReport(ok);
@@ -2675,7 +2697,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    ok &= tst_battery_all();
+    // ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
@@ -2683,7 +2705,7 @@ int main(int argc, char **argv)
     // ok &= tst_cal_005();
     // ok &= tst_arm_015();
     // ok &= tst_cal_005();
-    // ok &= tst_cal_004();
+    ok &= tst_cal_004();
     // ok &= tst_arm_016();
 
     return (ok)? RET_OK : RET_ERROR;
