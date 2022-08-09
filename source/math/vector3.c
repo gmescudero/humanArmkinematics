@@ -183,3 +183,64 @@ ERROR_CODE vector3_angleBetweenTwoVectorsCalculate(double a[3], double b[3], dou
 
     return status;
 }
+
+void vector3_to_spherical_coordinates_convert(double vector[3], double *theta, double *rho, int *shperical_convention) {
+    *theta = atan2(sqrt(vector[0]*vector[0]+vector[1]*vector[1]) , vector[2]);
+    if (fabs(sin(*theta)) < 0.5) {
+        // Avoid singularity
+        *shperical_convention = 1;
+        *theta = atan2(sqrt(vector[2]*vector[2]+vector[1]*vector[1]) , vector[0]);
+        *rho   = atan2(vector[1],vector[2]);
+    }
+    else {
+        *shperical_convention = 0;
+        *rho   = atan2(vector[1],vector[0]);
+    }
+}
+
+/**
+ * @brief Convert a set of spherical coordinates to its 3D vector
+ * 
+ * @param theta (input) Theta angle of spherical coordinates
+ * @param rho (input) Rho angle of spherical coordinates
+ * @param shperical_convention (input) Convention used to get shperical coordinates 
+ * @param vector (output) Converted vector
+ */
+void vector3_from_spherical_coordinates_convert(double theta, double rho, int shperical_convention, double vector[3]) {
+    double ct = cos(theta);
+    double st = sin(theta);
+    double cr = cos(rho); 
+    double sr = sin(rho);
+
+    if (0 == shperical_convention) {
+        vector[0] = st*cr; vector[1] = st*sr; vector[2] = ct;
+    }
+    else {
+        vector[0] = ct; vector[1] = st*sr; vector[2] = st*cr;
+    }
+}
+
+/**
+ * @brief Compute the derivatives of the spherical representation of 3D vectors
+ * 
+ * @param theta (input) Theta angle of spherical coordinates
+ * @param rho (input) Rho angle of spherical coordinates
+ * @param shperical_convention (input) Convention used to get shperical coordinates 
+ * @param dtheta (output) Derivative with respect to theta
+ * @param drho (output) Derivative with respect to rho
+ */
+void vector3_spherical_coordinates_derivatives_compute(double theta, double rho, int shperical_convention, double dtheta[3],double drho[3]) {
+    double ct = cos(theta);
+    double st = sin(theta);
+    double cr = cos(rho); 
+    double sr = sin(rho);
+
+    if (0 == shperical_convention) {
+        dtheta[0] =  ct*cr; dtheta[1] = ct*sr; dtheta[2] = -st;
+          drho[0] = -st*sr;   drho[1] = st*cr;   drho[2] = 0.0;
+    }
+    else { // Alternative
+        dtheta[0] = -st; dtheta[1] = ct*sr; dtheta[2] =  ct*cr;  
+          drho[0] = 0.0;   drho[1] = st*cr;   drho[2] = -st*sr;
+    }
+}

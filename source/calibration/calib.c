@@ -20,9 +20,6 @@ typedef struct CAL_STATIC_CALIBRATION_STRUCT {
 } CAL_STATIC_CALIBRATION;
 
 static void scal_buffer_shift_and_insert(double array[], double value, int size);
-static void scal_vector3_to_spherical_coordinates_convert(double vector[3], double *theta, double *rho, int *shperical_convention);
-static void scal_spherical_coordinates_to_vector3_convert(double theta, double rho, int shperical_convention, double vector[3]);
-static void scal_spherical_coordinates_derivatives(double theta, double rho, int shperical_convention, double dtheta[3],double drho[3]);
 
 static CAL_STATIC_CALIBRATION cal_imus_calibration_data[IMU_MAX_NUMBER] = {
     {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
@@ -163,7 +160,7 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
     else {
         // Convert to spheric coordinates
         if (RET_OK == status) {
-            scal_vector3_to_spherical_coordinates_convert(rotationV,&t,&r,&sph_alt);
+            vector3_to_spherical_coordinates_convert(rotationV,&t,&r,&sph_alt);
         }
 
         // Calculate alpha to satisfy given angular speed
@@ -180,7 +177,7 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
 
         // Calculate partials of each angle
         if (RET_OK == status) {
-            scal_spherical_coordinates_derivatives(t, r, sph_alt, partRotT, partRotR);
+            vector3_spherical_coordinates_derivatives_compute(t, r, sph_alt, partRotT, partRotR);
         }
 
         // Calculate the partials of the cost index
@@ -217,7 +214,7 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
 
         // Set the output vector
         if (RET_OK == status) {
-            scal_spherical_coordinates_to_vector3_convert(newT, newR, sph_alt, rotationV);
+            vector3_from_spherical_coordinates_convert(newT, newR, sph_alt, rotationV);
         }
 
         // Compute the error
@@ -313,15 +310,15 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate_old(
     double theta1, rho1, theta2, rho2;
     int sph_alt1 = 0, sph_alt2 = 0;
     if (RET_OK == status) {
-        scal_vector3_to_spherical_coordinates_convert(rotationV1, &theta1, &rho1, &sph_alt1);
-        scal_vector3_to_spherical_coordinates_convert(rotationV2_from1, &theta2, &rho2, &sph_alt2);
+        vector3_to_spherical_coordinates_convert(rotationV1, &theta1, &rho1, &sph_alt1);
+        vector3_to_spherical_coordinates_convert(rotationV2_from1, &theta2, &rho2, &sph_alt2);
     }
 
     // Calculate partials of each angle
     double dpart_th1[3], dpart_rh1[3], dpart_th2[3], dpart_rh2[3];
     if (RET_OK == status) {
-        scal_spherical_coordinates_derivatives(theta1, rho1, sph_alt1, dpart_th1, dpart_rh1);
-        scal_spherical_coordinates_derivatives(theta2, rho2, sph_alt2, dpart_th2, dpart_rh2);
+        vector3_spherical_coordinates_derivatives_compute(theta1, rho1, sph_alt1, dpart_th1, dpart_rh1);
+        vector3_spherical_coordinates_derivatives_compute(theta2, rho2, sph_alt2, dpart_th2, dpart_rh2);
     }
 
     // Calculate partials of the error
@@ -421,8 +418,8 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate_old(
         // Set new vectors
         if (RET_OK == status) {
             Quaternion q1_2;
-            scal_spherical_coordinates_to_vector3_convert(theta1, rho1, sph_alt1, rotationV1);
-            scal_spherical_coordinates_to_vector3_convert(theta2, rho2, sph_alt2, rotationV2_from1);
+            vector3_from_spherical_coordinates_convert(theta1, rho1, sph_alt1, rotationV1);
+            vector3_from_spherical_coordinates_convert(theta2, rho2, sph_alt2, rotationV2_from1);
             Quaternion_conjugate(&q2_1, &q1_2);
             Quaternion_rotate(&q1_2, rotationV2_from1, rotationV2);
         }
@@ -530,13 +527,13 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate_new(
         // Spherical coordinates
         int sph_alt = 0;
         if (RET_OK == status) {
-            scal_vector3_to_spherical_coordinates_convert(rotationV, &phi.data[0][0], &phi.data[1][0], &sph_alt);
+            vector3_to_spherical_coordinates_convert(rotationV, &phi.data[0][0], &phi.data[1][0], &sph_alt);
         }
 
         // Calculate partials of each angle
         double dpart_th[3], dpart_rh[3];
         if (RET_OK == status) {
-            scal_spherical_coordinates_derivatives(phi.data[0][0], phi.data[1][0], sph_alt, dpart_th, dpart_rh);
+            vector3_spherical_coordinates_derivatives_compute(phi.data[0][0], phi.data[1][0], sph_alt, dpart_th, dpart_rh);
         }
 
         // Calculate error and Jacobian
@@ -610,7 +607,7 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate_new(
             matrix_free(phi_correction); 
             // Set new vector
             if (RET_OK == status) {
-                scal_spherical_coordinates_to_vector3_convert(phi.data[0][0], phi.data[1][0], sph_alt, rotationV);
+                vector3_from_spherical_coordinates_convert(phi.data[0][0], phi.data[1][0], sph_alt, rotationV);
             }
         }
     }
@@ -742,12 +739,12 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
             Quaternion_rotate(&qi, tempV2, rotationV2_from1);
 
             // Compute phi values
-            scal_vector3_to_spherical_coordinates_convert(tempV1,           &phi.data[0][0], &phi.data[1][0], &sph_alt1);
-            scal_vector3_to_spherical_coordinates_convert(rotationV2_from1, &phi.data[2][0], &phi.data[3][0], &sph_alt2);
+            vector3_to_spherical_coordinates_convert(tempV1,           &phi.data[0][0], &phi.data[1][0], &sph_alt1);
+            vector3_to_spherical_coordinates_convert(rotationV2_from1, &phi.data[2][0], &phi.data[3][0], &sph_alt2);
 
             // Compute derivatives of each phi parameter
-            scal_spherical_coordinates_derivatives(phi.data[0][0], phi.data[1][0], sph_alt1, dpart_th1, dpart_rh1);
-            scal_spherical_coordinates_derivatives(phi.data[2][0], phi.data[3][0], sph_alt2, dpart_th2, dpart_rh2);
+            vector3_spherical_coordinates_derivatives_compute(phi.data[0][0], phi.data[1][0], sph_alt1, dpart_th1, dpart_rh1);
+            vector3_spherical_coordinates_derivatives_compute(phi.data[2][0], phi.data[3][0], sph_alt2, dpart_th2, dpart_rh2);
 
             // Compute error
             double rotationVn[3];   // Normal vector to both rotation vectors
@@ -799,8 +796,8 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
         Quaternion_rotate(&q2_1, tempV2, rotationV2_from1);
 
         // Compute phi values
-        scal_vector3_to_spherical_coordinates_convert(tempV1,           &phi.data[0][0], &phi.data[1][0], &sph_alt1);
-        scal_vector3_to_spherical_coordinates_convert(rotationV2_from1, &phi.data[2][0], &phi.data[3][0], &sph_alt2);
+        vector3_to_spherical_coordinates_convert(tempV1,           &phi.data[0][0], &phi.data[1][0], &sph_alt1);
+        vector3_to_spherical_coordinates_convert(rotationV2_from1, &phi.data[2][0], &phi.data[3][0], &sph_alt2);
 
         // Use only the best set of rotation axes
         if (bestError > error) {
@@ -838,8 +835,8 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
             matrix_free(phi_correction); 
             // Set new vectors
             if (RET_OK == status) {
-                scal_spherical_coordinates_to_vector3_convert(phi.data[0][0], phi.data[1][0], sph_alt1, tempV1);
-                scal_spherical_coordinates_to_vector3_convert(phi.data[2][0], phi.data[3][0], sph_alt2, rotationV2_from1);
+                vector3_from_spherical_coordinates_convert(phi.data[0][0], phi.data[1][0], sph_alt1, tempV1);
+                vector3_from_spherical_coordinates_convert(phi.data[2][0], phi.data[3][0], sph_alt2, rotationV2_from1);
                 Quaternion_rotate(&q1_2, rotationV2_from1, tempV2);
             }
         }
@@ -906,73 +903,4 @@ static void scal_buffer_shift_and_insert(double array[], double value, int size)
         }
     }
     array[0] = value;
-}
-
-/**
- * @brief Convert a 3D vector to spherical coordinates
- * 
- * @param vector (input) Vector to convert
- * @param theta (output) Theta angle of spherical coordinates
- * @param rho (output) Rho angle of spherical coordinates
- * @param shperical_convention (output) Convention used to get shperical coordinates 
- */
-static void scal_vector3_to_spherical_coordinates_convert(double vector[3], double *theta, double *rho, int *shperical_convention) {
-    *theta = atan2(sqrt(vector[0]*vector[0]+vector[1]*vector[1]) , vector[2]);
-    if (fabs(sin(*theta)) < 0.5) {
-        // Avoid singularity
-        *shperical_convention = 1;
-        *theta = atan2(sqrt(vector[2]*vector[2]+vector[1]*vector[1]) , vector[0]);
-        *rho   = atan2(vector[1],vector[2]);
-    }
-    else {
-        *shperical_convention = 0;
-        *rho   = atan2(vector[1],vector[0]);
-    }
-}
-
-/**
- * @brief Convert a set of spherical coordinates to its 3D vector
- * 
- * @param theta (input) Theta angle of spherical coordinates
- * @param rho (input) Rho angle of spherical coordinates
- * @param shperical_convention (input) Convention used to get shperical coordinates 
- * @param vector (output) Converted vector
- */
-static void scal_spherical_coordinates_to_vector3_convert(double theta, double rho, int shperical_convention, double vector[3]) {
-    double ct = cos(theta);
-    double st = sin(theta);
-    double cr = cos(rho); 
-    double sr = sin(rho);
-
-    if (0 == shperical_convention) {
-        vector[0] = st*cr; vector[1] = st*sr; vector[2] = ct;
-    }
-    else {
-        vector[0] = ct; vector[1] = st*sr; vector[2] = st*cr;
-    }
-}
-
-/**
- * @brief Compute the derivatives of the spherical representation of 3D vectors
- * 
- * @param theta (input) Theta angle of spherical coordinates
- * @param rho (input) Rho angle of spherical coordinates
- * @param shperical_convention (input) Convention used to get shperical coordinates 
- * @param dtheta (output) Derivative with respect to theta
- * @param drho (output) Derivative with respect to rho
- */
-static void scal_spherical_coordinates_derivatives(double theta, double rho, int shperical_convention, double dtheta[3],double drho[3]) {
-    double ct = cos(theta);
-    double st = sin(theta);
-    double cr = cos(rho); 
-    double sr = sin(rho);
-
-    if (0 == shperical_convention) {
-        dtheta[0] =  ct*cr; dtheta[1] = ct*sr; dtheta[2] = -st;
-          drho[0] = -st*sr;   drho[1] = st*cr;   drho[2] = 0.0;
-    }
-    else { // Alternative
-        dtheta[0] = -st; dtheta[1] = ct*sr; dtheta[2] =  ct*cr;  
-          drho[0] = 0.0;   drho[1] = st*cr;   drho[2] = -st*sr;
-    }
 }

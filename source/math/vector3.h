@@ -108,4 +108,33 @@ ERROR_CODE vector3_normalize(double a[3], double output[3]);
  */
 ERROR_CODE vector3_angleBetweenTwoVectorsCalculate(double a[3], double b[3], double *output);
 
+/**
+ * @brief Convert a 3D vector to spherical coordinates
+ * 
+ * @param vector (input) Vector to convert
+ * @param theta (output) Theta angle of spherical coordinates
+ * @param rho (output) Rho angle of spherical coordinates
+ * @param shperical_convention (output) Convention used to get shperical coordinates 
+ */
+void vector3_to_spherical_coordinates_convert(double vector[3], double *theta, double *rho, int *shperical_convention);
+/**
+ * @brief Convert a set of spherical coordinates to its 3D vector
+ * 
+ * @param theta (input) Theta angle of spherical coordinates
+ * @param rho (input) Rho angle of spherical coordinates
+ * @param shperical_convention (input) Convention used to get shperical coordinates 
+ * @param vector (output) Converted vector
+ */
+void vector3_from_spherical_coordinates_convert(double theta, double rho, int shperical_convention, double vector[3]);
+/**
+ * @brief Compute the derivatives of the spherical representation of 3D vectors
+ * 
+ * @param theta (input) Theta angle of spherical coordinates
+ * @param rho (input) Rho angle of spherical coordinates
+ * @param shperical_convention (input) Convention used to get shperical coordinates 
+ * @param dtheta (output) Derivative with respect to theta
+ * @param drho (output) Derivative with respect to rho
+ */
+void vector3_spherical_coordinates_derivatives_compute(double theta, double rho, int shperical_convention, double dtheta[3],double drho[3]);
+
 #endif
