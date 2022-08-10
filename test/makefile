@@ -17,6 +17,7 @@ INC = \
 	-I$(SOURCE_DIR)/imu \
 	-I$(SOURCE_DIR)/database \
 	-I$(SOURCE_DIR)/calibration \
+	-I$(SOURCE_DIR)/libGA100 \
 	-Itst_lib
 # libraries
 IMULIB= -L../lib -lLpSensor -lstdc++ -lX11
@@ -36,7 +37,8 @@ CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 # OBJS =  $(BINARIES_DIR)/quaternion.o $(BINARIES_DIR)/arm.o $(BINARIES_DIR)/vector3.o
 OBJS = 	$(BINARIES_DIR)/arm.o  $(BINARIES_DIR)/database.o $(BINARIES_DIR)/functions.o \
 		$(BINARIES_DIR)/imu.o  $(BINARIES_DIR)/logging.o  $(BINARIES_DIR)/quaternion.o \
-		$(BINARIES_DIR)/vector3.o  $(BINARIES_DIR)/matrix.o $(BINARIES_DIR)/calib.o 
+		$(BINARIES_DIR)/vector3.o  $(BINARIES_DIR)/matrix.o $(BINARIES_DIR)/calib.o \
+		$(BINARIES_DIR)/libGA.o
 all: tst_lib.o tests.c $(OBJS)
 	$(info building tests ... )
 	$(CC) $(INC) $(OBJS) $(PTHREADSERIAL) $(IMULIB) tests.c tst_lib/*.o -o $(TARGET) -lm -ldl

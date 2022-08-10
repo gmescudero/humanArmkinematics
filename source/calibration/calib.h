@@ -77,4 +77,10 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
     double rotationV1[3],
     double rotationV2[3]);
 
+ERROR_CODE cal_automatic_two_rotation_axes_ga_calibrate(
+    Quaternion q_sensor1,
+    Quaternion q_sensor2,
+    double rotationV1[3],
+    double rotationV2[3]);
+
 #endif /* __calib_h__ */

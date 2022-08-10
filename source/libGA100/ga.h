@@ -172,7 +172,9 @@ typedef struct {
 #define RAND_BIT()  ((RAND_FRAC()>=.5)? 1 : 0 )
 
 /*--- min and max ---*/
+#ifndef MIN
 #define MIN(a,b) ((a < b) ? (a) : (b))
+#endif
 //#define MAX(a,b) ((a > b) ? (a) : (b))
 
 #define UT_warn(message) {fprintf(stderr,"WARNING: %s\n", message);}

@@ -2097,7 +2097,6 @@ void GA_run(
    /*--- Print out config information ---*/
    RP_config(ga_info);
 
-   printf("seed: %d",ga_info->rand_seed);
    /*--- Seed random number generator ---*/
    SEED_RAND(ga_info->rand_seed);
 
@@ -2635,8 +2634,8 @@ int MU_float_random(GA_Info_Ptr ga_info,
    chrom->gene[i] = RAND_FRAC();
    if( chrom->gene[i]>1)
      chrom->gene[i]=1;
-   if( chrom->gene[i]<0)
-     chrom->gene[i]=0;
+   if( chrom->gene[i]<-1)
+     chrom->gene[i]=-1;
 
    return OK;
 }
@@ -3220,8 +3219,8 @@ void PL_rand(
          case DT_REAL:
             /*--- Random reals from an arbitrary domain ---*/
             for(j = 0; j < chrom_len; j++)
-               chrom->gene[j] =
-                  (double)RAND_DOM(0,chrom_len-1) + (double)RAND_FRAC();
+               chrom->gene[j] = 1.0 - 2.0*(double)RAND_FRAC();
+                  // (double)RAND_DOM(0,chrom_len-1) + (double)RAND_FRAC();
             chrom->length = chrom_len;
             break;
 

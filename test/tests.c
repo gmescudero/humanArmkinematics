@@ -2320,7 +2320,8 @@ bool tst_cal_004()
 
         // Call autocalibration procedure
         if (0 == line % (imu_data_window/2)) {
-            ret = cal_automatic_two_rotation_axes_calibrate(omega1,omega2,q_sensor1,q_sensor2,rotVector1,rotVector2);
+            // ret = cal_automatic_two_rotation_axes_calibrate(omega1,omega2,q_sensor1,q_sensor2,rotVector1,rotVector2);
+            ret = cal_automatic_two_rotation_axes_ga_calibrate(q_sensor1,q_sensor2, rotVector1, rotVector2);
             ok &= assert_OK(ret, "cal_automatic_two_rotation_axes_calibrate");
         }
 
