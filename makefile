@@ -21,7 +21,8 @@ INC = \
 	-I$(SOURCE_DIR)/math \
 	-I$(SOURCE_DIR)/imu \
 	-I$(SOURCE_DIR)/database \
-	-I$(SOURCE_DIR)/calibration
+	-I$(SOURCE_DIR)/calibration \
+	-I$(SOURCE_DIR)/libGA100
 	
 # libraries
 IMULIB= -L$(current_dir)/lib -lLpSensor -lstdc++ -lX11
@@ -37,7 +38,7 @@ WARN = -Wall
 CCFLAGS = $(DEBUG) $(OPT) $(WARN)
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
-OBJS =  quaternion.o arm.o vector3.o matrix.o imu.o functions.o logging.o database.o calib.o
+OBJS =  quaternion.o arm.o vector3.o matrix.o imu.o functions.o logging.o database.o calib.o libGA.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
@@ -79,6 +80,10 @@ imu.o: $(SOURCE_DIR)/imu/imu.cpp dirs_create
 
 database.o: $(SOURCE_DIR)/database/database.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/database/database.c -o $(BINARIES_DIR)/$@ 
+
+libGA.o: $(SOURCE_DIR)/libGA100/libgaALL.c dirs_create
+	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/libGA100/libgaALL.c -o $(BINARIES_DIR)/$@ 
+
 
 dirs_create:
 	mkdir -p $(BINARIES_DIR)
