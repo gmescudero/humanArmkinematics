@@ -81,7 +81,7 @@ int MU_float_random(), MU_float_rnd_pert(), MU_float_LS(), MU_float_gauss_pert()
 
 double gaussian_random(void);
 
-int obj_fun(   Chrom_Ptr chrom);
+// int obj_fun(   Chrom_Ptr chrom);
 
 Pool_Ptr PL_alloc(int max_size);
 void PL_resize(Pool_Ptr pool, int new_size);
@@ -506,6 +506,7 @@ void CF_reset(
    ga_info->elitist         = TRUE;
    ga_info->converged       = FALSE;
    ga_info->use_convergence = TRUE;
+   ga_info->pert_range      = 1.0;
 
    /*--- Default operators ---*/
    SE_select(ga_info, "roulette");
@@ -2606,14 +2607,7 @@ int MU_float_rnd_pert(GA_Info_Ptr ga_info,
    if(i!=chrom->length)
    {
        /*--- Generate randomly perturbed element ---*/
-       chrom->gene[i] += ga_info->pert_range*(1.0 - 2.0*RAND_FRAC()) ;
-	   // + 	 ga_info->mut_bias[i];
-
-   if( chrom->gene[i]>1)
-     chrom->gene[i]=1;
-   if( chrom->gene[i]<0)
-     chrom->gene[i]=0;
-
+       chrom->gene[i] += ga_info->pert_range*(1.0 - 2.0*RAND_FRAC()); // + ga_info->mut_bias[i];
    }
    return OK;
 }
@@ -2632,10 +2626,6 @@ int MU_float_random(GA_Info_Ptr ga_info,
 
    /*--- Generate random element ---*/
    chrom->gene[i] = RAND_FRAC();
-   if( chrom->gene[i]>1)
-     chrom->gene[i]=1;
-   if( chrom->gene[i]<-1)
-     chrom->gene[i]=-1;
 
    return OK;
 }
@@ -2651,35 +2641,30 @@ int MU_float_LS(
   int   i;
   float old_fit, new_fit, prev_fit, prev_val;
 
-
-  while(1)
-    {
-      old_fit=chrom->fitness;
+  while(1) 
+  {
+      old_fit = chrom->fitness;
 
       /*--- loop thru genes ---*/
-      for(i=chrom->idx_min;i<chrom->length;i++)
-	{
-	  prev_fit=chrom->fitness;
-	  prev_val= chrom->gene[i];
+      for (i = chrom->idx_min; i < chrom->length; i++)
+      {
+         prev_fit = chrom->fitness;
+         prev_val = chrom->gene[i];
 
-	  chrom->gene[i] += 0.1*(1.0 - 2.0*RAND_FRAC());
-	  if( chrom->gene[i]>1)
-	    chrom->gene[i]=1;
-	  if( chrom->gene[i]<0)
-	    chrom->gene[i]=0;
+         chrom->gene[i] += ga_info->pert_range*(1.0 - 2.0*RAND_FRAC());
 
-	  //obj_fun(chrom);
-	  new_fit=chrom->fitness;
-
-	  if(new_fit>prev_fit)
-	    {
-	      chrom->gene[i]=prev_val;
-	      chrom->fitness=prev_fit;
-	    }
-	}
+         ga_info->EV_fun(chrom);
+         new_fit = chrom->fitness;
+         
+         if (     (0 == ga_info->minimize && new_fit < prev_fit)
+               || (1 == ga_info->minimize && new_fit > prev_fit)  )
+         {
+            chrom->gene[i] = prev_val;
+            chrom->fitness = prev_fit;
+         }
+      }
       if(chrom->fitness>=old_fit)
-	break;
-
+	      break;
    }
    return OK;
 }
@@ -2697,18 +2682,17 @@ int MU_float_gauss_pert(GA_Info_Ptr ga_info,
 
    //int q=15;
    // int c1;
-   int c2;
-   float c3, pert;
+   // int c2;
+   // float c3;
+   double pert;
 
    // c1 = 32767;  // c1=(1 << q)-1;
-   c2 = 10922;  // c2=(c1 / 3);
-   c3 = 3.05185e-05;  // c3=1.0/c1;
-
+   // c2 = 10922;  // c2=(c1 / 3);
+   // c3 = 3.05185e-05;  // c3=1.0/c1;
 
    // NB pert in [-1,1], gaussian: mean=0, var=1
-   pert=(2*(RAND_DOM(0,c2)+RAND_DOM(0,c2)+RAND_DOM(0,c2))-3*(c2))*c3;
-
-   //pert=gaussian_random();
+   // pert=(2*(RAND_DOM(0,c2)+RAND_DOM(0,c2)+RAND_DOM(0,c2))-3*(c2))*c3;
+   pert = gaussian_random();
 
    /*--- Select one element at random ---*/
    i = RAND_DOM(chrom->idx_min, chrom->length-1);
@@ -2716,16 +2700,10 @@ int MU_float_gauss_pert(GA_Info_Ptr ga_info,
    /*--- Generate randomly perturbed element ---*/
    chrom->gene[i] += ga_info->pert_range*pert ;//+ ga_info->mut_bias[i];
 
-   //   printf("gene %d, bias %g\n",i,ga_info->mut_bias[i]);
-
-   if( chrom->gene[i]>1)
-     chrom->gene[i]=1;
-   if( chrom->gene[i]<0)
-     chrom->gene[i]=0;
-
+   // printf("gene %d, bias %g\n",i,ga_info->mut_bias[i]);
+   
    return OK;
 }
-
 
 double gaussian_random(void)
 {
@@ -2736,14 +2714,15 @@ double gaussian_random(void)
 
   if (next_gaussian == 0) {
     do {
-      v1 = 2.0*RAND_FRAC()-1.0;
-      v2 = 2.0*RAND_FRAC()-1.0;
+      v1 = RAND_FRAC();
+      v2 = RAND_FRAC();
       rsq = v1*v1+v2*v2;
     } while (rsq >= 1.0 || rsq == 0.0);
-    fac = sqrt(-2.0*log(rsq)/rsq);
-    saved_gaussian_value=v1*fac;
-    next_gaussian=1;
-    return v2*fac;
+    fac = sqrt(-2.0*log(v1));
+
+    saved_gaussian_value = fac*cos(2.0*M_PI*v2);
+    next_gaussian = 1;
+    return fac*cos(2.0*M_PI*v2);
   } else {
     next_gaussian=0;
     return saved_gaussian_value;

@@ -139,7 +139,7 @@ bool tstCsvRawLineGet(int line, char line_str[TST_MAX_CSV_LINE_LENGTH]) {
     else {
         for (int ln = 0; ok && ln < line+1; ln++) {
             if (NULL == fgets(line_str, TST_MAX_CSV_LINE_LENGTH,fd)) {
-                tst_str("Could not read line %d, file ends in line %d",line,ln-1);
+                if (ln != line) tst_str("Could not read line %d, file ends in line %d",line,ln-1);
                 ok = false;
             }
         }
