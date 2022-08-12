@@ -2340,6 +2340,7 @@ void GA_ss_init(
 
    /*--- Initial pool report ---*/
    ga_info->iter = -1;
+   ga_info->converged = FALSE;
    RP_report(ga_info, pool);
 
    /*--- Allocate genes for children ---*/
@@ -2637,12 +2638,13 @@ int MU_float_LS(
      GA_Info_Ptr ga_info,
      Chrom_Ptr chrom)
 {
-
   int   i;
-  float old_fit, new_fit, prev_fit, prev_val;
+  float old_fit, prev_fit, prev_val;
+  double rand_val;
 
-  while(1) 
+  do
   {
+      ga_info->EV_fun(chrom);
       old_fit = chrom->fitness;
 
       /*--- loop thru genes ---*/
@@ -2650,22 +2652,26 @@ int MU_float_LS(
       {
          prev_fit = chrom->fitness;
          prev_val = chrom->gene[i];
+         rand_val = ga_info->pert_range*gaussian_random();
 
-         chrom->gene[i] += ga_info->pert_range*(1.0 - 2.0*RAND_FRAC());
-
-         ga_info->EV_fun(chrom);
-         new_fit = chrom->fitness;
-         
-         if (     (0 == ga_info->minimize && new_fit < prev_fit)
-               || (1 == ga_info->minimize && new_fit > prev_fit)  )
-         {
-            chrom->gene[i] = prev_val;
-            chrom->fitness = prev_fit;
+         /*--- try positive and negative sign ---*/
+         for (double sign = -1.0; sign <= 1.0; sign += 2.0) {
+            chrom->gene[i] = prev_val + sign*rand_val;
+            ga_info->EV_fun(chrom);
+            if (     (FALSE == ga_info->minimize && chrom->fitness < prev_fit)
+                  || (TRUE  == ga_info->minimize && chrom->fitness > prev_fit)  ) 
+            {
+               chrom->gene[i] = prev_val;
+               chrom->fitness = prev_fit;
+            }
+            else {
+               break;
+            }
          }
       }
-      if(chrom->fitness>=old_fit)
-	      break;
-   }
+   } while(    (FALSE == ga_info->minimize && chrom->fitness > old_fit)
+            || (TRUE  == ga_info->minimize && chrom->fitness < old_fit)  );
+
    return OK;
 }
 

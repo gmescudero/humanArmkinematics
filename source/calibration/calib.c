@@ -915,6 +915,9 @@ int scal_fitness_calculate(Chrom_Ptr chrom) {
     double theta2 =  chrom->gene[3];
     double rho2   =  chrom->gene[4];
     int sph_alt2  = (chrom->gene[5]>=0)?0:1;
+    // Correct spherical choice genes
+    chrom->gene[2] = (double)sph_alt1;
+    chrom->gene[5] = (double)sph_alt2;
     // Get Vectors
     double v1[3], v2[3];
     vector3_from_spherical_coordinates_convert(theta1, rho1, sph_alt1, v1);
@@ -937,7 +940,9 @@ int scal_fitness_calculate(Chrom_Ptr chrom) {
         double rotationVn[3];   // Normal vector to both rotation vectors
 
         status = vector3_cross(v1, v2_1, rotationVn);
-        
+        if (RET_OK == status) {
+            status = vector3_normalize(rotationVn, rotationVn);
+        }
         if (RET_OK == status) {
             status = vector3_dot(wi, rotationVn, &error);
         }
@@ -947,6 +952,9 @@ int scal_fitness_calculate(Chrom_Ptr chrom) {
     }
     if (RET_OK == status) {
         chrom->fitness = squared_error;
+    }
+    else {
+        chrom->fitness = 1e300;
     }
     
     return (RET_OK == status) ? OK : GA_ERROR;
@@ -1003,6 +1011,8 @@ ERROR_CODE scal_observations_get() {
     return status;
 }
 
+GA_Info_Ptr ga_info = NULL;
+
 ERROR_CODE cal_automatic_two_rotation_axes_ga_calibrate(
     Quaternion q_sensor1,
     Quaternion q_sensor2,
@@ -1011,18 +1021,22 @@ ERROR_CODE cal_automatic_two_rotation_axes_ga_calibrate(
 {
     ERROR_CODE status;
     char *config = "source/libGA100/GAconfig_full.conf";
-    GA_Info_Ptr ga_info;
 
     status = scal_observations_update();
+
     if (RET_OK == status) {
         status = scal_observations_get();
     }
     if (RET_OK == status) {
-        /* Initialize the genetic algorithm */
-        ga_info = GA_config(config, scal_fitness_calculate);
+        if (NULL == ga_info) {
+            /* Initialize the genetic algorithm */
+            ga_info = GA_config(config, scal_fitness_calculate);
+            remove(ga_info->rp_file);
+        }
         /* Run the GA */
         GA_run(ga_info);
     }
+
     double theta1;
     double rho1;
     int sph_alt1;
@@ -1040,7 +1054,8 @@ ERROR_CODE cal_automatic_two_rotation_axes_ga_calibrate(
         sph_alt2  = (chrom->gene[5]>=0)?0:1;
         bestError = chrom->fitness;
 
-        dbg_str("%s -> Best solution with error %f",__FUNCTION__, chrom->fitness);
+        dbg_str("%s -> Best solution with error %f. %s in %d iterations out of %d",__FUNCTION__, 
+            chrom->fitness, (ga_info->converged)?"Converged":"Did not converge", ga_info->iter, ga_info->max_iter);
         dbg_str("%s -> \t <%f,%f,%f,%f,%f,%f>",__FUNCTION__,chrom->gene[0],chrom->gene[1],chrom->gene[2],chrom->gene[3],chrom->gene[4],chrom->gene[5]);
 
         double tempV2_from1[3]; // Second rotation vector from the first sensor
@@ -1056,11 +1071,11 @@ ERROR_CODE cal_automatic_two_rotation_axes_ga_calibrate(
 
     // Update database
     if (RET_OK == status) {
-        double spherical[] = {theta1,rho1};
+        double spherical[] = {theta1,rho1,(double)sph_alt1};
         status = db_write(DB_CALIB_SPHERICAL_COORDS, 0, spherical);
     }
     if (RET_OK == status) {
-        double spherical[] = {theta2,rho2};
+        double spherical[] = {theta2,rho2,(double)sph_alt2};
         status = db_write(DB_CALIB_SPHERICAL_COORDS, 1, spherical);
     }
     if (RET_OK == status) {

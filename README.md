@@ -1,9 +1,22 @@
 # humanArmkinematics
 This repository is a working repository for my final masters degree. The aim is to take data from IMU sensors and process it to estimate the position of a human arm in order to control an exoesqueleton. 
 
+## Dependences
+**LpSensorLib**
+Install LpSensorLib [OPENMAT BINARIES](https://lp-research.com/support/)
+libLpSensor depends on libbluetooth.so
+- `sudo apt-get update`
+- `sudo apt-get install libbluetooth-dev`
+- `sudo dpkg -i liblpsensor-1.3.5-Linux.deb`
+- `dpkg -L liblpsensor`
+
+**LIBSERIALPORT**
+- `sudo apt-get update`
+- `sudo apt-get install libserialport-dev`
+
 ## Stored Data
 
-In the folder `test/tst_data` some csv data files shall be found with different data to be use din different ways.
+In the folder `test/tst_data` some csv data files shall be found with different data to be use in different ways.
 
 | Data                                              | Description |
 | :--                                               | ----------- |
