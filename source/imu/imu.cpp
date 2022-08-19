@@ -352,7 +352,7 @@ ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOI
     for (int i = 0; i < iterations && RET_OK == status; i++) {
         // Pause
         while (0 >= lpms[index]->hasImuData()) {
-            sleep_ms(1);
+            sleep_ms(10);
         }
         // Read imu
         status = imu_read(index,&data);

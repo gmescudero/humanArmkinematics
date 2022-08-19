@@ -22,6 +22,13 @@
 #define CALIB_TWO_ROT_AXES_STEP_SZ (1)
 
 /**
+ * @brief Adjust minimum velocity values to consider movement
+ * 
+ * @param min_vel (input) Velicity value to set 
+ */
+void cal_min_velocity_set(double min_vel);
+
+/**
  * @brief Set the calibration data from a given set of IMU sensor readings
  * 
  * @param known_quat (input) Predefined known quaternion during calibration

@@ -383,7 +383,7 @@ ERROR_CODE db_csv_dump(void) {
         csv_logging_fields.first = 0;
     }
 
-    dbg_str("%s -> Retrieve Database configured fields",__FUNCTION__);
+    // dbg_str("%s -> Retrieve Database configured fields",__FUNCTION__);
     for (int ind = 0; ind < csv_logging_fields.csv_coulmns && RET_OK == status; ind++) {
         current_field   = csv_logging_fields.fields[ind];
         instance        = csv_logging_fields.instances[ind];
@@ -393,7 +393,7 @@ ERROR_CODE db_csv_dump(void) {
             // database[current_field].name, instance, index, csv_buff[ind]);
     }
 
-    dbg_str("%s -> Write CSV data row",__FUNCTION__);
+    // dbg_str("%s -> Write CSV data row",__FUNCTION__);
     csv_log(csv_buff);
     return status;
 }
@@ -508,7 +508,7 @@ static void sdb_field_buffer_data_add(const DB_FIELD_IDENTIFIER field, int insta
 
 ERROR_CODE db_field_buffer_from_tail_data_get(const DB_FIELD_IDENTIFIER field, int instance, int offset, double *data) {
     ERROR_CODE status = RET_OK;
-    dbg_str("%s -> Retrieve data at %d positions from tail for field %s_%d",__FUNCTION__, offset, database[field].name, instance);
+    // dbg_str("%s -> Retrieve data at %d positions from tail for field %s_%d",__FUNCTION__, offset, database[field].name, instance);
     // Check arguments
     if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
     if (0 > instance || database[field].instances <= instance) return RET_ARG_ERROR;
@@ -541,7 +541,7 @@ ERROR_CODE db_field_buffer_from_tail_data_get(const DB_FIELD_IDENTIFIER field, i
 
 ERROR_CODE db_field_buffer_from_head_data_get(const DB_FIELD_IDENTIFIER field, int instance, int offset, double *data) {
     ERROR_CODE status = RET_OK;
-    dbg_str("%s -> Retrieve data at %d positions from head for field %s_%d",__FUNCTION__, offset, database[field].name, instance);
+    // dbg_str("%s -> Retrieve data at %d positions from head for field %s_%d",__FUNCTION__, offset, database[field].name, instance);
     // Check arguments
     if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
     if (0 > instance || database[field].instances <= instance) return RET_ARG_ERROR;

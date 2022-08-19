@@ -15,6 +15,7 @@
 #include "imu.h"
 #include "errors.h"
 #include "general.h"
+#include "vector3.h"
 #include "database.h"
 #include "calib.h"
 #include <string.h>
@@ -135,7 +136,7 @@ int main(int argc, char **argv) {
     /* Calibrate IMU quaternions */
     if (RET_OK == status) {
         log_str("Calibrate IMU sensors");
-        log_str("STAND IN T-POSE TO CALIBRATE");
+        log_str("USER -> STAND IN T-POSE TO CALIBRATE");
         sleep_ms(2000);
         if (RET_OK == status) {
 #if USE_IMU_CALIB
@@ -153,8 +154,23 @@ int main(int argc, char **argv) {
             cal_static_imu_quat_calibration_set(known_quats, read_quats);
 #endif
         }
+        double min_vel = 0;
+        for (int i = 0; RET_OK == status && i < IMUS_NUM; i++) {
+            log_str("USER -> STAY STILL FOR A WHILE");
+            IMU_NOISE_DATA imu_noise;
+            status = imu_static_errors_measure(i,30000,&imu_noise);
+            if (RET_OK == status) {
+                double norm_var;
+                status = vector3_norm(imu_noise.gyrVar, &norm_var);
+                min_vel = MAX(min_vel, norm_var*norm_var);
+            }
+        }
         if (RET_OK == status) {
-            log_str("CALIBRATION_DONE");
+            min_vel *= 1.05; // Add a 5% threshold
+            cal_min_velocity_set(min_vel); 
+        }
+        if (RET_OK == status) {
+            log_str("USER -> CALIBRATION_DONE");
         }
     }
 
@@ -167,9 +183,9 @@ int main(int argc, char **argv) {
     if (RET_OK == status) {
         log_str("Start loop procedure");
         do {
-            if (RET_NO_EXEC == status) {
-                status = RET_OK;
-            }
+            // Reset status
+            status = RET_OK;
+
             if (RET_OK == status) {
                 int hasNewData;
                 sleep_ms(100);

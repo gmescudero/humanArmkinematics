@@ -21,6 +21,7 @@ typedef struct CAL_STATIC_CALIBRATION_STRUCT {
 } CAL_STATIC_CALIBRATION;
 
 static void scal_buffer_shift_and_insert(double array[], double value, int size);
+static ERROR_CODE scal_observations_update();
 
 static CAL_STATIC_CALIBRATION cal_imus_calibration_data[IMU_MAX_NUMBER] = {
     {.calibration_done = false, .raw_to_calib = {.w = 1.0, .v = {0.0, 0.0, 0.0}}},
@@ -37,6 +38,13 @@ static CAL_ROT_AXIS_CALIB_CONFIG cal_rot_axis_autocalib_config = {
     .stepSize = DEFAULT_ROT_AXIS_CALIB_STEP_SZ,
     .minVel   = CALIB_MIN_VEL
 };
+
+static double scal_min_velocity_norm = CALIB_MIN_VEL;
+
+void cal_min_velocity_set(double min_vel) {
+    log_str("Minimum velocity to consider movement set to %f",min_vel);
+    scal_min_velocity_norm = min_vel;
+}
 
 void cal_static_imu_quat_calibration_set(
     Quaternion known_quat[IMU_MAX_NUMBER],
@@ -501,7 +509,7 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate_new(
     if (RET_OK == status) {
         status = vector3_norm(omegaR, &omegaR_norm);
     }
-    if (RET_OK == status && omegaR_norm < CALIB_MIN_VEL) {
+    if (RET_OK == status && omegaR_norm < scal_min_velocity_norm) {
         dbg_str("%s -> Not moving. OmegaR: %f",__FUNCTION__,omegaR_norm);
         return RET_OK;
     }
@@ -665,40 +673,11 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
     Quaternion_conjugate(&q2_1,&q1_2);                                      
     status = arm_relative_angular_vel_compute(q_sensor1, q_sensor2, omega1_from1, omega2_from2, omegaR);
 
-    int new_data_num = MIN(
-        MIN(db_field_buffer_current_size_get(DB_IMU_GYROSCOPE,0),  db_field_buffer_current_size_get(DB_IMU_GYROSCOPE,1)),
-        MIN(db_field_buffer_current_size_get(DB_IMU_QUATERNION,0), db_field_buffer_current_size_get(DB_IMU_QUATERNION,1))
-    );
-    for (int i = 0; RET_OK == status && i < new_data_num; i++) {
-        double w1[3], w2[3];
-        double q1[4], q2[4];
-        // Retrieve IMUs data
-        db_field_buffer_from_tail_data_get(DB_IMU_GYROSCOPE, 0,i,w1);
-        db_field_buffer_from_tail_data_get(DB_IMU_GYROSCOPE, 1,i,w2);
-        db_field_buffer_from_tail_data_get(DB_IMU_QUATERNION,0,i,q1);
-        db_field_buffer_from_tail_data_get(DB_IMU_QUATERNION,1,i,q2);
-        // Compute quaternion observation
-        Quaternion q_1, q_2;
-        quaternion_from_buffer_build(q1,&q_1);
-        quaternion_from_buffer_build(q2,&q_2);
-        Quaternion q2_1 = arm_quaternion_between_two_get(q_1, q_2); // Quaternion to move from sensor 2 to 1
-        // Compute angular velocity observation
-        status = arm_relative_angular_vel_compute(q_1, q_2, w1, w2, omegaR);
-        // Write observations to database
-        if (RET_OK == status) {
-            double observations[7] = {
-                omegaR[0], omegaR[1] ,omegaR[2], q2_1.w, q2_1.v[0], q2_1.v[1], q2_1.v[2]
-            };
-            status = db_write(DB_CALIB_TWO_AXES_OBSERVATIONS,0,observations);
-        }
-    }
+    // Update observation vector
     if (RET_OK == status) {
-        db_field_buffer_clear(DB_IMU_GYROSCOPE,0);
-        db_field_buffer_clear(DB_IMU_GYROSCOPE,1);
-        db_field_buffer_clear(DB_IMU_QUATERNION,0);
-        db_field_buffer_clear(DB_IMU_QUATERNION,1);
+        status = scal_observations_update();
     }
-
+    
     // GAUSS-NEWTON
     int iterations = CALIB_TWO_ROT_AXES_MAX_ITERATIONS;                                         // Iterations of the algorithm
     int observations_num = db_field_buffer_current_size_get(DB_CALIB_TWO_AXES_OBSERVATIONS,0);  // Number of managed observations
@@ -711,6 +690,7 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
     double bestError = error;                                       // Best achieved error value
     double tempV1[] = {rotationV1[0],rotationV1[1],rotationV1[2]};  // Vector 1 to be tweaked by the algorithm
     double tempV2[] = {rotationV2[0],rotationV2[1],rotationV2[2]};  // Vector 2 to be tweaked by the algorithm
+    int sph_alt1, sph_alt2;                                         // Spherical coordinate convention in use
 
     while (RET_OK == status && CALIB_TWO_ROT_AXES_MAX_ERROR < error && 0 < iterations) {
         iterations--;
@@ -718,7 +698,6 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
         // Calculate error and Jacobian
         double squared_error = 0.0;                                     // Squared error value
         double dpart_th1[3], dpart_rh1[3], dpart_th2[3], dpart_rh2[3];  // Derivatives of each vector wrt each spherical coordinate
-        int sph_alt1, sph_alt2;                                         // Spherical coordinate convention in use
         double tempV2_from1[3];                                         // Second rotation vector from the first sensor
 
         for (int i = 0; RET_OK == status && i < observations_num; i++) {
@@ -852,11 +831,11 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
         status = db_write(DB_CALIB_COST_DERIVATIVE, 1, d_cost);
     }
     if (RET_OK == status) {
-        double spherical[] = {phi.data[0][0],phi.data[1][0]};
+        double spherical[] = {phi.data[0][0],phi.data[1][0], sph_alt1};
         status = db_write(DB_CALIB_SPHERICAL_COORDS, 0, spherical);
     }
     if (RET_OK == status) {
-        double spherical[] = {phi.data[2][0],phi.data[3][0]};
+        double spherical[] = {phi.data[2][0],phi.data[3][0], sph_alt2};
         status = db_write(DB_CALIB_SPHERICAL_COORDS, 1, spherical);
     }
     if (RET_OK == status) {
@@ -960,7 +939,7 @@ int scal_fitness_calculate(Chrom_Ptr chrom) {
     return (RET_OK == status) ? OK : GA_ERROR;
 }
 
-ERROR_CODE scal_observations_update() {
+static ERROR_CODE scal_observations_update() {
     ERROR_CODE status = RET_OK;
     double omegaR[3];
 
@@ -971,20 +950,24 @@ ERROR_CODE scal_observations_update() {
     for (int i = 0; RET_OK == status && i < new_data_num; i++) {
         double w1[3], w2[3];
         double q1[4], q2[4];
+        double omega_norm;
         // Retrieve IMUs data
         db_field_buffer_from_tail_data_get(DB_IMU_GYROSCOPE, 0,i,w1);
         db_field_buffer_from_tail_data_get(DB_IMU_GYROSCOPE, 1,i,w2);
         db_field_buffer_from_tail_data_get(DB_IMU_QUATERNION,0,i,q1);
         db_field_buffer_from_tail_data_get(DB_IMU_QUATERNION,1,i,q2);
-        // Compute quaternion observation
+        // Compute angular velocity observation
         Quaternion q_1, q_2;
         quaternion_from_buffer_build(q1,&q_1);
         quaternion_from_buffer_build(q2,&q_2);
-        Quaternion q2_1 = arm_quaternion_between_two_get(q_2, q_1); // Quaternion to move from sensor 2 to 1
-        // Compute angular velocity observation
         status = arm_relative_angular_vel_compute(q_1, q_2, w1, w2, omegaR);
-        // Write observations to database
         if (RET_OK == status) {
+            status = vector3_norm(omegaR,&omega_norm);
+        }
+        if (RET_OK == status /* && scal_min_velocity_norm < omega_norm */) {
+            // Compute quaternion observation
+            Quaternion q2_1 = arm_quaternion_between_two_get(q_2, q_1); // Quaternion to move from sensor 2 to 1
+            // Write observations to database
             double observations[7] = {
                 omegaR[0], omegaR[1] ,omegaR[2], q2_1.w, q2_1.v[0], q2_1.v[1], q2_1.v[2]
             };
