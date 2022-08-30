@@ -472,7 +472,7 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate_old(
     return status;
 }
 #endif // Old implementation
-
+#if 0
 ERROR_CODE cal_automatic_rotation_axis_calibrate_new(
     double omega1_from1[3],
     double omega2_from2[3],
@@ -649,6 +649,7 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate_new(
 
     return status;
 }
+#endif // Alternative
 
 ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
     double omega1_from1[3],
