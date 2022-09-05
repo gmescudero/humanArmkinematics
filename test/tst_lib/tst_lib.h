@@ -16,11 +16,27 @@
 #define TST_MAX_CSV_DATA_VALUES (CSV_FILE_VALUES_NUMBER)
 #define TST_MAX_CSV_HEADER_LENGTH (CSV_HEADER_MAX_LENGTH)
 
-typedef enum LOG_LEVEL_ENUM{
+typedef enum LOG_LEVEL_ENUM {
     ALL_TRACES,
     SILENT_NO_ERROR,
     SILENT
 } LOG_LEVEL;
+
+typedef struct TST_CSV_IMU_DATA_STRUCT {
+    double timestamp;
+    double gyr0[3];
+    double gyr1[3];
+    double acc0[3];
+    double acc1[3];
+    double mag0[3];
+    double mag1[3];
+    double omega0[3];
+    double omega1[3];
+    double linAcc0[3];
+    double linAcc1[3];
+    double quat0[4];
+    double quat1[4];
+} TST_CSV_IMU_DATA;
 
 
 // * TEST FUNCTIONS ***********************************************************

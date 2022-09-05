@@ -693,6 +693,11 @@ ERROR_CODE cal_automatic_two_rotation_axes_calibrate(
     double tempV2[] = {rotationV2[0],rotationV2[1],rotationV2[2]};  // Vector 2 to be tweaked by the algorithm
     int sph_alt1, sph_alt2;                                         // Spherical coordinate convention in use
 
+    if (0 >= observations_num) {
+        wrn_str("No available observations for two axes calibration");
+        return RET_NO_EXEC;
+    }
+
     while (RET_OK == status && CALIB_TWO_ROT_AXES_MAX_ERROR < error && 0 < iterations) {
         iterations--;
 
