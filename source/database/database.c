@@ -59,6 +59,7 @@ typedef struct DB_CSV_LOG_STRUCT {
 
 static size_t sdb_field_size_get(const DB_FIELD_IDENTIFIER field);
 static void sdb_field_buffer_data_add(const DB_FIELD_IDENTIFIER field, int instance, const double *data);
+static void sdb_buffer_free(DB_BUFFER *field_buff);
 
 /*
     DB_FIELD_IDENTIFIER identifier;
@@ -185,14 +186,9 @@ ERROR_CODE db_terminate(void) {
 
     // Reset data buffers
     for (int buff_id = 0; buff_id < field_buffers_num; buff_id++) {
-        for (int i = 0; RET_OK == status && i < field_buffers[buff_id].size; i++) {
-            free(field_buffers[buff_id].buff[i]);
+        if (NULL == field_buffers[buff_id].buff) {
+            sdb_buffer_free(&field_buffers[buff_id]);
         }
-        free(field_buffers[buff_id].buff);
-        field_buffers[buff_id].size = 0;
-        field_buffers[buff_id].current_size = 0;
-        field_buffers[buff_id].first_index = 0;
-        field_buffers[buff_id].last_index = 0;
     }
     field_buffers_num = 0;
 
@@ -200,6 +196,8 @@ ERROR_CODE db_terminate(void) {
     for (int field_id = 0; field_id < DB_NUMBER_OF_ENTRIES; field_id++) {
         if (1 == database[field_id].initialized) {
             for (int inst = 0; inst < database[field_id].instances; inst++) {
+                // Reset buffer pointer
+                database[field_id].buffer[inst] = NULL;
                 // Free allocated memory
                 free(database[field_id].data_ptr[inst]);
             }
@@ -437,11 +435,20 @@ ERROR_CODE db_field_buffer_setup(const DB_FIELD_IDENTIFIER field, int instance, 
     dbg_str("%s -> Setting up buffer of size %d for field %s_%d",__FUNCTION__, size,database[field].name, instance);
     // Check arguments
     if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return RET_ARG_ERROR;
-    if (DB_MAX_BUFFER_SIZE < size) return RET_ARG_ERROR;
+    if (0 > size || DB_MAX_BUFFER_SIZE < size) return RET_ARG_ERROR;
     if (DB_REAL != database[field].type) return RET_ARG_ERROR;
     if (0 > instance || database[field].instances <= instance) return RET_ARG_ERROR;
     // Check availability
     if (DB_MAX_BUFFER_FIELDS <= field_buffers_num) return RET_ERROR;
+
+    if (0 == size) {
+        log_str("Removing buffer for field %s_%d",database[field].name,instance);
+        if (NULL != database[field].buffer[instance]) {
+            sdb_buffer_free(database[field].buffer[instance]);
+            database[field].buffer[instance] = NULL;
+        }
+        return RET_OK;
+    }
 
     if (0 != sem_wait(&(database[field].mutex))) {
         err_str("Could not retrieve semaphore");
@@ -606,4 +613,20 @@ int db_field_buffer_current_size_get(const DB_FIELD_IDENTIFIER field, int instan
     if (NULL == database[field].buffer[instance]) return -1;
 
     return (database[field].buffer[instance]->current_size);
+}
+
+/**
+ * @brief Free a field buffer
+ * 
+ * @param field_buff (input) field buffer to free
+ */
+static void sdb_buffer_free(DB_BUFFER *field_buff) {
+    for (int i = 0; i < field_buff->size; i++) {
+        free(field_buff->buff[i]);
+    }
+    free(field_buff->buff);
+    field_buff->size = 0;
+    field_buff->current_size = 0;
+    field_buff->first_index = 0;
+    field_buff->last_index = 0;
 }

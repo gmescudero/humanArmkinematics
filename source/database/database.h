@@ -172,4 +172,6 @@ ERROR_CODE db_field_buffer_clear(const DB_FIELD_IDENTIFIER field, int instance);
  */
 int db_field_buffer_current_size_get(const DB_FIELD_IDENTIFIER field, int instance);
 
+
+
 #endif /* __database_h__ */

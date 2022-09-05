@@ -1028,6 +1028,7 @@ ERROR_CODE cal_automatic_two_rotation_axes_ga_calibrate(
     double rho2;
     int sph_alt2;
     double bestError;
+    static double oldBestError = 0.0;
     if (RET_OK == status) {
         Chrom_Ptr chrom = ga_info->best;
         theta1 =  chrom->gene[0];
@@ -1051,6 +1052,17 @@ ERROR_CODE cal_automatic_two_rotation_axes_ga_calibrate(
         Quaternion q1_2;                                                        // Quaternion to move from sensor 1 to 2
         Quaternion_conjugate(&q2_1,&q1_2);                                      
         Quaternion_rotate(&q1_2,tempV2_from1, rotationV2);
+
+        // Adjust mutation and crossover rate
+        if (bestError > oldBestError) {
+            ga_info->mu_rate = 1.0;
+            ga_info->x_rate = 0.1;
+        }
+        else {
+            ga_info->mu_rate = 0.1;
+            ga_info->x_rate = 0.5;
+        }
+        oldBestError = bestError;
     }
 
     // Update database

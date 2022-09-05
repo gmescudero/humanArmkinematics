@@ -2669,8 +2669,8 @@ int MU_float_LS(
             }
          }
       }
-   } while(    (FALSE == ga_info->minimize && chrom->fitness > old_fit)
-            || (TRUE  == ga_info->minimize && chrom->fitness < old_fit)  );
+   } while(    (FALSE == ga_info->minimize && chrom->fitness-1e-5 > old_fit)
+            || (TRUE  == ga_info->minimize && chrom->fitness+1e-5 < old_fit)  );
 
    return OK;
 }
