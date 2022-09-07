@@ -2216,6 +2216,8 @@ bool tst_cal_004()
     double v1_expected[3];
     double v2_expected[3];
 
+    double q_buff[4] = {0.0};
+
     testDescription(__FUNCTION__, "Test two rotation axis calibration");
     ok = preconditions_init_databaseCalib(__FUNCTION__,20,CALIB_TWO_ROT_AXES_WINDOW);
 
@@ -2223,28 +2225,36 @@ bool tst_cal_004()
     tstRandomUnitVector3Generate(rotVector1);
     tstRandomUnitVector3Generate(rotVector2);
 
-    bool once = true;
     while (ok && time<timeout)
     {
+        // Add noise to angular velocities
+        tstVector3RandomNoiseAdd(omega1, 50.0, omega1_noise);
+        tstVector3RandomNoiseAdd(omega2, 50.0, omega2_noise);
+        
+        // Set new quaternions
+        quaternion_ang_vel_apply(q_sensor1,timeInc,omega1,&q_sensor1);
+        quaternion_ang_vel_apply(q_sensor2,timeInc,omega2,&q_sensor2);
+        // Set gyroscope readings
+        ret = db_write(DB_IMU_GYROSCOPE,0,omega1_noise);
+        ok &= assert_OK(ret, "db_write DB_IMU_GYROSCOPE_0");
+        ret = db_write(DB_IMU_GYROSCOPE,1,omega2_noise);
+        ok &= assert_OK(ret, "db_write DB_IMU_GYROSCOPE_1");
+        // Set quaternion values
+        quaternion_buffer_build(q_sensor1, &q_buff);
+        ret = db_write(DB_IMU_QUATERNION,0,q_buff);
+        ok &= assert_OK(ret, "db_write DB_IMU_QUATERNION_0");
+        quaternion_buffer_build(q_sensor2, &q_buff);
+        ret = db_write(DB_IMU_QUATERNION,1,q_buff);
+        ok &= assert_OK(ret, "db_write DB_IMU_QUATERNION_1");
         // Set timestamp
         ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
-        // Add noise to angular velocities
-        tstVector3RandomNoiseAdd(omega1, 50.0, omega1_noise);
-        tstVector3RandomNoiseAdd(omega2, 50.0, omega2_noise);
-        // Set new quaternions
-        quaternion_ang_vel_apply(q_sensor1,timeInc,omega1,&q_sensor1);
-        quaternion_ang_vel_apply(q_sensor2,timeInc,omega2,&q_sensor2);
+
         // quaternion_print(q_sensor1,"q_sensor1");
         // quaternion_print(q_sensor2,"q_sensor2");
         // Execute arm calibration of a single rotation axis
         // tst_str("Time %f (iterations %d)", time, (int)(time/timeInc));
-        if (time>timeout/2 && once) {
-            rotVector1[0]=0.0;          rotVector1[1]=0.0;  rotVector1[2]=-1.0;
-            rotVector2[0]=M_SQRT1_2;    rotVector2[1]=0.0;  rotVector2[2]=M_SQRT1_2;
-            once = false;
-        }
 
         // ret = cal_automatic_two_rotation_axes_ga_calibrate(q_sensor1,q_sensor2, rotVector1, rotVector2);
         ret = cal_automatic_two_rotation_axes_calibrate(omega1_noise,omega2_noise,q_sensor1,q_sensor2,rotVector1,rotVector2);
@@ -2331,7 +2341,6 @@ bool tst_cal_005()
         omega2[0] = data[4]; omega2[1] = data[5]; omega2[2] = data[6];
         ret = db_write(DB_IMU_GYROSCOPE,1,omega2);
         ok &= assert_OK(ret, "db_write DB_IMU_GYROSCOPE_1");
-
         // Set quaternion values
         q_buff[0] = data[31]; q_buff[1] = data[32]; q_buff[2] = data[33]; q_buff[3] = data[34];
         quaternion_from_buffer_build(q_buff, &q_sensor1);
@@ -2341,7 +2350,6 @@ bool tst_cal_005()
         quaternion_from_buffer_build(q_buff, &q_sensor2);
         ret = db_write(DB_IMU_QUATERNION,1,q_buff);
         ok &= assert_OK(ret, "db_write DB_IMU_QUATERNION_1");
-
         // Set timestamp
         ret = db_write(DB_IMU_TIMESTAMP,0,&data[0]);
         ok &= assert_OK(ret, "db_write");
