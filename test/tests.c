@@ -2195,6 +2195,32 @@ bool tst_cal_003()
     return ok;
 }
 
+bool tst_cal_xxx()
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+
+    double omega1[] = {0.0,0.0,500.0};
+    double omega2[] = {500.0,0.0,1000.0};
+    double omega1_noise[3];
+    double omega2_noise[3];
+
+    Quaternion q_sensor1 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
+    Quaternion q_sensor2 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
+    double q_buff[4] = {0.0};
+
+    testDescription(__FUNCTION__, "Test two rotation axis calibration");
+    ok = preconditions_init_databaseCalib(__FUNCTION__,20,CALIB_TWO_ROT_AXES_WINDOW);
+
+    // Test Steps
+
+
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
 bool tst_cal_004() 
 {
     bool ok = true;
@@ -2222,9 +2248,7 @@ bool tst_cal_004()
     ok = preconditions_init_databaseCalib(__FUNCTION__,20,CALIB_TWO_ROT_AXES_WINDOW);
 
     // Test Steps
-    tstRandomUnitVector3Generate(rotVector1);
-    tstRandomUnitVector3Generate(rotVector2);
-
+    int iterations;
     while (ok && time<timeout)
     {
         // Add noise to angular velocities
@@ -2240,28 +2264,33 @@ bool tst_cal_004()
         ret = db_write(DB_IMU_GYROSCOPE,1,omega2_noise);
         ok &= assert_OK(ret, "db_write DB_IMU_GYROSCOPE_1");
         // Set quaternion values
-        quaternion_buffer_build(q_sensor1, &q_buff);
+        quaternion_buffer_build(q_sensor1, q_buff);
         ret = db_write(DB_IMU_QUATERNION,0,q_buff);
         ok &= assert_OK(ret, "db_write DB_IMU_QUATERNION_0");
-        quaternion_buffer_build(q_sensor2, &q_buff);
+        quaternion_buffer_build(q_sensor2, q_buff);
         ret = db_write(DB_IMU_QUATERNION,1,q_buff);
         ok &= assert_OK(ret, "db_write DB_IMU_QUATERNION_1");
         // Set timestamp
         ret = db_index_write(DB_IMU_TIMESTAMP,0,0,&time);
         ok &= assert_OK(ret, "db_index_write timestamp");
         time += timeInc;
+    
+        if (20 <= db_field_buffer_current_size_get(DB_IMU_GYROSCOPE,0)) {
+            // Set observations
+            ret = cal_two_rot_axes_calib_observations_update(omega1_noise, omega2_noise, q_sensor1, q_sensor2);
+            ok &= assert_OK(ret, "cal_two_rot_axes_calib_observations_update");
+        }
 
-        // quaternion_print(q_sensor1,"q_sensor1");
-        // quaternion_print(q_sensor2,"q_sensor2");
-        // Execute arm calibration of a single rotation axis
-        // tst_str("Time %f (iterations %d)", time, (int)(time/timeInc));
+        if ((CALIB_TWO_ROT_AXES_WINDOW/2) < db_field_buffer_current_size_get(DB_CALIB_OMEGA,0)
+            && ((iterations++ % CALIB_TWO_ROT_AXES_WINDOW/2) == 0)) {
+            // Execute calibration
+            ret = cal_two_rot_axes_calib_compute(rotVector1,rotVector2);
+            tst_str("V1: <%f, %f, %f>, V2: <%f, %f, %f>", 
+                rotVector1[0],rotVector1[1], rotVector1[2],
+                rotVector2[0],rotVector2[1], rotVector2[2]);
+            ok &= assert_OK(ret, "cal_two_rot_axes_calib_compute");
+        }
 
-        // ret = cal_automatic_two_rotation_axes_ga_calibrate(q_sensor1,q_sensor2, rotVector1, rotVector2);
-        ret = cal_automatic_two_rotation_axes_calibrate(omega1_noise,omega2_noise,q_sensor1,q_sensor2,rotVector1,rotVector2);
-        // tst_str("V1: <%f, %f, %f>, V2: <%f, %f, %f>", 
-        //     rotVector1[0],rotVector1[1], rotVector1[2],
-        //     rotVector2[0],rotVector2[1], rotVector2[2]);
-        ok &= assert_OK(ret, "cal_automatic_two_rotation_axes_calibrate");
         // Dump database data
         ret = db_csv_dump();
         ok &= assert_OK(ret, "db_csv_dump");
@@ -2282,6 +2311,7 @@ bool tst_cal_004()
     return ok;
 }
 
+#if 0 // To be reviewed
 bool tst_cal_005() 
 {
     bool ok = true;
@@ -2404,7 +2434,6 @@ bool tst_cal_005()
     return ok;
 }
 
-
 bool tst_cal_006() 
 {
     bool ok = true;
@@ -2516,6 +2545,8 @@ bool tst_cal_006()
     testReport(ok);
     return ok;
 }
+
+#endif
 
 #if 1 <= IMUS_CONNECTED
 bool tst_imu_single_001() 
@@ -2759,14 +2790,13 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    ok &= tst_battery_all();
+    // ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
     // ok &= tst_cal_xxx();
     // ok &= tst_arm_015();
-    ok &= tst_cal_005();
-    ok &= tst_cal_006();
+    ok &= tst_cal_004();
     // ok &= tst_arm_016();
 
     return (ok)? RET_OK : RET_ERROR;

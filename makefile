@@ -38,7 +38,7 @@ WARN = -Wall
 CCFLAGS = $(DEBUG) $(OPT) $(WARN)
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
-OBJS =  quaternion.o arm.o vector3.o matrix.o imu.o functions.o logging.o database.o calib.o libGA.o
+OBJS =  quaternion.o arm.o vector3.o matrix.o imu.o functions.o logging.o database.o calib.o calib_two_axes_ga.o calib_two_axes_gn.o libGA.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
@@ -68,6 +68,12 @@ arm.o: $(SOURCE_DIR)/arm/arm.c vector3.o dirs_create
 
 calib.o: $(SOURCE_DIR)/calibration/calib.c vector3.o libGA.o dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/calibration/calib.c -o $(BINARIES_DIR)/$@ 
+
+calib_two_axes_gn.o: $(SOURCE_DIR)/calibration/calib_two_axes_gn.c vector3.o dirs_create
+	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/calibration/calib_two_axes_gn.c -o $(BINARIES_DIR)/$@ 
+
+calib_two_axes_ga.o: $(SOURCE_DIR)/calibration/calib_two_axes_ga.c libGA.o vector3.o dirs_create
+	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/calibration/calib_two_axes_ga.c -o $(BINARIES_DIR)/$@ 
 
 vector3.o: $(SOURCE_DIR)/math/vector3.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/math/vector3.c -o $(BINARIES_DIR)/$@ 

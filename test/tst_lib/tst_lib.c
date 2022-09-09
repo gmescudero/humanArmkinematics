@@ -7,6 +7,7 @@
 #include "vector3.h"
 #include "errors.h"
 #include "imu.h"
+#include "calib.h"
 
 LOG_LEVEL testTraceLevel = SILENT;
 
@@ -271,7 +272,45 @@ bool preconditions_init_imus(const char *test_name)
     return ok;
 }
 
+
 bool preconditions_init_databaseCalib(const char *test_name, int imu_data_window, int observations_window) {
+    bool ok = true;
+    ERROR_CODE ret;
+    double j1[3], j2[3];
+
+    ok &= preconditions_init(test_name);
+    /* Set CSV logging */
+    ret = db_csv_field_add(DB_IMU_TIMESTAMP,0);
+    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_IMU_TIMESTAMP_0");
+    ret = db_csv_field_add(DB_CALIB_OMEGA,0);
+    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_OMEGA_0");
+    ret = db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
+    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_OMEGA_NORM_0");
+    ret = db_csv_field_add(DB_CALIB_ERROR,0);
+    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_ERROR_0");
+    ret = db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
+    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_ROT_VECTOR_0");
+    ret = db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
+    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_ROT_VECTOR_1");
+    ret = db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,0);
+    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_SPHERICAL_COORDS_0");
+    ret = db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,1);
+    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_SPHERICAL_COORDS_1");
+    ret = db_csv_field_add(DB_CALIB_COST_DERIVATIVE,0);
+    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_COST_DERIVATIVE_0");
+    ret = db_csv_field_add(DB_CALIB_COST_DERIVATIVE,1);
+    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_COST_DERIVATIVE_1");
+    /* Generate random unit rotation vectors */
+    tstRandomUnitVector3Generate(j1);
+    tstRandomUnitVector3Generate(j2);
+    /* Initialize calibration package */
+    ret = cal_two_rot_axes_calib_initialize(imu_data_window, observations_window, j1, j2);
+    ok &= assert_OK(ret, "cal_two_rot_axes_calib_initialize");
+
+    return ok;
+}
+
+bool preconditions_init_databaseCalibVectors(const char *test_name, int imu_data_window, int observations_window, double j1[3], double j2[3]) {
     bool ok = true;
     ERROR_CODE ret;
 
@@ -297,17 +336,9 @@ bool preconditions_init_databaseCalib(const char *test_name, int imu_data_window
     ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_COST_DERIVATIVE_0");
     ret = db_csv_field_add(DB_CALIB_COST_DERIVATIVE,1);
     ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_COST_DERIVATIVE_1");
-    /* Set data buffers */
-    ret = db_field_buffer_setup(DB_IMU_GYROSCOPE,0,imu_data_window);
-    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_field_buffer_setup DB_IMU_GYROSCOPE_0");
-    ret = db_field_buffer_setup(DB_IMU_GYROSCOPE,1,imu_data_window);
-    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_field_buffer_setup DB_IMU_GYROSCOPE_1");
-    ret = db_field_buffer_setup(DB_IMU_QUATERNION,0,imu_data_window);
-    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_field_buffer_setup DB_IMU_QUATERNION_0");
-    ret = db_field_buffer_setup(DB_IMU_QUATERNION,1,imu_data_window);
-    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_field_buffer_setup DB_IMU_QUATERNION_1");
-    ret = db_field_buffer_setup(DB_CALIB_TWO_AXES_OBSERVATIONS,0,observations_window);
-    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_field_buffer_setup DB_CALIB_TWO_AXES_OBSERVATIONS");
+    /* Initialize calibration package */
+    ret = cal_two_rot_axes_calib_initialize(imu_data_window, observations_window, j1, j2);
+    ok &= assert_OK(ret, "cal_two_rot_axes_calib_initialize");
 
     return ok;
 }
