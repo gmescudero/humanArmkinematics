@@ -496,15 +496,9 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
 
     if (a.rows <= a.cols) {
         status = smatrix_pseudoinverse_alt1(a,output);
-        if (RET_OK != status) {
-            status = smatrix_pseudoinverse_alt2(a,output);
-        }
     }
     else {
         status = smatrix_pseudoinverse_alt2(a,output);
-        if (RET_OK != status) {
-            status = smatrix_pseudoinverse_alt1(a,output);
-        }
     }
 
     return status;
@@ -512,7 +506,7 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
 
 void matrix_print(MATRIX a, const char *name) {
     char string[2048] = "";
-    char part_string[16] = "";  
+    char part_string[32] = "";  
 
     if (false == a.allocated) {
         wrn_str("Failed to print matrix. Not allocated!");

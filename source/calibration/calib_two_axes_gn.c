@@ -1,6 +1,7 @@
 #include "calib.h"
 #include "arm.h"
 #include "vector3.h"
+#include "constants.h"
 #include "matrix.h"
 #include <math.h>
 
@@ -19,9 +20,9 @@
  * @return double: Error value
  */
 static double scal_error_sph_11(double omega_x, double omega_y, double omega_z, double rho_1, double rho_2, double theta_1, double theta_2) {
-   double error_sph_result;
-   error_sph_result = omega_x*(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1)) + omega_y*(-sin(theta_1)*cos(rho_1)*cos(theta_2) + sin(theta_2)*cos(rho_2)*cos(theta_1)) + omega_z*(-sin(rho_1)*sin(theta_1)*sin(theta_2)*cos(rho_2) + sin(rho_2)*sin(theta_1)*sin(theta_2)*cos(rho_1)) + (pow(omega_x, 2) + pow(omega_y, 2) + pow(omega_z, 2))*(sin(rho_1)*sin(rho_2)*sin(theta_1)*sin(theta_2) + sin(theta_1)*sin(theta_2)*cos(rho_1)*cos(rho_2) + cos(theta_1)*cos(theta_2));
-   return error_sph_result;
+   double error_sph_11_result;
+   error_sph_11_result = (omega_x*(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1)) - omega_y*(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1)) - omega_z*sin(theta_1)*sin(theta_2)*sin(rho_1 - rho_2))/sqrt(pow(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1), 2) + pow(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1), 2) + pow(sin(theta_1), 2)*pow(sin(theta_2), 2)*pow(sin(rho_1 - rho_2), 2));
+   return error_sph_11_result;
 }
 /**
  * @brief Error derivatives of each parameter for a single measure
@@ -35,13 +36,13 @@ static double scal_error_sph_11(double omega_x, double omega_y, double omega_z, 
  * @param rho_1 (input) Rho angle of the spherical representation of the first rotation vector
  * @param theta_2 (input) Theta angle of the spherical representation of the second rotation vector
  * @param rho_2 (input) Rho angle of the spherical representation of the second rotation vector
- * @param out_100856207966491609 (output) Derivatives of the error according to each angle: de/dth1, de/drh1, de/dth2, de/drh2
+ * @param out_5484134635083685209 (output) Derivatives of the error according to each angle: de/dth1, de/drh1, de/dth2, de/drh2
  */
-static void scal_error_derivatives_11(double omega_x, double omega_y, double omega_z, double theta_1, double rho_1, double theta_2, double rho_2, double *out_100856207966491609) {
-    out_100856207966491609[0] = omega_x*(sin(rho_1)*cos(theta_1)*cos(theta_2) + sin(rho_2)*sin(theta_1)*sin(theta_2)) + omega_y*(-sin(theta_1)*sin(theta_2)*cos(rho_2) - cos(rho_1)*cos(theta_1)*cos(theta_2)) + omega_z*(-sin(rho_1)*sin(theta_2)*cos(rho_2)*cos(theta_1) + sin(rho_2)*sin(theta_2)*cos(rho_1)*cos(theta_1));
-    out_100856207966491609[1] = omega_x*sin(theta_1)*cos(rho_1)*cos(theta_2) + omega_y*sin(rho_1)*sin(theta_1)*cos(theta_2) + omega_z*(-sin(rho_1)*sin(rho_2)*sin(theta_1)*sin(theta_2) - sin(theta_1)*sin(theta_2)*cos(rho_1)*cos(rho_2));
-    out_100856207966491609[2] = omega_x*(-sin(rho_1)*sin(theta_1)*sin(theta_2) - sin(rho_2)*cos(theta_1)*cos(theta_2)) + omega_y*(sin(theta_1)*sin(theta_2)*cos(rho_1) + cos(rho_2)*cos(theta_1)*cos(theta_2)) + omega_z*(-sin(rho_1)*sin(theta_1)*cos(rho_2)*cos(theta_2) + sin(rho_2)*sin(theta_1)*cos(rho_1)*cos(theta_2));
-    out_100856207966491609[3] = -omega_x*sin(theta_2)*cos(rho_2)*cos(theta_1) - omega_y*sin(rho_2)*sin(theta_2)*cos(theta_1) + omega_z*(sin(rho_1)*sin(rho_2)*sin(theta_1)*sin(theta_2) + sin(theta_1)*sin(theta_2)*cos(rho_1)*cos(rho_2));
+static void scal_error_derivatives_11(double omega_x, double omega_y, double omega_z, double rho_1, double rho_2, double theta_1, double theta_2, double *out_5514908373459938152) {
+   out_5514908373459938152[0] = ((1.0/32.0)*(-omega_x*(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1)) + omega_y*(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1)) + omega_z*sin(theta_1)*sin(theta_2)*sin(rho_1 - rho_2))*(4*sin(2*theta_1) + 6*sin(2*theta_1 - 2*theta_2) + 6*sin(2*theta_1 + 2*theta_2) - 2*sin(-2*rho_1 + 2*rho_2 + 2*theta_1) - 2*sin(2*rho_1 - 2*rho_2 + 2*theta_1) + sin(-2*rho_1 + 2*rho_2 + 2*theta_1 + 2*theta_2) - 4*sin(-rho_1 + rho_2 + 2*theta_1 + 2*theta_2) - 4*sin(rho_1 - rho_2 - 2*theta_1 + 2*theta_2) + 4*sin(rho_1 - rho_2 + 2*theta_1 - 2*theta_2) - 4*sin(rho_1 - rho_2 + 2*theta_1 + 2*theta_2) - sin(2*rho_1 - 2*rho_2 - 2*theta_1 + 2*theta_2) + sin(2*rho_1 - 2*rho_2 + 2*theta_1 - 2*theta_2) + sin(2*rho_1 - 2*rho_2 + 2*theta_1 + 2*theta_2)) + (omega_x*(sin(rho_1)*cos(theta_1)*cos(theta_2) + sin(rho_2)*sin(theta_1)*sin(theta_2)) - omega_y*(sin(theta_1)*sin(theta_2)*cos(rho_2) + cos(rho_1)*cos(theta_1)*cos(theta_2)) - omega_z*sin(theta_2)*sin(rho_1 - rho_2)*cos(theta_1))*(pow(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1), 2) + pow(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1), 2) + pow(sin(theta_1), 2)*pow(sin(theta_2), 2)*pow(sin(rho_1 - rho_2), 2)))/pow(pow(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1), 2) + pow(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1), 2) + pow(sin(theta_1), 2)*pow(sin(theta_2), 2)*pow(sin(rho_1 - rho_2), 2), 3.0/2.0);
+   out_5514908373459938152[1] = ((sin(theta_1)*sin(theta_2)*cos(rho_1 - rho_2) + cos(theta_1)*cos(theta_2))*(-omega_x*(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1)) + omega_y*(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1)) + omega_z*sin(theta_1)*sin(theta_2)*sin(rho_1 - rho_2))*sin(theta_2)*sin(rho_1 - rho_2) + (omega_x*cos(rho_1)*cos(theta_2) + omega_y*sin(rho_1)*cos(theta_2) - omega_z*sin(theta_2)*cos(rho_1 - rho_2))*(pow(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1), 2) + pow(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1), 2) + pow(sin(theta_1), 2)*pow(sin(theta_2), 2)*pow(sin(rho_1 - rho_2), 2)))*sin(theta_1)/pow(pow(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1), 2) + pow(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1), 2) + pow(sin(theta_1), 2)*pow(sin(theta_2), 2)*pow(sin(rho_1 - rho_2), 2), 3.0/2.0);
+   out_5514908373459938152[2] = ((-omega_x*(sin(rho_1)*sin(theta_1)*sin(theta_2) + sin(rho_2)*cos(theta_1)*cos(theta_2)) + omega_y*(sin(theta_1)*sin(theta_2)*cos(rho_1) + cos(rho_2)*cos(theta_1)*cos(theta_2)) - omega_z*sin(theta_1)*sin(rho_1 - rho_2)*cos(theta_2))*(pow(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1), 2) + pow(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1), 2) + pow(sin(theta_1), 2)*pow(sin(theta_2), 2)*pow(sin(rho_1 - rho_2), 2)) - 1.0/32.0*(-omega_x*(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1)) + omega_y*(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1)) + omega_z*sin(theta_1)*sin(theta_2)*sin(rho_1 - rho_2))*(-4*sin(2*theta_2) + 6*sin(2*theta_1 - 2*theta_2) - 6*sin(2*theta_1 + 2*theta_2) + 2*sin(-2*rho_1 + 2*rho_2 + 2*theta_2) + 2*sin(2*rho_1 - 2*rho_2 + 2*theta_2) - sin(-2*rho_1 + 2*rho_2 + 2*theta_1 + 2*theta_2) + 4*sin(-rho_1 + rho_2 + 2*theta_1 + 2*theta_2) - 4*sin(rho_1 - rho_2 - 2*theta_1 + 2*theta_2) + 4*sin(rho_1 - rho_2 + 2*theta_1 - 2*theta_2) + 4*sin(rho_1 - rho_2 + 2*theta_1 + 2*theta_2) - sin(2*rho_1 - 2*rho_2 - 2*theta_1 + 2*theta_2) + sin(2*rho_1 - 2*rho_2 + 2*theta_1 - 2*theta_2) - sin(2*rho_1 - 2*rho_2 + 2*theta_1 + 2*theta_2)))/pow(pow(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1), 2) + pow(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1), 2) + pow(sin(theta_1), 2)*pow(sin(theta_2), 2)*pow(sin(rho_1 - rho_2), 2), 3.0/2.0);
+   out_5514908373459938152[3] = (-(sin(theta_1)*sin(theta_2)*cos(rho_1 - rho_2) + cos(theta_1)*cos(theta_2))*(-omega_x*(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1)) + omega_y*(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1)) + omega_z*sin(theta_1)*sin(theta_2)*sin(rho_1 - rho_2))*sin(theta_1)*sin(rho_1 - rho_2) + (-omega_x*cos(rho_2)*cos(theta_1) - omega_y*sin(rho_2)*cos(theta_1) + omega_z*sin(theta_1)*cos(rho_1 - rho_2))*(pow(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1), 2) + pow(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1), 2) + pow(sin(theta_1), 2)*pow(sin(theta_2), 2)*pow(sin(rho_1 - rho_2), 2)))*sin(theta_2)/pow(pow(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1), 2) + pow(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1), 2) + pow(sin(theta_1), 2)*pow(sin(theta_2), 2)*pow(sin(rho_1 - rho_2), 2), 3.0/2.0);
 }
 /**
  * @brief Conversion from spherical coordinates to rotation vectors
@@ -50,12 +51,12 @@ static void scal_error_derivatives_11(double omega_x, double omega_y, double ome
  * 
  * @param theta_1 (input) Theta angle of the spherical representation of the rotation vector
  * @param rho_1 (input) Rho angle of the spherical representation of the rotation vector
- * @param out_1202474196787603773 (output) Rotation vector obtained
+ * @param out_8227029826163990492 (output) Rotation vector obtained
  */
-static void scal_spherical_2_vec_1(double theta_1, double rho_1, double *out_1202474196787603773) {
-    out_1202474196787603773[0] = sin(theta_1)*cos(rho_1);
-    out_1202474196787603773[1] = sin(rho_1)*sin(theta_1);
-    out_1202474196787603773[2] = cos(theta_1);
+static void scal_spherical_2_vec_1(double rho_1, double theta_1, double *out_8227029826163990492) {
+   out_8227029826163990492[0] = sin(theta_1)*cos(rho_1);
+   out_8227029826163990492[1] = sin(rho_1)*sin(theta_1);
+   out_8227029826163990492[2] = cos(theta_1);
 }
 /**
  * @brief Conversion from cartesian coordinates vector to spherical coordinates
@@ -65,11 +66,11 @@ static void scal_spherical_2_vec_1(double theta_1, double rho_1, double *out_120
  * @param x (input) X component of the cartesian vector
  * @param y (input) Y component of the cartesian vector
  * @param z (input) Z component of the cartesian vector
- * @param out_6370209996326608495 (output) spherical coordinates: theta, rho
+ * @param out_346291481195618932 (output) spherical coordinates: theta, rho
  */
-void scal_spherical_1(double x, double y, double z, double *out_6370209996326608495) {
-   out_6370209996326608495[0] = atan2(sqrt(pow(x, 2) + pow(y, 2)), z);
-   out_6370209996326608495[1] = atan2(y, x);
+void scal_spherical_1(double x, double y, double z, double *out_346291481195618932) {
+   out_346291481195618932[0] = atan2(sqrt(pow(x, 2) + pow(y, 2)), z);
+   out_346291481195618932[1] = atan2(y, x);
 }
 
 typedef struct CAL_DATA_STRUCT {
@@ -241,8 +242,8 @@ ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double parameter_vector
     double obs_err;
     
     // Compute residuals vector and Jacobian
+    double omegaR[3];
     for (int i = 0; RET_OK == status && i < observations_num; i++) {
-        double omegaR[3];
         // Retrieve omega R observation
         if (RET_OK == status) status = db_field_buffer_from_tail_data_get(DB_CALIB_OMEGA,0, i, omegaR);
         // Compute the error value
@@ -309,12 +310,13 @@ ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double parameter_vector
 ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV2[3]) {
     ERROR_CODE status = RET_OK;
 
-    double error = 1e9;                                 // Last iteration error value
+    double error = 1e299;                               // Error value
+    double oldError = 1e300;                            // Last iteration error value
     double spherical_coords[4];                         // Spherical coords of both vectors
 
     int iterations = CALIB_TWO_ROT_AXES_MAX_ITERATIONS; // Iterations of the algorithm
 
-    while (RET_OK == status && CALIB_TWO_ROT_AXES_MAX_ERROR < error && 0 < iterations) {
+    while (RET_OK == status && oldError*1.05 > error && 0 < iterations) {
         status = cal_two_rot_axes_calib_gauss_newton_iteration(spherical_coords, &error);
         // Use only the best set of rotation axes
         if (RET_OK == status && scal_data.error > error) {
@@ -322,6 +324,9 @@ ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV
             scal_spherical_2_vec_1(spherical_coords[2], spherical_coords[3], rotationV2);
             scal_data.error = error;
         }
+        oldError = scal_data.error;
+        dbg_str("%s -> [it: %d] Current calib error: %f (best error: %f)",__FUNCTION__, 
+            CALIB_TWO_ROT_AXES_MAX_ITERATIONS-iterations, error, scal_data.error);
     }
 
     // Update database
