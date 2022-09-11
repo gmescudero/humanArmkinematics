@@ -36,7 +36,7 @@ static double scal_error_sph_11(double omega_x, double omega_y, double omega_z, 
  * @param rho_1 (input) Rho angle of the spherical representation of the first rotation vector
  * @param theta_2 (input) Theta angle of the spherical representation of the second rotation vector
  * @param rho_2 (input) Rho angle of the spherical representation of the second rotation vector
- * @param out_5484134635083685209 (output) Derivatives of the error according to each angle: de/dth1, de/drh1, de/dth2, de/drh2
+ * @param out_xxxxxxxxxxxxxxxxxxx (output) Derivatives of the error according to each angle: de/dth1, de/drh1, de/dth2, de/drh2
  */
 static void scal_error_derivatives_11(double omega_x, double omega_y, double omega_z, double rho_1, double rho_2, double theta_1, double theta_2, double *out_5514908373459938152) {
    out_5514908373459938152[0] = ((1.0/32.0)*(-omega_x*(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1)) + omega_y*(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1)) + omega_z*sin(theta_1)*sin(theta_2)*sin(rho_1 - rho_2))*(4*sin(2*theta_1) + 6*sin(2*theta_1 - 2*theta_2) + 6*sin(2*theta_1 + 2*theta_2) - 2*sin(-2*rho_1 + 2*rho_2 + 2*theta_1) - 2*sin(2*rho_1 - 2*rho_2 + 2*theta_1) + sin(-2*rho_1 + 2*rho_2 + 2*theta_1 + 2*theta_2) - 4*sin(-rho_1 + rho_2 + 2*theta_1 + 2*theta_2) - 4*sin(rho_1 - rho_2 - 2*theta_1 + 2*theta_2) + 4*sin(rho_1 - rho_2 + 2*theta_1 - 2*theta_2) - 4*sin(rho_1 - rho_2 + 2*theta_1 + 2*theta_2) - sin(2*rho_1 - 2*rho_2 - 2*theta_1 + 2*theta_2) + sin(2*rho_1 - 2*rho_2 + 2*theta_1 - 2*theta_2) + sin(2*rho_1 - 2*rho_2 + 2*theta_1 + 2*theta_2)) + (omega_x*(sin(rho_1)*cos(theta_1)*cos(theta_2) + sin(rho_2)*sin(theta_1)*sin(theta_2)) - omega_y*(sin(theta_1)*sin(theta_2)*cos(rho_2) + cos(rho_1)*cos(theta_1)*cos(theta_2)) - omega_z*sin(theta_2)*sin(rho_1 - rho_2)*cos(theta_1))*(pow(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1), 2) + pow(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1), 2) + pow(sin(theta_1), 2)*pow(sin(theta_2), 2)*pow(sin(rho_1 - rho_2), 2)))/pow(pow(sin(rho_1)*sin(theta_1)*cos(theta_2) - sin(rho_2)*sin(theta_2)*cos(theta_1), 2) + pow(sin(theta_1)*cos(rho_1)*cos(theta_2) - sin(theta_2)*cos(rho_2)*cos(theta_1), 2) + pow(sin(theta_1), 2)*pow(sin(theta_2), 2)*pow(sin(rho_1 - rho_2), 2), 3.0/2.0);
@@ -51,7 +51,7 @@ static void scal_error_derivatives_11(double omega_x, double omega_y, double ome
  * 
  * @param theta_1 (input) Theta angle of the spherical representation of the rotation vector
  * @param rho_1 (input) Rho angle of the spherical representation of the rotation vector
- * @param out_8227029826163990492 (output) Rotation vector obtained
+ * @param out_xxxxxxxxxxxxxxxxxxx (output) Rotation vector obtained
  */
 static void scal_spherical_2_vec_1(double rho_1, double theta_1, double *out_8227029826163990492) {
    out_8227029826163990492[0] = sin(theta_1)*cos(rho_1);
@@ -66,12 +66,15 @@ static void scal_spherical_2_vec_1(double rho_1, double theta_1, double *out_822
  * @param x (input) X component of the cartesian vector
  * @param y (input) Y component of the cartesian vector
  * @param z (input) Z component of the cartesian vector
- * @param out_346291481195618932 (output) spherical coordinates: theta, rho
+ * @param out_xxxxxxxxxxxxxxxxxxx (output) spherical coordinates: theta, rho
  */
 void scal_spherical_1(double x, double y, double z, double *out_346291481195618932) {
    out_346291481195618932[0] = atan2(sqrt(pow(x, 2) + pow(y, 2)), z);
    out_346291481195618932[1] = atan2(y, x);
 }
+
+
+#define CAL_PARAMETERS_NUM (4)
 
 typedef struct CAL_DATA_STRUCT {
     bool initialized;
@@ -114,7 +117,7 @@ ERROR_CODE cal_two_rot_axes_calib_initialize(int imu_data_buff_size, int obs_dat
     // Initialize observations buffer
     if (RET_OK == status) status = db_field_buffer_setup(DB_CALIB_OMEGA,0,obs_data_buff_size);
     // Set up parameters vector
-    scal_data.phi = matrix_allocate(4,1);
+    scal_data.phi = matrix_allocate(CAL_PARAMETERS_NUM,1);
     // Set initial value of phi based on the given vectors
     double sph[2];
     scal_spherical_1(j1[0],j1[1],j1[2],sph);
@@ -228,7 +231,7 @@ ERROR_CODE cal_two_rot_axes_calib_observations_from_database_update() {
  * @param error (output) Mean error of the new solution
  * @return ERROR_CODE 
  */
-ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double parameter_vector[4], double *error) {
+ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double parameter_vector[CAL_PARAMETERS_NUM], double *error) {
     ERROR_CODE status = RET_OK;
 
     int observations_num = db_field_buffer_current_size_get(DB_CALIB_OMEGA,0);  // Number of managed observations
@@ -238,7 +241,7 @@ ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double parameter_vector
     }
 
     MATRIX errorV   = matrix_allocate(observations_num,1);  // Vector of residuals
-    MATRIX Jacobian = matrix_allocate(observations_num,4);  // Jacobian matrix
+    MATRIX Jacobian = matrix_allocate(observations_num,CAL_PARAMETERS_NUM);  // Jacobian matrix
     double obs_err;
     
     // Compute residuals vector and Jacobian
@@ -261,8 +264,8 @@ ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double parameter_vector
 
     // Apply Gauss-Newton algorithm to update Phi values
     if (RET_OK == status) {
-        MATRIX Jpinv            = matrix_allocate(4,observations_num);  // Pseudoinverse of the Jacobian
-        MATRIX phi_correction   = matrix_allocate(4,1);                 // Parameters delta
+        MATRIX Jpinv            = matrix_allocate(CAL_PARAMETERS_NUM,observations_num);  // Pseudoinverse of the Jacobian
+        MATRIX phi_correction   = matrix_allocate(CAL_PARAMETERS_NUM,1);                 // Parameters delta
 
         if (RET_OK == status) status = matrix_pseudoinverse(Jacobian,&Jpinv);
         if (RET_OK == status) status = matrix_multiply(Jpinv, errorV, &phi_correction);
@@ -295,7 +298,7 @@ ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double parameter_vector
         // Acumulate squared error values
         if (RET_OK == status) sqr_err += obs_err*obs_err;
     }
-    *error = sqrt(sqr_err)/observations_num;
+    *error = sqrt(sqr_err/observations_num);
 
     return status;
 }
@@ -310,21 +313,23 @@ ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double parameter_vector
 ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV2[3]) {
     ERROR_CODE status = RET_OK;
 
-    double error = 1e299;                               // Error value
-    double oldError = 1e300;                            // Last iteration error value
-    double spherical_coords[4];                         // Spherical coords of both vectors
+    double error = 1e199;                               // Error value
+    double oldError = error*2;                          // Last iteration error value
+    double spherical_coords[CAL_PARAMETERS_NUM];        // Spherical coords of both vectors
 
     int iterations = CALIB_TWO_ROT_AXES_MAX_ITERATIONS; // Iterations of the algorithm
 
-    while (RET_OK == status && oldError*1.05 > error && 0 < iterations) {
+    while (RET_OK == status && 0 < iterations--  && fabs(oldError-error) > 1e-1 ) {
+        // Previous iteration error value
+        oldError = error;
+        // Execute one iteration of the gauss newton algorithm
         status = cal_two_rot_axes_calib_gauss_newton_iteration(spherical_coords, &error);
         // Use only the best set of rotation axes
-        if (RET_OK == status && scal_data.error > error) {
+        if (RET_OK == status && oldError + EPSI > error) {
             scal_spherical_2_vec_1(spherical_coords[0], spherical_coords[1], rotationV1);
             scal_spherical_2_vec_1(spherical_coords[2], spherical_coords[3], rotationV2);
             scal_data.error = error;
         }
-        oldError = scal_data.error;
         dbg_str("%s -> [it: %d] Current calib error: %f (best error: %f)",__FUNCTION__, 
             CALIB_TWO_ROT_AXES_MAX_ITERATIONS-iterations, error, scal_data.error);
     }

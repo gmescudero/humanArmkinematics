@@ -698,7 +698,41 @@ bool assert_matrix(MATRIX actual, MATRIX expected, const char *description) {
     return ok;
 }
 
-bool assert_matrix_identity(MATRIX actual, const char *description) {
+
+bool assert_matrixThreshold(MATRIX actual, MATRIX expected, const double threshold, const char *description) {
+    bool ok = true;
+
+    ok &= assert_int(actual.rows, expected.rows, NULL);
+    ok &= assert_int(actual.cols, expected.cols, NULL);
+
+    for (int r = 0; ok && r < expected.rows; r ++) {
+        for (int c = 0; ok && c < expected.cols; c ++) {
+            ok &= assert_double(actual.data[r][c], expected.data[r][c], threshold, NULL);
+            if (!ok) tst_str("Messed up in <%d,%d>",r,c);
+        }
+    }
+
+    if (WILL_PRINT(ok) && (NULL != description)) {        
+        printf("\t -> RESULT: %s (%s) | EXPECTED: ", (true == ok)?"PASSED":"FAILED", description);
+        for (int r = 0; r < expected.rows; r ++) {
+            printf("\n\t\t");
+            for (int c = 0; c < expected.cols; c ++) {
+                printf("%f\t",expected.data[r][c]);
+            }
+        }
+        printf("\n\n\t\tACTUAL: ");
+        for (int r = 0; r < actual.rows; r ++) {
+            printf("\n\t\t");
+            for (int c = 0; c < actual.cols; c ++) {
+                printf("%f\t",actual.data[r][c]);
+            }
+        }
+        printf("\n");
+    }
+    return ok;
+}
+
+bool assert_matrixIdentity(MATRIX actual, const char *description) {
     bool ok = true;
     MATRIX I;
 

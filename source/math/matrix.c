@@ -15,8 +15,6 @@ static ERROR_CODE smatrix_inverse_standard(MATRIX a, MATRIX *output);
 #else
 static ERROR_CODE smatrix_inverse_gauss_jordan(MATRIX a, MATRIX *output);
 #endif
-static ERROR_CODE smatrix_pseudoinverse_alt1(MATRIX a, MATRIX *output);
-static ERROR_CODE smatrix_pseudoinverse_alt2(MATRIX a, MATRIX *output);
 
 
 MATRIX matrix_allocate(unsigned rows, unsigned cols) {
@@ -65,6 +63,8 @@ void matrix_free(MATRIX a) {
     }
     free(a.data);
     a.allocated = false;
+    a.rows = 0;
+    a.cols = 0;
 }
 
 ERROR_CODE matrix_copy(MATRIX a, MATRIX *output) {
@@ -417,91 +417,6 @@ ERROR_CODE matrix_inverse(MATRIX a, MATRIX *output) {
 #else
     return smatrix_inverse_gauss_jordan(a, output);
 #endif
-}
-
-static ERROR_CODE smatrix_pseudoinverse_alt1(MATRIX a, MATRIX *output) {
-    ERROR_CODE status;
-    MATRIX result;
-    MATRIX at;
-    MATRIX aat;
-    MATRIX aatinv;
-
-    if (false == a.allocated)       return RET_ARG_ERROR;
-    if (false == output->allocated) return RET_ARG_ERROR;
-
-    // Jt*(J*Jt)^-1
-    at      = matrix_allocate(a.cols, a.rows);
-    aat     = matrix_allocate(a.rows, at.cols);
-    aatinv  = matrix_allocate(aat.rows, aat.cols);
-    result  = matrix_allocate(at.rows, aatinv.cols);
-
-    status = matrix_transpose(a, &at);
-    if (RET_OK == status) {
-        status = matrix_multiply(a, at, &aat);
-    }
-    if (RET_OK == status) {
-        status = matrix_inverse(aat, &aatinv);
-    }
-    if (RET_OK == status) {
-        status = matrix_multiply(at, aatinv, &result);
-    }
-    if (RET_OK == status) {
-        status = matrix_copy(result, output);
-    }
-    matrix_free(result);
-    matrix_free(aatinv);
-    matrix_free(aat);
-    matrix_free(at);
-    return status;
-}
-
-static ERROR_CODE smatrix_pseudoinverse_alt2(MATRIX a, MATRIX *output) {
-    ERROR_CODE status;
-    MATRIX result;
-    MATRIX at;
-    MATRIX ata;
-    MATRIX atainv;
-
-    if (false == a.allocated)       return RET_ARG_ERROR;
-    if (false == output->allocated) return RET_ARG_ERROR;
-
-    // (Jt*J)^-1*Jt
-    at      = matrix_allocate(a.cols, a.rows);
-    ata     = matrix_allocate(at.rows, a.cols);
-    atainv  = matrix_allocate(ata.rows, ata.cols);
-    result  = matrix_allocate(atainv.rows, at.cols);
-
-    status = matrix_transpose(a, &at);
-    if (RET_OK == status) {
-        status = matrix_multiply(at, a, &ata);
-    }
-    if (RET_OK == status) {
-        status = matrix_inverse(ata, &atainv);
-    }
-    if (RET_OK == status) {
-        status = matrix_multiply(atainv, at, &result);
-    }
-    if (RET_OK == status) {
-        status = matrix_copy(result, output);
-    }
-    matrix_free(result);
-    matrix_free(atainv);
-    matrix_free(ata);
-    matrix_free(at);
-    return status;
-}
-
-ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
-    ERROR_CODE status;
-
-    if (a.rows <= a.cols) {
-        status = smatrix_pseudoinverse_alt1(a,output);
-    }
-    else {
-        status = smatrix_pseudoinverse_alt2(a,output);
-    }
-
-    return status;
 }
 
 void matrix_print(MATRIX a, const char *name) {

@@ -87,6 +87,7 @@ bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, const double 
 bool assert_dbFieldInt(DB_FIELD_IDENTIFIER field, int instance, const int expected[], const char *description);
 bool assert_dbFieldIntGreaterEqual(DB_FIELD_IDENTIFIER field, int instance, const int expected[], const char *description);
 bool assert_matrix(MATRIX actual, MATRIX expected, const char *description);
-bool assert_matrix_identity(MATRIX actual, const char *description);
+bool assert_matrixThreshold(MATRIX actual, MATRIX expected, const double threshold, const char *description);
+bool assert_matrixIdentity(MATRIX actual, const char *description);
 
 #endif

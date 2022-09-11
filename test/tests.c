@@ -417,12 +417,12 @@ bool tst_math_011()
     m1 = matrix_identity_allocate(3);
     m2 = matrix_allocate(3,3);
 
-    ok &= assert_matrix_identity(m1, "identity 1");
+    ok &= assert_matrixIdentity(m1, "identity 1");
 
     ret = matrix_copy(m1, &m2);
     ok &= assert_OK(ret, "matrix_copy");
 
-    ok &= assert_matrix_identity(m2, "identity 2");
+    ok &= assert_matrixIdentity(m2, "identity 2");
 
     matrix_free(m1);
     matrix_free(m2);
@@ -575,29 +575,50 @@ bool tst_math_016()
     bool ok = true;
     ERROR_CODE ret;
     MATRIX m, mpinv;
-    MATRIX m_expected;
+    MATRIX m_expected1;
+    MATRIX m_expected2;
 
     testDescription(__FUNCTION__, "Check matrix pseudo inversion");
     ok = preconditions_init(__FUNCTION__);
 
     m    = matrix_allocate(2,3);
     mpinv = matrix_allocate(3,2);
-    m_expected = matrix_allocate(3,2);
+    m_expected1 = matrix_allocate(3,2);
 
     m.data[0][0] = 1.0;    m.data[0][1] = 0.0;    m.data[0][2] = 0.0;
     m.data[1][0] = 0.0;    m.data[1][1] = 1.0;    m.data[1][2] =-3.0;
 
-    m_expected.data[0][0] = 1.0;   m_expected.data[0][1] = 0.0;
-    m_expected.data[1][0] = 0.0;   m_expected.data[1][1] = 0.1;
-    m_expected.data[2][0] = 0.0;   m_expected.data[2][1] =-0.3;
+    m_expected1.data[0][0] = 1.0;   m_expected1.data[0][1] = 0.0;
+    m_expected1.data[1][0] = 0.0;   m_expected1.data[1][1] = 0.1;
+    m_expected1.data[2][0] = 0.0;   m_expected1.data[2][1] =-0.3;
 
     ret = matrix_pseudoinverse(m, &mpinv);
-    ok &= assert_OK(ret, "matrix_pseudoinverse");
-    ok &= assert_matrix(mpinv, m_expected, "matrix_pseudoinverse result");
+    ok &= assert_OK(ret, "matrix_pseudoinverse 1");
+    ok &= assert_matrix(mpinv, m_expected1, "matrix_pseudoinverse result 1");
+
+    matrix_free(m); m = matrix_allocate(3,8);
+    m.data[0][0] = 1;   m.data[0][1] = 2;   m.data[0][2] = 1;   m.data[0][3] = 3;   m.data[0][4] = 1;   m.data[0][5] = 4;   m.data[0][6] = 1;   m.data[0][7] = 50;
+    m.data[1][0] = 1;   m.data[1][1] = 2;   m.data[1][2] = 2;   m.data[1][3] = 2;   m.data[1][4] = 3;   m.data[1][5] = 2;   m.data[1][6] = 4;   m.data[1][7] = 20;
+    m.data[2][0] = 1;   m.data[2][1] = 2;   m.data[2][2] = 1;   m.data[2][3] = 4;   m.data[2][4] = 5;   m.data[2][5] = 6;   m.data[2][6] = 7;   m.data[2][7] = 80;
+    m_expected2 = matrix_allocate(8,3);
+    m_expected2.data[0][0] = 0.09540529;   m_expected2.data[0][1] = 0.12694315;   m_expected2.data[0][2] =-0.09150867;
+    m_expected2.data[1][0] = 0.19081058;   m_expected2.data[1][1] = 0.25388630;   m_expected2.data[1][2] =-0.18301734;
+    m_expected2.data[2][0] = 0.00689826;   m_expected2.data[2][1] = 0.09634847;   m_expected2.data[2][2] =-0.02848114;
+    m_expected2.data[3][0] = 0.12729426;   m_expected2.data[3][1] = 0.16814683;   m_expected2.data[3][2] =-0.12137359;
+    m_expected2.data[4][0] =-0.08160877;   m_expected2.data[4][1] = 0.06575378;   m_expected2.data[4][2] = 0.03454638;
+    m_expected2.data[5][0] = 0.06377793;   m_expected2.data[5][1] = 0.08240737;   m_expected2.data[5][2] =-0.05972985;
+    m_expected2.data[6][0] =-0.17011580;   m_expected2.data[6][1] = 0.03515910;   m_expected2.data[6][2] = 0.09757391;
+    m_expected2.data[7][0] = 0.00261611;   m_expected2.data[7][1] =-0.03332094;   m_expected2.data[7][2] = 0.01913889;
+    
+    matrix_free(mpinv); mpinv = matrix_allocate(8,3);
+    ret = matrix_pseudoinverse(m, &mpinv);
+    ok &= assert_OK(ret, "matrix_pseudoinverse 2");
+    ok &= assert_matrixThreshold(mpinv, m_expected2, 1.1e-1, "matrix_pseudoinverse result 2");
 
     matrix_free(m);
     matrix_free(mpinv);
-    matrix_free(m_expected);
+    matrix_free(m_expected1);
+    matrix_free(m_expected2);
     testCleanUp();
     testReport(ok);
     return ok;
@@ -2889,7 +2910,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    // ok &= tst_battery_all();
+    ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
