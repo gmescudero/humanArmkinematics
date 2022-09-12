@@ -2249,7 +2249,7 @@ bool tst_cal_004()
 
     double rotVector1[3];
     double rotVector2[3];
-    double timeout = 20.0;/*(seconds)*/
+    double timeout = 40.0;/*(seconds)*/
     double timeInc = 0.02;/*(seconds)*/
     double time = 0.0;
 
@@ -2269,6 +2269,9 @@ bool tst_cal_004()
     ok = preconditions_init_databaseCalib(__FUNCTION__,20,CALIB_TWO_ROT_AXES_WINDOW);
 
     // Test Steps
+    tstRandomUnitVector3Generate(rotVector1);
+    tstRandomUnitVector3Generate(rotVector2);
+
     int iterations;
     while (ok && time<timeout)
     {
@@ -2425,6 +2428,122 @@ bool tst_cal_005()
         rotVector2[0],rotVector2[1], rotVector2[2]);
     ok &= assert_vector3EqualNoSignThreshold(rotVector1,v1_expected,5e-2,"cal_automatic_rotation_axis_calibrate result1");
     ok &= assert_vector3EqualNoSignThreshold(rotVector2,v2_expected,5e-2,"cal_automatic_rotation_axis_calibrate result2");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+
+bool tst_cal_006() 
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+
+    const char csvFile[] = "test/tst_data/data5_tst_cal_004_onArmArbitraryMotions.csv";
+    // const char csvFile[] = "test/tst_data/data6_tst_cal_004_onArmArbitraryMotions.csv";
+    // const char csvFile[] = "test/tst_data/data7_tst_cal_004_onArmArbitraryMotions.csv";
+    char headers[TST_MAX_CSV_DATA_VALUES][TST_MAX_CSV_HEADER_LENGTH] = {'\0'};
+    double buff[TST_MAX_CSV_DATA_VALUES];
+    TST_CSV_IMU_DATA *data = (TST_CSV_IMU_DATA*)buff;
+
+    int iterations = 10;
+    double initVector1[7][3] = {
+        {1,0,0},
+        {0,1,0},
+        {1,1,0},
+        {0,0,1},
+        {1,0,1},
+        {0,1,1},
+        {1,1,1},
+    };
+    double initVector2[7][3] = {
+        {1,1,1},
+        {0,1,1},
+        {1,0,1},
+        {0,0,1},
+        {1,1,0},
+        {0,1,0},
+        {1,0,0},
+    };
+
+    double rotVector1[3];
+    double rotVector2[3];
+
+    double prevRotV1[3];
+    double prevRotV2[3];
+
+    Quaternion q_sensor1 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
+    Quaternion q_sensor2 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
+
+    double v1_expected[3] = {0.0,0.0,1.0};
+    double v2_expected[3] = {1.0,0.0,0.0};
+
+    int imu_data_window = 50;
+    int observations_window = CALIB_TWO_ROT_AXES_WINDOW;
+
+    testDescription(__FUNCTION__, "Test two rotation axis calibration by using real data with different set of initialization vectors");
+    ok = preconditions_init_databaseCalib(__FUNCTION__,imu_data_window,observations_window);
+
+    // Test Steps
+    ok &= tstCsvLoad(csvFile);
+    
+    for (int i = 0; i < iterations; i++) {
+        // Set initial vector
+        if (7 < i) {
+            tstRandomUnitVector3Generate(rotVector1);
+            tstRandomUnitVector3Generate(rotVector2);
+        }else{
+            ret = vector3_normalize(initVector1[i],rotVector1);
+            ok &= assert_OK(ret, "vector3_normalize");
+            ret = vector3_normalize(initVector2[i],rotVector2);
+            ok &= assert_OK(ret, "vector3_normalize");
+        }
+
+        int line = 1000;
+        while (tstCsvDataLineGet(line++, buff) && CALIB_TWO_ROT_AXES_WINDOW >= db_field_buffer_current_size_get(DB_CALIB_OMEGA,0)) {
+            // Set gyroscope readings
+            ret = db_write(DB_IMU_GYROSCOPE,0,data->gyr0);
+            ok &= assert_OK(ret, "db_write DB_IMU_GYROSCOPE_0");
+            ret = db_write(DB_IMU_GYROSCOPE,1,data->gyr1);
+            ok &= assert_OK(ret, "db_write DB_IMU_GYROSCOPE_1");
+            // Set quaternion values
+            quaternion_from_buffer_build(data->quat0, &q_sensor1);
+            ret = db_write(DB_IMU_QUATERNION,0,data->quat0);
+            ok &= assert_OK(ret, "db_write DB_IMU_QUATERNION_0");
+            quaternion_from_buffer_build(data->quat1, &q_sensor2);
+            ret = db_write(DB_IMU_QUATERNION,1,data->quat1);
+            ok &= assert_OK(ret, "db_write DB_IMU_QUATERNION_1");
+            // Set timestamp
+            ret = db_write(DB_IMU_TIMESTAMP,0,&data->timestamp);
+            ok &= assert_OK(ret, "db_write");
+
+            if (imu_data_window <= db_field_buffer_current_size_get(DB_IMU_GYROSCOPE,0)) {
+                // Set observations
+                ret = cal_two_rot_axes_calib_observations_from_database_update();
+                ok &= assert_OK(ret, "cal_two_rot_axes_calib_observations_from_database_update");
+            }
+
+            // Dump database data
+            ret = db_csv_dump();
+            ok &= assert_OK(ret, "db_csv_dump");
+        }
+        // Call autocalib procedure
+        ret = cal_two_rot_axes_calib_compute(rotVector1,rotVector2);
+        tst_str("V1: <%f, %f, %f>, V2: <%f, %f, %f>", 
+            rotVector1[0],rotVector1[1], rotVector1[2],
+            rotVector2[0],rotVector2[1], rotVector2[2]);
+        ok &= assert_OK(ret, "cal_two_rot_axes_calib_compute");
+
+        if (0 < i) {
+            ok &= assert_vector3EqualNoSignThreshold(rotVector1,prevRotV1,5e-2,"cal_automatic_rotation_axis_calibrate result1");
+            ok &= assert_vector3EqualNoSignThreshold(rotVector2,prevRotV2,5e-2,"cal_automatic_rotation_axis_calibrate result2");
+        }
+        ret = vector3_copy(rotVector1,prevRotV1);
+        ok &= assert_OK(ret, "vector3_copy");
+        ret = vector3_copy(rotVector2,prevRotV2);
+        ok &= assert_OK(ret, "vector3_copy");
+    }
 
     testCleanUp();
     testReport(ok);
@@ -2910,13 +3029,15 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    ok &= tst_battery_all();
+    // ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
     // ok &= tst_cal_xxx();
     // ok &= tst_arm_015();
+    ok &= tst_cal_004();
     ok &= tst_cal_005();
+    ok &= tst_cal_006();
     // ok &= tst_arm_016();
 
     return (ok)? RET_OK : RET_ERROR;

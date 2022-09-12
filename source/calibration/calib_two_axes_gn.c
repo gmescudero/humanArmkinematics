@@ -99,16 +99,11 @@ static CAL_DATA scal_data = {
  * 
  * @param imu_data_buff_size (input) Size of the imu measures buffer
  * @param obs_data_buff_size (input) Size of the observations buffer
- * @param j1 (input) Initial value for first rotation vector
- * @param j2 (input) Initial value for second rotation vector
  * @return ERROR_CODE 
  */
-ERROR_CODE cal_two_rot_axes_calib_initialize(int imu_data_buff_size, int obs_data_buff_size, double j1[3], double j2[3]) {
+ERROR_CODE cal_two_rot_axes_calib_initialize(int imu_data_buff_size, int obs_data_buff_size) {
     ERROR_CODE status = RET_OK;
 
-    // Check arguments
-    if (NULL == j1) return RET_ARG_ERROR;
-    if (NULL == j2) return RET_ARG_ERROR;
     // Initialize IMU measures buffer
     if (RET_OK == status) status = db_field_buffer_setup(DB_IMU_GYROSCOPE,0,imu_data_buff_size);
     if (RET_OK == status) status = db_field_buffer_setup(DB_IMU_GYROSCOPE,1,imu_data_buff_size);
@@ -118,16 +113,6 @@ ERROR_CODE cal_two_rot_axes_calib_initialize(int imu_data_buff_size, int obs_dat
     if (RET_OK == status) status = db_field_buffer_setup(DB_CALIB_OMEGA,0,obs_data_buff_size);
     // Set up parameters vector
     scal_data.phi = matrix_allocate(CAL_PARAMETERS_NUM,1);
-    // Set initial value of phi based on the given vectors
-    double sph[2];
-    scal_spherical_1(j1[0],j1[1],j1[2],sph);
-    scal_data.phi.data[0][0] = sph[0];
-    scal_data.phi.data[1][0] = sph[1];
-    scal_data.sph_alt1 = 0;
-    scal_spherical_1(j2[0],j2[1],j2[2],sph);
-    scal_data.phi.data[2][0] = sph[0];
-    scal_data.phi.data[3][0] = sph[1];
-    scal_data.sph_alt2 = 0;
     // Set initial error
     scal_data.error = 1e300;
 
@@ -313,13 +298,23 @@ ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double parameter_vector
 ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV2[3]) {
     ERROR_CODE status = RET_OK;
 
-    double error = 1e199;                               // Error value
+    double error = scal_data.error;                     // Error value
     double oldError = error*2;                          // Last iteration error value
     double spherical_coords[CAL_PARAMETERS_NUM];        // Spherical coords of both vectors
 
     int iterations = CALIB_TWO_ROT_AXES_MAX_ITERATIONS; // Iterations of the algorithm
 
-    while (RET_OK == status && 0 < iterations--  && fabs(oldError-error) > 1e-1 ) {
+    double sph[2];
+    scal_spherical_1(rotationV1[0],rotationV1[1],rotationV1[2],sph);
+    scal_data.phi.data[0][0] = sph[0];
+    scal_data.phi.data[1][0] = sph[1];
+    scal_data.sph_alt1 = 0;
+    scal_spherical_1(rotationV2[0],rotationV2[1],rotationV2[2],sph);
+    scal_data.phi.data[2][0] = sph[0];
+    scal_data.phi.data[3][0] = sph[1];
+    scal_data.sph_alt2 = 0;
+
+    while (RET_OK == status && 0 < iterations--  && fabs(oldError-error) > CALIB_TWO_ROT_AXES_MAX_ERROR ) {
         // Previous iteration error value
         oldError = error;
         // Execute one iteration of the gauss newton algorithm

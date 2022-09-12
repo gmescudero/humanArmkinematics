@@ -62,7 +62,6 @@ bool preconditions_initTraces(const char *test_name);
 bool preconditions_init(const char *test_name);
 bool preconditions_init_imus(const char *test_name);
 bool preconditions_init_databaseCalib(const char *test_name, int imu_data_window, int observations_window);
-bool preconditions_init_databaseCalibVectors(const char *test_name, int imu_data_window, int observations_window, double j1[3], double j2[3]);
 // * ASSERTS ******************************************************************
 bool assert_OK(ERROR_CODE status, const char *description);
 bool assert_ERROR(ERROR_CODE status, const char *description);
