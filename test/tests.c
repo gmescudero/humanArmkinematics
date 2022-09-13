@@ -2216,32 +2216,6 @@ bool tst_cal_003()
     return ok;
 }
 
-bool tst_cal_xxx()
-{
-    bool ok = true;
-    ERROR_CODE ret = RET_OK;
-
-    double omega1[] = {0.0,0.0,500.0};
-    double omega2[] = {500.0,0.0,1000.0};
-    double omega1_noise[3];
-    double omega2_noise[3];
-
-    Quaternion q_sensor1 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
-    Quaternion q_sensor2 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
-    double q_buff[4] = {0.0};
-
-    testDescription(__FUNCTION__, "Test two rotation axis calibration");
-    ok = preconditions_init_databaseCalib(__FUNCTION__,20,CALIB_TWO_ROT_AXES_WINDOW);
-
-    // Test Steps
-
-
-
-    testCleanUp();
-    testReport(ok);
-    return ok;
-}
-
 bool tst_cal_004() 
 {
     bool ok = true;

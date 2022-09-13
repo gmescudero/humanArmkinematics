@@ -98,6 +98,13 @@ ERROR_CODE imu_initialize(const char *com_port);
  * @return ERROR_CODE: RET_OK on succes, RET_ERROR on failure and RET_ARG_ERROR if the given arguments are invalid
  */
 ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num);
+/**
+ * @brief Search COM ports and Initialize a set of IMU sensors from a given set of COM ports
+ * 
+ * @param imus_num (input) How many IMU sensors to initialize
+ * @return ERROR_CODE: RET_OK on succes, RET_ERROR on failure and RET_ARG_ERROR if the given arguments are invalid
+ */
+ERROR_CODE imu_batch_search_and_initialize(unsigned int imus_num);
 
 /**
  * @brief Remove initialized sensors from the handler

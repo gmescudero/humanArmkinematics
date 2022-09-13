@@ -171,8 +171,9 @@ ERROR_CODE db_initialize(void) {
 }
 
 ERROR_CODE db_terminate(void) {
-    dbg_str("%s -> Removing all database resources",__FUNCTION__);
     ERROR_CODE status = RET_OK;
+
+    log_str("Removing all database resources");
 
     // Reset csv logging
     csv_logging_fields.first       = 1;

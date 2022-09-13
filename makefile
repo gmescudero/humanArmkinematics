@@ -22,7 +22,8 @@ INC = \
 	-I$(SOURCE_DIR)/imu \
 	-I$(SOURCE_DIR)/database \
 	-I$(SOURCE_DIR)/calibration \
-	-I$(SOURCE_DIR)/libGA100
+	-I$(SOURCE_DIR)/libGA100 \
+	-I$(SOURCE_DIR)/launcher
 	
 # libraries
 IMULIB= -L$(current_dir)/lib -lLpSensor -lstdc++ -lX11
@@ -38,7 +39,7 @@ WARN = -Wall
 CCFLAGS = $(DEBUG) $(OPT) $(WARN)
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
-OBJS =  quaternion.o arm.o vector3.o matrix.o imu.o functions.o logging.o database.o calib.o calib_two_axes_ga.o calib_two_axes_gn.o libGA.o svd.o
+OBJS =  quaternion.o arm.o vector3.o matrix.o imu.o functions.o logging.o database.o calib.o calib_two_axes_ga.o calib_two_axes_gn.o libGA.o svd.o boot.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
@@ -53,6 +54,9 @@ test_nl: $(OBJS) all
 
 main.o: $(SOURCE_DIR)/main.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/main.c -o $(BINARIES_DIR)/$@
+
+boot.o: $(SOURCE_DIR)/launcher/boot.c dirs_create
+	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/launcher/boot.c -o $(BINARIES_DIR)/$@
 
 functions.o: $(SOURCE_DIR)/general/functions.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/general/functions.c -o $(BINARIES_DIR)/$@ 

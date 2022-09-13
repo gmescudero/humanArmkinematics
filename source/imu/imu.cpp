@@ -92,6 +92,31 @@ ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num){
     return status;
 }
 
+ERROR_CODE imu_batch_search_and_initialize(unsigned int imus_num) {
+    ERROR_CODE status = RET_OK;
+    COM_PORTS discoveredPorts;
+
+    dbg_str("%s -> Search and initialize %d IMUs",__FUNCTION__, imus_num);
+
+    // Check arguments
+    if (imus_num > IMU_MAX_NUMBER || imus_num <= 0) return RET_ARG_ERROR;
+
+    /* Look for COM ports avalilable in the system */
+    if (RET_OK == status) {
+        log_str("Retrieve available COM ports");
+        status = com_ports_list(&discoveredPorts);
+        if (RET_OK == status && discoveredPorts.ports_number < imus_num) {
+            err_str("Found only %d when %d IMU sensors required");
+            status = RET_ERROR;
+        }
+    }
+
+    /* Initialize required IMU sensors */
+    status  = imu_batch_initialize(discoveredPorts, imus_num);
+
+    return status;
+}
+
 void imu_all_sensors_remove(){
     // Removes the initialized sensor
     for (int i = 0; i < num_imus; i++) {
@@ -105,6 +130,7 @@ void imu_all_sensors_remove(){
 }
 
 void imu_terminate(){
+    log_str("Terminate all IMU connections");
     // Removes the initialized sensors
     imu_all_sensors_remove();
     // Deletes LpmsSensorManager object

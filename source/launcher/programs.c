@@ -1,38 +1,128 @@
-/**
- * @file main.c
- * @author German Moreno Escudero
- * @brief Main execution program 
- * @version 0.1
- * @date 2022-04-28
- * 
- * @copyright Copyright (c) 2022
- * 
- */
 
-#include "Quaternion.h"
-#include "constants.h"
-#include "arm.h"
-#include "imu.h"
-#include "general.h"
-#include "vector3.h"
-#include "database.h"
-#include "calib.h"
 #include "launch.h"
-#include <string.h>
+#include "database.h"
+#include "imu.h"
+#include "constants.h"
 
-/******************************/
-/** CONFIG ********************/
-/******************************/
-#define USE_IMU_CALIB (1)           // Set whether to use the IMUs offset calibration or the integrated one (1 use imu, 0 use app)
-#define USE_AUTO_CALIB (0)          // Set whether or not to use autocalibration of rotation axis (0 no autocalib, 1 one axis, 2 two axes)
-#define IMUS_NUM (2)                // Set the expected minimum imu sensors for the program to work
-#define UPPER_ARM_LENGTH (10.0)     // Set the Upper-arm length
-#define FOREARM_LENGTH (5.0)        // Set the Forearm length
-/******************************/
+#define NO_DATA_MAX_ITERATIONS (10)
 
-#define STATUS_EVAL(code) {if (RET_OK != code && RET_NO_EXEC != status) err_str("[%d] Failed: %d ",__LINE__, code);}
+ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseIterations) {
+    ERROR_CODE status = RET_OK;
+    IMU_NOISE_DATA noise;
+    ImuData data[imus_num];
+    double startTime   = -1.0;
+    double currentTime = -1.0;
+    double buffTime    = -1.0;
+    int hasNewData;
+    int noDataIterations = NO_DATA_MAX_ITERATIONS;
 
-int main(int argc, char **argv) {
+    // Check arguments
+    if (imus_num > IMU_MAX_NUMBER || imus_num <= 0) return RET_ARG_ERROR;
+    if (time <= EPSI)                               return RET_ARG_ERROR;
+    if (measureNoiseIterations < 0)                 return RET_ARG_ERROR;
+
+    /* Set the csv logging from the database */
+    log_str("Set the database fields to track into the csv");
+    for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
+        if (RET_OK == status) status = db_csv_field_add(DB_IMU_TIMESTAMP,imu);
+        if (RET_OK == status) status = db_csv_field_add(DB_IMU_GYROSCOPE,imu);
+        if (RET_OK == status) status = db_csv_field_add(DB_IMU_ACCELEROMETER,imu);
+        if (RET_OK == status) status = db_csv_field_add(DB_IMU_MAGNETOMETER,imu);
+        if (RET_OK == status) status = db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,imu);
+        if (RET_OK == status) status = db_csv_field_add(DB_IMU_LINEAR_ACCELERATION,imu);
+        if (RET_OK == status) status = db_csv_field_add(DB_IMU_QUATERNION,imu);
+    }
+    if (RET_OK != status) err_str("Failed to setup database CSV logging");
+
+    /* Look for IMU sensors and initialize 2 of them */
+    if (RET_OK == status) status = imu_batch_search_and_initialize(imus_num);
+    if (RET_OK != status) err_str("Failed to setup IMU sensors");
+
+    /* Measure noise values */
+    if (0 < measureNoiseIterations) {
+        log_str("Measuring IMUs in static position to gather noise data");
+        log_str(" -> [USER]: Keep IMU sensors in a steady position");
+        for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
+            if (RET_OK == status) status = imu_static_errors_measure(imu, measureNoiseIterations, &noise);
+            if (RET_OK == status) {
+                log_str("IMU %d noise data: \n"
+                    "\t accelerometer: mean <%f,%f,%f> var <%f,%f,%f> \n"
+                    "\t gyroscope:     mean <%f,%f,%f> var <%f,%f,%f> \n"
+                    "\t magnetometer:  mean <%f,%f,%f> var <%f,%f,%f> \n",
+                        imu, 
+                        noise.accMean[0],noise.accMean[1],noise.accMean[2], noise.accVar[0], noise.accVar[1], noise.accVar[2],
+                        noise.gyrMean[0],noise.gyrMean[1],noise.gyrMean[2], noise.gyrVar[0], noise.gyrVar[1], noise.gyrVar[2],
+                        noise.magMean[0],noise.magMean[1],noise.magMean[2], noise.magVar[0], noise.magVar[1], noise.magVar[2]
+                );
+            }
+        }
+        log_str("Finished IMUs noise measuring");
+    }
+
+    /* Set starting time */
+    if (RET_OK == status) status = imu_batch_read(imus_num, data);
+    if (RET_OK == status) startTime = data[0].timeStamp;
+    if (RET_OK != status) err_str("Failed to read IMU sensors");
+
+    /* Start IMU reading callbacks */
+    for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
+        status = imu_read_callback_attach(imu, 0==imu);
+    }
+    if (RET_OK != status) err_str("Failed to initialize reading callback for IMU sensors");
+
+    /* Read IMUs data for the given amount of time */
+    log_str("Starting loop gathering IMU sensors data");
+    log_str(" -> [USER]: Starting recording for %f seconds",time);
+    do {
+        /* Reset no execution buffer or trigger error if timeout is reached */
+        if (RET_NO_EXEC == status) {
+            if (0 <= noDataIterations--) {
+                status = RET_ERROR;
+                err_str("Unable to gather IMUs data. Reading timeout");
+            }
+            else {
+                sleep_ms(100);
+                status = RET_OK;
+            }
+        }
+        else {
+            noDataIterations = NO_DATA_MAX_ITERATIONS;
+        }
+
+        /* Check for available data in IMU sensors */
+        for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
+            if (RET_OK == status) status = db_read(DB_IMU_NEW_DATA, imu, &hasNewData);
+            if (RET_OK == status && (int)false == hasNewData) {
+                wrn_str("Imu sensor %d data retrieving timeout", imu);
+                status = RET_NO_EXEC;
+            }
+            /* Reset new data flag */
+            if (RET_OK == status && (int)true == hasNewData) {
+                hasNewData = (int)false;
+                status = db_write(DB_IMU_NEW_DATA, imu, &hasNewData);
+            }
+        }
+
+        /* Retrieve current timestamp from database */
+        if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
+        if (RET_OK == status) currentTime = buffTime - startTime;
+        if (RET_OK != status) err_str("Failed to read IMU sensors timestamp from database");
+
+        dbg_str("Current time %f seconds out  of %f seconds",currentTime, time);
+
+        /* Wait for next iteration */
+        if (RET_OK == status) sleep_s(1);
+
+    } while ((RET_OK == status || RET_NO_EXEC == status) && time > currentTime);
+    log_str(" -> [USER]: Finished recording data");
+
+
+    return status;
+}
+
+
+#if 0 // TODO: Create programs for other utilities
+{
     ERROR_CODE status = RET_OK;
     COM_PORTS discoveredPorts;
     ImuData data[IMUS_NUM];
@@ -268,3 +358,4 @@ int main(int argc, char **argv) {
 
     return (RET_OK == status)? RET_OK:RET_ERROR;
 }
+#endif
