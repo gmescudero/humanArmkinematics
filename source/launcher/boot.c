@@ -30,6 +30,7 @@ ERROR_CODE hak_terminate() {
     log_str("Cleaning all resources used for Human Arm Kinematics");
 
     imu_terminate();
+    cal_two_rot_axes_calib_terminate();
     status = db_terminate();
     if (RET_OK != status) wrn_str("Failed to clean all resources");
 

@@ -43,3 +43,20 @@ ERROR_CODE hak_terminate();
  * @return ERROR_CODE 
  */
 ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseIterations);
+/**
+ * @brief A program that calibrates through the use of automatic two axes calib and measures elbow angles
+ * 
+ * @details
+ *      The program performs the following steps:
+ *      - Set up database logging to CSV
+ *      - Search ans initialize 2 IMU sensors connected to COM ports
+ *      - Attack IMU data retrieve callback 
+ *      - Loop while gathering IMU data of arbitrary motions to be used for calibration
+ *      - Run Two Axes Automatic calibration algorithm to obtain rotation vectors of the elbow
+ *      - Loop during the requested ammount of time measuring the elbow angles
+ *      - End
+ * 
+ * @param time (input) Total monitoring time in seconds
+ * @return ERROR_CODE 
+ */
+ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time);

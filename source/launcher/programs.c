@@ -3,6 +3,7 @@
 #include "database.h"
 #include "imu.h"
 #include "constants.h"
+#include "calib.h"
 
 #define NO_DATA_MAX_ITERATIONS (10)
 
@@ -34,7 +35,7 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
     }
     if (RET_OK != status) err_str("Failed to setup database CSV logging");
 
-    /* Look for IMU sensors and initialize 2 of them */
+    /* Look for IMU sensors and initialize the required of them */
     if (RET_OK == status) status = imu_batch_search_and_initialize(imus_num);
     if (RET_OK != status) err_str("Failed to setup IMU sensors");
 
@@ -72,8 +73,8 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
     /* Start IMU reading callbacks */
     for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
         status = imu_read_callback_attach(imu, 0==imu);
+        if (RET_OK != status) err_str("Failed to initialize reading callback for IMU sensor %d",imu);
     }
-    if (RET_OK != status) err_str("Failed to initialize reading callback for IMU sensors");
 
     do {
         /* Reset no execution buffer or trigger error if timeout is reached */
@@ -110,7 +111,7 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
         if (RET_OK == status) currentTime = buffTime - startTime;
         if (RET_OK != status) err_str("Failed to read IMU sensors timestamp from database");
 
-        dbg_str("Current time %f seconds out  of %f seconds",currentTime, time);
+        dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
 
         /* Wait for next iteration */
         if (RET_OK == status) sleep_s(1);
@@ -118,6 +119,7 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
     } while ((RET_OK == status || RET_NO_EXEC == status) && time > currentTime);
     log_str(" -> [USER]: Finished recording data");
 
+    /* Remove used resources */
     for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
         status = imu_read_callback_detach(imu);
     }
@@ -129,8 +131,101 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
 
 ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     ERROR_CODE status = RET_OK;
+    int imus_num = IMUS_NUM;
+    double rotationV1[3] = {0,0,1};
+    double rotationV2[3] = {1,0,0};
+    double q_buff[4];
+    double startTime   = -1.0;
+    double currentTime = -1.0;
+    double buffTime    = -1.0;
+    Quaternion q1,q2;
+    double fe, ps, carryingAngle;
 
     // TODO: make this function
+    /* Set the csv logging from the database */
+    log_str("Set the database fields to track into the csv");
+    if (RET_OK == status) status = db_csv_field_add(DB_IMU_TIMESTAMP,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_IMU_GYROSCOPE,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_IMU_GYROSCOPE,1);
+    if (RET_OK == status) status = db_csv_field_add(DB_IMU_QUATERNION,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_IMU_QUATERNION,1);
+    if (RET_OK == status) status = db_csv_field_add(DB_CALIB_OMEGA,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
+    if (RET_OK == status) status = db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,1);
+    if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ERROR,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_ANGLES,0);
+    if (RET_OK != status) err_str("Failed to setup database CSV logging");
+
+    /* Look for IMU sensors and initialize 2 of them */
+    if (RET_OK == status) status = imu_batch_search_and_initialize(imus_num);
+    if (RET_OK != status) err_str("Failed to setup IMU sensors");
+
+    /* Read IMUs data for the given amount of time */
+    log_str("Starting loop gathering IMU sensors data to calibrate rotation axes");
+    log_str(" -> [USER]: Perform arbitrary motions of the elbow including flexion/extension and pronation/supination for %f seconds",time);
+    sleep_s(2);
+
+    /* Start IMU reading callbacks */
+    for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
+        status = imu_read_callback_attach(imu, 0==imu);
+        if (RET_OK != status) err_str("Failed to initialize reading callback for IMU sensor %d",imu);
+    }
+
+    /* Loop while data keeps beeing gathered */
+    do {
+        sleep_s(1);
+        if (RET_OK == status) status = cal_two_rot_axes_calib_observations_from_database_update();
+    } while (RET_OK == status && CALIB_TWO_ROT_AXES_WINDOW > db_field_buffer_current_size_get(DB_CALIB_OMEGA,0));
+    log_str(" -> [USER]: Finished recording calibration data");
+
+    /* Perform calibration algorithm */
+    log_str("Calibrating rotation two axes");
+    if (RET_OK == status) {
+        status = cal_two_rot_axes_calib_compute(rotationV1,rotationV2);
+        if (RET_OK != status) err_str("Failed to initialize reading callback for IMU sensors");
+    }
+    log_str("Finished two axes calibration: ");
+    log_str("\tRotation vector 1:[%f,%f,%f]", rotationV1[0],rotationV1[1], rotationV1[2]);
+    log_str("\tRotation vector 2:[%f,%f,%f]", rotationV2[0],rotationV2[1], rotationV2[2]);
+
+    /* Apply calibration functions to imu readings */
+    log_str("Starting loop printing arm angles");
+    log_str(" -> [USER]: Starting recording for %f seconds",time);
+    sleep_s(2);
+
+    /* Set starting time */
+    if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP,0,&startTime);
+
+    do {
+        /* Get the current quaternions */
+        if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,0,q_buff);
+        if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q1);
+        if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,1,q_buff);
+        if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q2);
+
+        /* Compute current elbow angles */
+        if (RET_OK == status) status = arm_elbow_angles_from_rotation_vectors_get(
+            q1, q2, rotationV1, rotationV2,&fe, &ps, &carryingAngle);
+
+        /* Retrieve current timestamp from database */
+        if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
+        if (RET_OK == status) currentTime = buffTime - startTime;
+
+        dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
+
+        /* Wait for next iteration */
+        if (RET_OK == status) sleep_ms(100);
+
+    } while (RET_OK == status && time > currentTime);
+    if (RET_OK != status) err_str("Failed to apply calibration");
+
+    /* Remove used resources */
+    for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
+        status = imu_read_callback_detach(imu);
+    }
 
     return status;
 }
