@@ -42,6 +42,7 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
     if (0 < measureNoiseIterations) {
         log_str("Measuring IMUs in static position to gather noise data");
         log_str(" -> [USER]: Keep IMU sensors in a steady position");
+        sleep_s(2);
         for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
             if (RET_OK == status) status = imu_static_errors_measure(imu, measureNoiseIterations, &noise);
             if (RET_OK == status) {
@@ -59,6 +60,10 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
         log_str("Finished IMUs noise measuring");
     }
 
+    /* Read IMUs data for the given amount of time */
+    log_str("Starting loop gathering IMU sensors data");
+    log_str(" -> [USER]: Starting recording for %f seconds",time);
+    sleep_s(2);
     /* Set starting time */
     if (RET_OK == status) status = imu_batch_read(imus_num, data);
     if (RET_OK == status) startTime = data[0].timeStamp;
@@ -70,9 +75,6 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
     }
     if (RET_OK != status) err_str("Failed to initialize reading callback for IMU sensors");
 
-    /* Read IMUs data for the given amount of time */
-    log_str("Starting loop gathering IMU sensors data");
-    log_str(" -> [USER]: Starting recording for %f seconds",time);
     do {
         /* Reset no execution buffer or trigger error if timeout is reached */
         if (RET_NO_EXEC == status) {
@@ -116,6 +118,16 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
     } while ((RET_OK == status || RET_NO_EXEC == status) && time > currentTime);
     log_str(" -> [USER]: Finished recording data");
 
+
+    return status;
+}
+
+#define IMUS_NUM (2)
+
+ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
+    ERROR_CODE status = RET_OK;
+
+    // TODO: make this function
 
     return status;
 }
