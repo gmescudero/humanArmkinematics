@@ -37,8 +37,10 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
     if (RET_OK != status) err_str("Failed to setup database CSV logging");
 
     /* Look for IMU sensors and initialize the required of them */
-    if (RET_OK == status) status = imu_batch_search_and_initialize(imus_num);
-    if (RET_OK != status) err_str("Failed to setup IMU sensors");
+    if (imus_num > imu_number_get()) {
+        if (RET_OK == status) status = imu_batch_search_and_initialize(imus_num);
+        if (RET_OK != status) err_str("Failed to setup IMU sensors");
+    }
 
     /* Measure noise values */
     if (0 < measureNoiseIterations) {
@@ -69,7 +71,7 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
     /* Set starting time */
     if (RET_OK == status) status = imu_batch_read(imus_num, data);
     if (RET_OK == status) startTime = data[0].timeStamp;
-    if (RET_OK != status) err_str("Failed to read IMU sensors");
+    if (RET_OK != status) err_str("Failed to read IMU sensors: ret: %d",status);
 
     /* Start IMU reading callbacks */
     for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
@@ -108,9 +110,11 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
         }
 
         /* Retrieve current timestamp from database */
-        if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
+        if (RET_OK == status) {
+            status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime); 
+            if (RET_OK != status) err_str("Failed to read IMU sensors timestamp from database");
+        }
         if (RET_OK == status) currentTime = buffTime - startTime;
-        if (RET_OK != status) err_str("Failed to read IMU sensors timestamp from database");
 
         dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
 
@@ -160,9 +164,11 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_ANGLES,0);
     if (RET_OK != status) err_str("Failed to setup database CSV logging");
 
-    /* Look for IMU sensors and initialize 2 of them */
-    if (RET_OK == status) status = imu_batch_search_and_initialize(imus_num);
-    if (RET_OK != status) err_str("Failed to setup IMU sensors");
+    /* Look for IMU sensors and initialize the required of them */
+    if (imus_num > imu_number_get()) {
+        if (RET_OK == status) status = imu_batch_search_and_initialize(imus_num);
+        if (RET_OK != status) err_str("Failed to setup IMU sensors");
+    }
 
     /* Read IMUs data for the given amount of time */
     log_str("Starting loop gathering IMU sensors data to calibrate rotation axes");

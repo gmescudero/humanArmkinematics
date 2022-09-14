@@ -27,6 +27,7 @@ int main(int argc, char **argv) {
     if (RET_OK == status) status = hak_initialize();
 
     if (RET_OK == status) status = hak_record_imus_data(2,30,1000);
+    if (RET_OK == status) status = hak_two_axes_auto_calib_and_kinematics(30);
 
     if (RET_OK == status) status = hak_terminate();
 

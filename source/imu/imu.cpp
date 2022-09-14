@@ -388,7 +388,7 @@ ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOI
     double sumGyr2[3] = {0.0};
     double sumMag[3]  = {0.0};
     double sumMag2[3] = {0.0};
-    int noDataTimeout = 20;
+    int noDataTimeout = 50;
 
         
     // Check arguments
@@ -407,7 +407,7 @@ ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOI
                 return RET_ERROR;
             }
         }
-        noDataTimeout = 20;
+        noDataTimeout = 50;
 
         // Read imu
         status = imu_read(index,&data);
