@@ -118,6 +118,9 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
     } while ((RET_OK == status || RET_NO_EXEC == status) && time > currentTime);
     log_str(" -> [USER]: Finished recording data");
 
+    for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
+        status = imu_read_callback_detach(imu);
+    }
 
     return status;
 }

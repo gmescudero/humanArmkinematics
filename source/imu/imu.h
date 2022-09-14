@@ -155,12 +155,18 @@ ERROR_CODE imu_batch_read(unsigned int imus_num, ImuData imus[]);
 /**
  * @brief Attach the read callback to an IMU sensor
  * 
- * @param index (input) IMU sensor index to attack callback to
+ * @param index (input) IMU sensor index to attach callback to
  * @param csv_dump (input) Set the read callback to dump the csv or not
  * @return ERROR_CODE 
  */
 ERROR_CODE imu_read_callback_attach(unsigned int index, bool csv_dump);
-
+/**
+ * @brief Detach a read callback from an IMU sensor
+ * 
+ * @param index (input) IMU sensor index to detach callback from
+ * @return ERROR_CODE 
+ */
+ERROR_CODE imu_read_callback_detach(unsigned int index);
 /**
  * @brief Print the IMU data through console
  * 

@@ -236,6 +236,16 @@ ERROR_CODE imu_read_callback_attach(unsigned int index, bool csv_dump) {
     return RET_OK;
 }
 
+ERROR_CODE imu_read_callback_detach(unsigned int index) {
+    dbg_str("%s -> Detaching data retrieving callback from IMU%d",__FUNCTION__, index);
+    // Check arguments
+    if (0 > index || num_imus <= index) return RET_ARG_ERROR;
+    
+    lpms[index]->setCallback(NULL);
+
+    return RET_OK;
+}
+
 ERROR_CODE imu_read(unsigned int index, ImuData *imu) {
     // dbg_str("%s -> Read IMU %d out of %d",__FUNCTION__, index, num_imus);
     ERROR_CODE status;
