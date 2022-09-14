@@ -4,6 +4,7 @@
 #include "imu.h"
 #include "constants.h"
 #include "calib.h"
+#include "arm.h"
 
 #define NO_DATA_MAX_ITERATIONS (10)
 

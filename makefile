@@ -39,7 +39,7 @@ WARN = -Wall
 CCFLAGS = $(DEBUG) $(OPT) $(WARN)
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
-OBJS =  quaternion.o arm.o vector3.o matrix.o imu.o functions.o logging.o database.o calib.o calib_two_axes_ga.o calib_two_axes_gn.o libGA.o svd.o boot.o
+OBJS =  quaternion.o arm.o vector3.o matrix.o imu.o functions.o logging.o database.o calib.o calib_two_axes_ga.o calib_two_axes_gn.o libGA.o svd.o boot.o launch.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
@@ -57,6 +57,9 @@ main.o: $(SOURCE_DIR)/main.c dirs_create
 
 boot.o: $(SOURCE_DIR)/launcher/boot.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/launcher/boot.c -o $(BINARIES_DIR)/$@
+
+launch.o: $(SOURCE_DIR)/launcher/programs.c dirs_create
+	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/launcher/programs.c -o $(BINARIES_DIR)/$@
 
 functions.o: $(SOURCE_DIR)/general/functions.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/general/functions.c -o $(BINARIES_DIR)/$@ 

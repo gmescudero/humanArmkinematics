@@ -219,6 +219,17 @@ static void simu_callback_new_data_update_and_dump(ImuData d, const char *id) {
     }
 }
 
+/**
+ * @brief Callback used as placeholder for detached callback
+ * 
+ * @param d N/A
+ * @param id N/A
+ */
+static void simu_callback_no_operation(ImuData d, const char *id) {
+    /* No operation */
+}
+
+
 ERROR_CODE imu_read_callback_attach(unsigned int index, bool csv_dump) {
     dbg_str("%s -> Attaching data retrieving callback to IMU%d",__FUNCTION__, index);
     // Check arguments
@@ -241,7 +252,7 @@ ERROR_CODE imu_read_callback_detach(unsigned int index) {
     // Check arguments
     if (0 > index || num_imus <= index) return RET_ARG_ERROR;
     
-    lpms[index]->setCallback(NULL);
+    lpms[index]->setCallback(&simu_callback_no_operation);
 
     return RET_OK;
 }
@@ -377,6 +388,8 @@ ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOI
     double sumGyr2[3] = {0.0};
     double sumMag[3]  = {0.0};
     double sumMag2[3] = {0.0};
+    int noDataTimeout = 20;
+
         
     // Check arguments
     if (1 > iterations || 100000 <= iterations) return RET_ARG_ERROR; // TODO make this a macro
@@ -389,7 +402,13 @@ ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOI
         // Pause
         while (0 >= lpms[index]->hasImuData()) {
             sleep_ms(10);
+            if (0 >= noDataTimeout--) {
+                err_str("Unable to retrieve IMU sensor %d data",index);
+                return RET_ERROR;
+            }
         }
+        noDataTimeout = 20;
+
         // Read imu
         status = imu_read(index,&data);
         // Aggregate values
