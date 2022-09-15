@@ -2414,9 +2414,9 @@ bool tst_cal_006()
     bool ok = true;
     ERROR_CODE ret = RET_OK;
 
-    const char csvFile[] = "test/tst_data/data5_tst_cal_004_onArmArbitraryMotions.csv";
+    // const char csvFile[] = "test/tst_data/data5_tst_cal_004_onArmArbitraryMotions.csv";
     // const char csvFile[] = "test/tst_data/data6_tst_cal_004_onArmArbitraryMotions.csv";
-    // const char csvFile[] = "test/tst_data/data7_tst_cal_004_onArmArbitraryMotions.csv";
+    const char csvFile[] = "test/tst_data/data7_tst_cal_004_onArmArbitraryMotions.csv";
     char headers[TST_MAX_CSV_DATA_VALUES][TST_MAX_CSV_HEADER_LENGTH] = {'\0'};
     double buff[TST_MAX_CSV_DATA_VALUES];
     TST_CSV_IMU_DATA *data = (TST_CSV_IMU_DATA*)buff;

@@ -735,7 +735,7 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
     }
     if (0 != smatrix_Singular_Value_Decomposition((double*)A,a.rows,a.cols,(double*)U,D,(double*)V,dummy_array)) {
         err_str("Failed to perform Singular Value Decomposition for pseudoinverse");
-        return RET_ERROR;
+        return RET_NO_EXEC;
     }
     free(dummy_array);
 
