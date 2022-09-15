@@ -18,7 +18,7 @@
 
 #define CALIB_TWO_ROT_AXES_WINDOW (500)
 #define CALIB_TWO_ROT_AXES_IMU_DATA_BUFF_SIZE (40)
-#define CALIB_TWO_ROT_AXES_MAX_ITERATIONS (100)
+#define CALIB_TWO_ROT_AXES_MAX_ITERATIONS (50)
 #define CALIB_TWO_ROT_AXES_MAX_ERROR (1e-2)
 #define CALIB_TWO_ROT_AXES_STEP_SZ (1)
 
@@ -113,7 +113,6 @@ ERROR_CODE cal_two_rot_axes_calib_initialize(int imu_data_buff_size, int obs_dat
 void cal_two_rot_axes_calib_terminate();
 ERROR_CODE cal_two_rot_axes_calib_observations_update(double omega1_from1[3], double omega2_from2[3], Quaternion q_sensor1, Quaternion q_sensor2);
 ERROR_CODE cal_two_rot_axes_calib_observations_from_database_update();
-ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double parameter_vector[4], double *error);
 ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV2[3]);
 
 
