@@ -27,6 +27,7 @@ In the folder `test/tst_data` some csv data files shall be found with different 
 | data5_tst_cal_004_onArmArbitraryMotions.csv       | Measures of the IMUs while mounted on the arm and performing arbitrary motions | 
 | data6_tst_cal_004_onArmArbitraryMotions.csv       | Measures of the IMUs while mounted on the arm and performing arbitrary motions | 
 | data7_tst_cal_004_onArmArbitraryMotions.csv       | Measures of the IMUs while mounted on the arm and performing arbitrary motions (Longer period) | 
+| data8_onArmAbductionFromTposeAndBack.csv          | Measures of the IMUs while mounted on the arm and performing abuction movements parallel to the ground |
 
 ## Gauss-Newton Implementation
 The error is calculated in the following way:
