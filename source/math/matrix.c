@@ -261,6 +261,32 @@ ERROR_CODE matrix_determinant(MATRIX a, double *output) {
                 - a.data[0][0]*a.data[1][2]*a.data[2][1]
                 - a.data[0][1]*a.data[1][0]*a.data[2][2];
     }
+    else if (4 == size) {
+        *output = a.data[0][0]*a.data[1][1]*a.data[2][2]*a.data[3][3] 
+                - a.data[0][0]*a.data[1][1]*a.data[2][3]*a.data[3][2] 
+                - a.data[0][0]*a.data[1][2]*a.data[2][1]*a.data[3][3] 
+                + a.data[0][0]*a.data[1][2]*a.data[2][3]*a.data[3][1] 
+                + a.data[0][0]*a.data[1][3]*a.data[2][1]*a.data[3][2] 
+                - a.data[0][0]*a.data[1][3]*a.data[2][2]*a.data[3][1] 
+                - a.data[0][1]*a.data[1][0]*a.data[2][2]*a.data[3][3] 
+                + a.data[0][1]*a.data[1][0]*a.data[2][3]*a.data[3][2] 
+                + a.data[0][1]*a.data[1][2]*a.data[2][0]*a.data[3][3] 
+                - a.data[0][1]*a.data[1][2]*a.data[2][3]*a.data[3][0] 
+                - a.data[0][1]*a.data[1][3]*a.data[2][0]*a.data[3][2] 
+                + a.data[0][1]*a.data[1][3]*a.data[2][2]*a.data[3][0] 
+                + a.data[0][2]*a.data[1][0]*a.data[2][1]*a.data[3][3] 
+                - a.data[0][2]*a.data[1][0]*a.data[2][3]*a.data[3][1] 
+                - a.data[0][2]*a.data[1][1]*a.data[2][0]*a.data[3][3] 
+                + a.data[0][2]*a.data[1][1]*a.data[2][3]*a.data[3][0] 
+                + a.data[0][2]*a.data[1][3]*a.data[2][0]*a.data[3][1] 
+                - a.data[0][2]*a.data[1][3]*a.data[2][1]*a.data[3][0] 
+                - a.data[0][3]*a.data[1][0]*a.data[2][1]*a.data[3][2] 
+                + a.data[0][3]*a.data[1][0]*a.data[2][2]*a.data[3][1] 
+                + a.data[0][3]*a.data[1][1]*a.data[2][0]*a.data[3][2] 
+                - a.data[0][3]*a.data[1][1]*a.data[2][2]*a.data[3][0] 
+                - a.data[0][3]*a.data[1][2]*a.data[2][0]*a.data[3][1] 
+                + a.data[0][3]*a.data[1][2]*a.data[2][1]*a.data[3][0];
+    }
     else {
         double partialDet = 0;
         MATRIX minor = matrix_allocate(size-1,size-1);

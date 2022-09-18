@@ -9,16 +9,7 @@
  * 
  */
 
-#include "Quaternion.h"
-#include "constants.h"
-#include "arm.h"
-#include "imu.h"
-#include "general.h"
-#include "vector3.h"
-#include "database.h"
-#include "calib.h"
 #include "launch.h"
-#include <string.h>
 
 
 int main(int argc, char **argv) {

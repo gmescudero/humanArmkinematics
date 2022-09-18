@@ -672,7 +672,7 @@ bool tst_math_018()
 {
     bool ok = true;
     ERROR_CODE ret;
-    MATRIX m1, m2, m3, m4;
+    MATRIX m1, m2, m3, m4, m5;
     double det;
     
     testDescription(__FUNCTION__, "Check matrix determinant");
@@ -681,7 +681,8 @@ bool tst_math_018()
     m1    = matrix_identity_allocate(1);
     m2    = matrix_identity_allocate(2);
     m3    = matrix_identity_allocate(3);
-    m4    = matrix_identity_allocate(5);
+    m4    = matrix_identity_allocate(4);
+    m5    = matrix_identity_allocate(5);
 
     ret = matrix_determinant(m1, &det);
     ok &= assert_OK(ret, "matrix_determinant 1");
@@ -700,19 +701,28 @@ bool tst_math_018()
     ok &= assert_OK(ret, "matrix_determinant 3");
     ok &= assert_double(det, -3.0, EPSI, "matrix_determinant result 3");
 
-    m4.data[0][0] = 2.0;  m4.data[0][1] = 2.0;  m4.data[0][2] = 3.0;  m4.data[0][3] = 0.0;  m4.data[0][4] = 5.0; 
-    m4.data[1][0] = 6.0;  m4.data[1][1] = 8.0;  m4.data[1][2] = 8.0;  m4.data[1][3] = 9.0;  m4.data[1][4] = 10.0; 
-    m4.data[2][0] = 14.0; m4.data[2][1] = 13.0; m4.data[2][2] = 13.0; m4.data[2][3] = 11.0; m4.data[2][4] = 11.0; 
-    m4.data[3][0] = 15.0; m4.data[3][1] = 16.0; m4.data[3][2] = 17.0; m4.data[3][3] = 19.0; m4.data[3][4] = 19.0; 
-    m4.data[4][0] = 24.0; m4.data[4][1] = 23.0; m4.data[4][2] = 22.0; m4.data[4][3] = 21.0; m4.data[4][4] = 20.0; 
+    m4.data[0][0] = 2.0;  m4.data[0][1] = 2.0;  m4.data[0][2] = 3.0;  m4.data[0][3] = 0.0;  
+    m4.data[1][0] = 6.0;  m4.data[1][1] = 8.0;  m4.data[1][2] = 8.0;  m4.data[1][3] = 9.0;  
+    m4.data[2][0] = 14.0; m4.data[2][1] = 13.0; m4.data[2][2] = 13.0; m4.data[2][3] = 11.0; 
+    m4.data[3][0] = 15.0; m4.data[3][1] = 16.0; m4.data[3][2] = 17.0; m4.data[3][3] = 19.0; 
     ret = matrix_determinant(m4, &det); 
     ok &= assert_OK(ret, "matrix_determinant 4");
-    ok &= assert_double(det,-482.0, EPSI, "matrix_determinant result 4");
+    ok &= assert_double(det,-183.0, EPSI, "matrix_determinant result 4");
+
+    m5.data[0][0] = 2.0;  m5.data[0][1] = 2.0;  m5.data[0][2] = 3.0;  m5.data[0][3] = 0.0;  m5.data[0][4] = 5.0; 
+    m5.data[1][0] = 6.0;  m5.data[1][1] = 8.0;  m5.data[1][2] = 8.0;  m5.data[1][3] = 9.0;  m5.data[1][4] = 10.0; 
+    m5.data[2][0] = 14.0; m5.data[2][1] = 13.0; m5.data[2][2] = 13.0; m5.data[2][3] = 11.0; m5.data[2][4] = 11.0; 
+    m5.data[3][0] = 15.0; m5.data[3][1] = 16.0; m5.data[3][2] = 17.0; m5.data[3][3] = 19.0; m5.data[3][4] = 19.0; 
+    m5.data[4][0] = 24.0; m5.data[4][1] = 23.0; m5.data[4][2] = 22.0; m5.data[4][3] = 21.0; m5.data[4][4] = 20.0; 
+    ret = matrix_determinant(m5, &det); 
+    ok &= assert_OK(ret, "matrix_determinant 5");
+    ok &= assert_double(det,-482.0, EPSI, "matrix_determinant result 5");
 
     matrix_free(m1);
     matrix_free(m2);
     matrix_free(m3);
     matrix_free(m4);
+    matrix_free(m5);
     testCleanUp();
     testReport(ok);
     return ok;
@@ -3003,7 +3013,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    // ok &= tst_battery_all();
+    ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
