@@ -3013,7 +3013,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    ok &= tst_battery_all();
+    // ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();

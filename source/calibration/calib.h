@@ -16,11 +16,9 @@
 #define CALIB_ONE_ROT_AXIS_MAX_ERROR (1e-1)
 #define CALIB_ONE_ROT_AXIS_STEP_SZ (1)
 
-#define CALIB_TWO_ROT_AXES_WINDOW (500)
+#define CALIB_TWO_ROT_AXES_WINDOW (1000)
 #define CALIB_TWO_ROT_AXES_IMU_DATA_BUFF_SIZE (40)
-#define CALIB_TWO_ROT_AXES_MAX_ITERATIONS (50)
-#define CALIB_TWO_ROT_AXES_MAX_ERROR (1e-2)
-#define CALIB_TWO_ROT_AXES_STEP_SZ (1)
+#define CALIB_TWO_ROT_AXES_MAX_ITERATIONS (200)
 
 /**
  * @brief Adjust minimum velocity values to consider movement

@@ -9,7 +9,9 @@
 
 
 #define CAL_PARAMETERS_NUM (4)
-#define CAL_TRYS_NUM (5)
+#define CAL_TRYS_NUM (6)
+#define CAL_ERROR_MIN_DIFF (1e-6)
+#define CAL_ERROR_STALLED_COUTDOWN (15)
 
 typedef struct CAL_DATA_STRUCT {
     bool initialized;
@@ -499,15 +501,17 @@ ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV
         {rotationV1[0],rotationV1[1],rotationV1[2]},
         {scal_rnd(),scal_rnd(),scal_rnd()},
         {scal_rnd(),scal_rnd(),scal_rnd()},
-        {scal_rnd(),scal_rnd(),scal_rnd()},
-        {0,0,1}
+        {0,0,1},
+        {1,0,0},
+        {0,1,0},
     };
     double initVector2[CAL_TRYS_NUM][3] = {
         {rotationV2[0],rotationV2[1],rotationV2[2]},
         {scal_rnd(),scal_rnd(),scal_rnd()},
         {scal_rnd(),scal_rnd(),scal_rnd()},
-        {scal_rnd(),scal_rnd(),scal_rnd()},
-        {1,0,0}
+        {1,0,0},
+        {0,1,0},
+        {0,0,1}
     };
     double tempV1[3],tempV2[3];
 
@@ -525,7 +529,8 @@ ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV
                 if (RET_OK == status) status = vector3_copy(tempV1,rotationV1);
                 if (RET_OK == status) status = vector3_copy(tempV2,rotationV2);
             }
-            dbg_str("%s -> [try: %d, it: %d] Current calib error: %f (best error: %f)",__FUNCTION__, 
+
+            dbg_str("%s -> [try: %d, it: %d] Current calib error: %.10f (best error: %.10f)",__FUNCTION__, 
                 try, iteration, error, scal_data.error);
         }
         if (RET_NO_EXEC == status) status = RET_OK;
