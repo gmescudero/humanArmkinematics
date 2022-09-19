@@ -310,6 +310,10 @@ ERROR_CODE hak_static_calib_kinematics(double time)
         /* Compute arm positions */
         if (RET_OK == status) status = arm_direct_kinematics_compute(joints, NULL);
 
+        /* Retrieve current timestamp from database */
+        if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
+        if (RET_OK == status) currentTime = buffTime - startTime;
+
         dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
 
         if (RET_OK == status) status = db_field_print(DB_ARM_WRIST_POSITION,0);

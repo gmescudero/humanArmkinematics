@@ -356,13 +356,7 @@ static ERROR_CODE smatrix_inverse_standard(MATRIX a, MATRIX *output) {
     ERROR_CODE status = RET_OK;
     MATRIX result;
     double determinant = 0.0;
-
     int size = a.rows;
-    // Check arguments
-    if (NULL == output)             return RET_ARG_ERROR;
-    if (false == a.allocated)       return RET_ARG_ERROR;
-    if (false == output->allocated) return RET_ARG_ERROR;
-    if (a.rows != a.cols)           return RET_ARG_ERROR;
 
     result = matrix_allocate(size,size);
 
@@ -396,11 +390,6 @@ static ERROR_CODE smatrix_inverse_gauss_jordan(MATRIX a, MATRIX *output) {
     MATRIX result;
     double temp;
     int size = a.rows;
-    // Check arguments
-    if (NULL == output)             return RET_ARG_ERROR;
-    if (false == a.allocated)       return RET_ARG_ERROR;
-    if (false == output->allocated) return RET_ARG_ERROR;
-    if (a.rows != a.cols)           return RET_ARG_ERROR;
     
     result = matrix_identity_allocate(size);
     aux = matrix_from_matrix_allocate(a);
@@ -438,6 +427,14 @@ static ERROR_CODE smatrix_inverse_gauss_jordan(MATRIX a, MATRIX *output) {
 #endif
 
 ERROR_CODE matrix_inverse(MATRIX a, MATRIX *output) {
+    // Check arguments
+    if (NULL == output)                 return RET_ARG_ERROR;
+    if (false == a.allocated)           return RET_ARG_ERROR;
+    if (false == output->allocated)     return RET_ARG_ERROR;
+    if (a.rows != a.cols)               return RET_ARG_ERROR;
+    if (a.rows != output->rows)         return RET_ARG_ERROR;
+    if (output->rows != output->cols)   return RET_ARG_ERROR;
+
 #if (0 == INVERSE_ALGORITHM)
     return smatrix_inverse_standard(a, output);
 #else

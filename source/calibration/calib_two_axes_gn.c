@@ -42,7 +42,7 @@ static CAL_DATA scal_data = {
  * @return double 
  */
 double scal_error_xyz(double j_x1, double j_y1,  double j_z1, double j_x2, double j_y2, double j_z2, double omega_x, double omega_y, double omega_z) {
-   return omega_x*(j_y1*j_z2 - j_y2*j_z1) + omega_y*(-j_x1*j_z2 + j_x2*j_z1) + omega_z*(j_x1*j_y2 - j_x2*j_y1);
+    return (omega_x*(j_y1*j_z2 - j_y2*j_z1)/sqrt(pow(j_x1*j_y2 - j_x2*j_y1, 2) + pow(-j_x1*j_z2 + j_x2*j_z1, 2) + pow(j_y1*j_z2 - j_y2*j_z1, 2)) + omega_y*(-j_x1*j_z2 + j_x2*j_z1)/sqrt(pow(j_x1*j_y2 - j_x2*j_y1, 2) + pow(-j_x1*j_z2 + j_x2*j_z1, 2) + pow(j_y1*j_z2 - j_y2*j_z1, 2)) + omega_z*(j_x1*j_y2 - j_x2*j_y1)/sqrt(pow(j_x1*j_y2 - j_x2*j_y1, 2) + pow(-j_x1*j_z2 + j_x2*j_z1, 2) + pow(j_y1*j_z2 - j_y2*j_z1, 2)));
 }
 /**
  * @brief Error derivatives of each parameter for a single measure. Spherical 1 and 1
