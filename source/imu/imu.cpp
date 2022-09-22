@@ -53,7 +53,7 @@ ERROR_CODE imu_initialize(const char *com_port){
 
     // Add a new sensor to the list
     lpms[index] = manager->addSensor(DEVICE_LPMS_U2, com_port);
-    lpms[index]->setVerbose(true);
+    lpms[index]->setVerbose(false);
     if (NULL == lpms[index]) return RET_ERROR;
 
     // Retrieve cthe connection status

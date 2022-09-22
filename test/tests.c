@@ -2270,7 +2270,7 @@ bool tst_cal_004()
         }
         // Call autocalib procedure
         ret = cal_two_rot_axes_calib_compute(rotVector1,rotVector2);
-        tst_str("V1: <%f, %f, %f>, V2: <%f, %f, %f>", 
+        tst_str("[%d] -> V1: <%f, %f, %f>, V2: <%f, %f, %f>", i,
             rotVector1[0],rotVector1[1], rotVector1[2],
             rotVector2[0],rotVector2[1], rotVector2[2]);
         ok &= assert_OK(ret, "cal_two_rot_axes_calib_compute");

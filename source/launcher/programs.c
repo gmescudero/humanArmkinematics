@@ -140,11 +140,13 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     int imus_num = IMUS_NUM;
     double rotationV1[3] = {0,0,1};
     double rotationV2[3] = {1,0,0};
+    double rotationV2_2[3]; // rotationV2 in coordinates of sensor 2
     double q_buff[4];
     double startTime   = -1.0;
     double currentTime = -1.0;
     double buffTime    = -1.0;
     Quaternion q1,q2;
+    Quaternion q12;
     double fe, ps, carryingAngle;
 
     /* Set the csv logging from the database */
@@ -214,9 +216,13 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
         if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,1,q_buff);
         if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q2);
 
+        /* Get the second rotation vector in second sensor coordinate system */
+        if (RET_OK == status) q12 = arm_quaternion_between_two_get(q2,q1);
+        if (RET_OK == status) Quaternion_rotate(&q12,rotationV2,rotationV2_2);
+
         /* Compute current elbow angles */
         if (RET_OK == status) status = arm_elbow_angles_from_rotation_vectors_get(
-            q1, q2, rotationV1, rotationV2,&fe, &ps, &carryingAngle);
+            q1, q2, rotationV1, rotationV2_2,&fe, &ps, &carryingAngle);
 
         /* Retrieve current timestamp from database */
         if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);

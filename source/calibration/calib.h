@@ -16,9 +16,9 @@
 #define CALIB_ONE_ROT_AXIS_MAX_ERROR (1e-1)
 #define CALIB_ONE_ROT_AXIS_STEP_SZ (1)
 
-#define CALIB_TWO_ROT_AXES_WINDOW (1000)
+#define CALIB_TWO_ROT_AXES_WINDOW (1000) // if sample time for IMUs is 50Hz this makes 10s window
 #define CALIB_TWO_ROT_AXES_IMU_DATA_BUFF_SIZE (40)
-#define CALIB_TWO_ROT_AXES_MAX_ITERATIONS (200)
+#define CALIB_TWO_ROT_AXES_MAX_ITERATIONS (100)
 
 /**
  * @brief Adjust minimum velocity values to consider movement
@@ -111,6 +111,7 @@ ERROR_CODE cal_two_rot_axes_calib_initialize(int imu_data_buff_size, int obs_dat
 void cal_two_rot_axes_calib_terminate();
 ERROR_CODE cal_two_rot_axes_calib_observations_update(double omega1_from1[3], double omega2_from2[3], Quaternion q_sensor1, Quaternion q_sensor2);
 ERROR_CODE cal_two_rot_axes_calib_observations_from_database_update();
+ERROR_CODE cal_two_rot_axes_calib_root_mean_square(double rotationV1[3], double rotationV2[3], double *error);
 ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV2[3]);
 
 

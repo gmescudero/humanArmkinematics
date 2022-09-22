@@ -9,7 +9,7 @@
 
 
 #define CAL_PARAMETERS_NUM (4)
-#define CAL_TRYS_NUM (6)
+#define CAL_TRYS_NUM (5)
 #define CAL_ERROR_MIN_DIFF (1e-6)
 #define CAL_ERROR_STALLED_COUTDOWN (15)
 
@@ -383,15 +383,37 @@ ERROR_CODE cal_two_rot_axes_calib_observations_from_database_update() {
     return status;
 }
 
-
 /**
- * @brief Make a single iteration of the Gauss-Newton algorithm
+ * @brief Compute total Root Mean Square value for Gauss-Newton
  * 
- * @param parameter_vector (output) New achieved parameters vector
+ * @param rotationV1 (input/output) First rotation vector
+ * @param rotationV2 (input/output) Second rotation vector
  * @param error (output) Mean error of the new solution
  * @return ERROR_CODE 
  */
+ERROR_CODE cal_two_rot_axes_calib_root_mean_square(double rotationV1[3], double rotationV2[3], double *error) {
+    ERROR_CODE status = RET_OK;
+    int observations_num = db_field_buffer_current_size_get(DB_CALIB_OMEGA,0);  // Number of managed observations
+    double obs_err;
+    double sqr_err = 0.0;
 
+    for (int i = 0; RET_OK == status && i < observations_num; i++) {
+        double omegaR[3];
+        // Retrieve omega R observation
+        if (RET_OK == status) status = db_field_buffer_from_tail_data_get(DB_CALIB_OMEGA,0, i, omegaR);
+        // Compute the error value
+        if (RET_OK == status) obs_err = scal_error_xyz(
+            rotationV1[0],rotationV1[1],rotationV1[2], 
+            rotationV2[0],rotationV2[1],rotationV2[2], 
+            omegaR[0],omegaR[1],omegaR[2]);
+        // Acumulate squared error values
+        if (RET_OK == status) sqr_err += obs_err*obs_err;
+    }
+    // Compute RMS
+    if (RET_OK == status) *error = sqrt(sqr_err/observations_num);
+
+    return status;
+}
 
 /**
  * @brief Make a single iteration of the Gauss-Newton algorithm
@@ -458,20 +480,7 @@ ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double rotationV1[3], d
     matrix_free(Jacobian);
 
     // Compute total Root Mean Square value after correction
-    double sqr_err = 0.0;
-    for (int i = 0; RET_OK == status && i < observations_num; i++) {
-        double omegaR[3];
-        // Retrieve omega R observation
-        if (RET_OK == status) status = db_field_buffer_from_tail_data_get(DB_CALIB_OMEGA,0, i, omegaR);
-        // Compute the error value
-        if (RET_OK == status) obs_err = scal_error_xyz(
-            rotationV1[0],rotationV1[1],rotationV1[2], 
-            rotationV2[0],rotationV2[1],rotationV2[2], 
-            omegaR[0],omegaR[1],omegaR[2]);
-        // Acumulate squared error values
-        if (RET_OK == status) sqr_err += obs_err*obs_err;
-    }
-    *error = sqrt(sqr_err/observations_num);
+    if (RET_OK == status) status = cal_two_rot_axes_calib_root_mean_square(rotationV1,rotationV2,error);
 
     // Set vectors with new parameters
     scal_spherical_2_vec(scal_data.phi.data[0][0], scal_data.phi.data[1][0], scal_data.sph_alt1, rotationV1);
@@ -480,7 +489,11 @@ ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double rotationV1[3], d
     return status;
 }
 
-
+/**
+ * @brief Generate a random number in a uniform distribution [-PI,PI]
+ * 
+ * @return double: The random value
+ */
 static double scal_rnd(){
     return 2*M_PI*((double)rand()/(double)RAND_MAX - 0.5);
 }
@@ -502,16 +515,14 @@ ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV
         {scal_rnd(),scal_rnd(),scal_rnd()},
         {scal_rnd(),scal_rnd(),scal_rnd()},
         {0,0,1},
-        {1,0,0},
-        {0,1,0},
+        {0,0,1}
     };
     double initVector2[CAL_TRYS_NUM][3] = {
         {rotationV2[0],rotationV2[1],rotationV2[2]},
         {scal_rnd(),scal_rnd(),scal_rnd()},
         {scal_rnd(),scal_rnd(),scal_rnd()},
         {1,0,0},
-        {0,1,0},
-        {0,0,1}
+        {0,1,0}
     };
     double tempV1[3],tempV2[3];
 
