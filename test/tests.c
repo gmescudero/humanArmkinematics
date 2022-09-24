@@ -2045,7 +2045,8 @@ bool tst_arm_016()
     double omega2[] = {50.0,0.0,100.0};
     double rotVector1[3] = {0.0,0.0,1.0};
     double rotVector2[3] = {1.0,0.0,0.0};
-    double fe, ps, carryingAngle;
+    double anglesFE_B_PS[ARM_ELBOW_NUMBER_OF_ANGLES];
+    double zeroAngles[ARM_ELBOW_NUMBER_OF_ANGLES] = {0.0,0.0,0.0};
 
     testDescription(__FUNCTION__, "Compute elbow angles from rotation vectors and quaternion");
     ok = preconditions_init(__FUNCTION__); 
@@ -2061,10 +2062,18 @@ bool tst_arm_016()
             Quaternion_multiply(&q1_2, &q1, &q1_into2);
             Quaternion_multiply(&q2,&q1_into2,&q2);
 
-            ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2,
-                &fe, &ps, &carryingAngle);
-            ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get");
+            ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+            ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get pre zero");
+            // ok &= assert_vector3Equal(anglesFE_B_PS,zeroAngles,"arm_elbow_angles_from_rotation_vectors_get pre zero");
             // tst_str("[%f,%f] Angles: fe <%f>, ps <%f>, beta <%f>",ang1,ang2,fe,ps,carryingAngle);
+
+            ret = arm_elbow_angles_zero(0.0,0.0,q1,q2,rotVector1,rotVector2);
+            ok &= assert_OK(ret, "arm_elbow_angles_zero");
+
+            ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+            ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get zero");
+            // TODO: check how to assert this is working correctly
+            // ok &= assert_vector3Equal(anglesFE_B_PS,zeroAngles,"arm_elbow_angles_from_rotation_vectors_get zeroed");
         }
     }
     
@@ -2986,6 +2995,7 @@ bool tst_battery_all()
     ok &= tst_arm_013();
     ok &= tst_arm_014();
     // ok &= tst_arm_015();
+    ok &= tst_arm_016();
 
     ok &= tst_cal_001();
     ok &= tst_cal_002();
@@ -3018,8 +3028,8 @@ int main(int argc, char **argv)
     // ok &= tst_arm_014();
     // ok &= tst_cal_xxx();
     // ok &= tst_arm_015();
-    ok &= tst_cal_005();
-    ok &= tst_cal_006();
+    // ok &= tst_cal_005();
+    // ok &= tst_cal_006();
     // ok &= tst_arm_016();
 
     return (ok)? RET_OK : RET_ERROR;

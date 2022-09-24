@@ -38,7 +38,12 @@ typedef struct ARM_POSE_STRUCT {
     ARM_FRAME wrist;
 } ARM_POSE;
 
-
+enum ARM_ELBOW_ANGLES_ENUM {
+    ALPHA_FE = 0,
+    BETA_CARRYING,
+    GAMMA_PS,
+    ARM_ELBOW_NUMBER_OF_ANGLES
+} ARM_ELBOW_ANGLES;
 
 /******************************************************************************/
 /* Function Declarations                                                      */
@@ -143,15 +148,32 @@ ERROR_CODE arm_relative_angular_vel_compute(
 Quaternion arm_quaternion_between_two_get(Quaternion q1, Quaternion q2);
 
 /**
+ * @brief Set the zero point for the elbow angles
+ * 
+ * @param alphaR (input) Expected Flexion/Extension (FE) angle at current point
+ * @param gammaR (input) Expected Pronation/Supination (PS) angle at current point
+ * @param q_sensor1 (input) Orientation of the first imu
+ * @param q_sensor2 (input) Orientation of the second imu
+ * @param rotationV1 (input) Rotation vector of the FE axis
+ * @param rotationV2 (input) Rotation vector of the PS axis
+ * @return ERROR_CODE 
+ */
+ERROR_CODE arm_elbow_angles_zero(
+    double alphaR, 
+    double gammaR,     
+    Quaternion q_sensor1, 
+    Quaternion q_sensor2, 
+    double rotationV1[3], 
+    double rotationV2[3]);
+
+/**
  * @brief Compute the elbow angles from quaternion orientations and rotation vecors
  * 
  * @param q_sensor1 (input) Orientation of the first imu
  * @param q_sensor2 (input) Orientation of the second imu
  * @param rotationV1 (input) Rotation vector of the FE axis
  * @param rotationV2 (input) Rotation vector of the PS axis
- * @param angleFE (output) Flexion-Extension angle
- * @param anglePS (output) Pronation-Supination angle
- * @param carryingAngle (output) Carrying angle (should be constant)
+ * @param anglesFE_B_PS (output) Elbow angles in the next order: [Flexion/Extension, Carrying angle, Pronation/Supination]
  * @return ERROR_CODE 
  */
 ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
@@ -159,8 +181,6 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     Quaternion q_sensor2, 
     double rotationV1[3], 
     double rotationV2[3],
-    double *angleFE,
-    double *anglePS,
-    double *carryingAngle);
+    double anglesFE_B_PS[ARM_ELBOW_NUMBER_OF_ANGLES]);
 
 #endif

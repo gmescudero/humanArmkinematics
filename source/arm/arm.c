@@ -312,22 +312,51 @@ static ERROR_CODE sarm_current_position_update(ARM_POSE pose) {
     return status;
 }
 
+static double alpha0 = 0.0;
+static double gamma0 = 0.0;
+
+ERROR_CODE arm_elbow_angles_zero(
+    double alphaR, 
+    double gammaR,     
+    Quaternion q_sensor1, 
+    Quaternion q_sensor2, 
+    double rotationV1[3], 
+    double rotationV2[3])
+{
+    ERROR_CODE status = RET_OK;
+    double anglesFE_B_PS[ARM_ELBOW_NUMBER_OF_ANGLES];
+
+    // Check arguments
+    if (NULL == rotationV1)    return RET_ARG_ERROR;
+    if (NULL == rotationV2)    return RET_ARG_ERROR;
+    if (NULL == anglesFE_B_PS) return RET_ARG_ERROR;
+
+    status = arm_elbow_angles_from_rotation_vectors_get(q_sensor1,q_sensor2,rotationV1,rotationV2,anglesFE_B_PS);
+    if (RET_OK == status) {
+        alpha0 = anglesFE_B_PS[ALPHA_FE] + alphaR;
+        gamma0 = gammaR - anglesFE_B_PS[GAMMA_PS];
+    }
+
+    return status;
+}
+
 ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     Quaternion q_sensor1, 
     Quaternion q_sensor2, 
     double rotationV1[3], 
     double rotationV2[3],
-    double *angleFE,
-    double *anglePS,
-    double *carryingAngle) 
+    double anglesFE_B_PS[ARM_ELBOW_NUMBER_OF_ANGLES]) 
 {
     ERROR_CODE status = RET_OK;
 
     // Check arguments
-    if (NULL == rotationV1)         return RET_ARG_ERROR;
-    if (NULL == rotationV2)         return RET_ARG_ERROR;
+    if (NULL == rotationV1)    return RET_ARG_ERROR;
+    if (NULL == rotationV2)    return RET_ARG_ERROR;
+    if (NULL == anglesFE_B_PS) return RET_ARG_ERROR;
 
     Quaternion q1bs, q2bs;
+    Quaternion q1bs_zeroed, q2bs_zeroed;
+    Quaternion q_relative;
     // double x_vector[] = {1.0,0.0,0.0};
     double y_vector[] = {0.0,1.0,0.0};
     double z_vector[] = {0.0,0.0,1.0};
@@ -335,54 +364,54 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     double crossVal[3];
     
     // Segment to sensor 1 compute 
-    if (RET_OK == status) {
-        status = vector3_dot(z_vector, rotationV1, &dotVal);
-    }
-    if (RET_OK == status) {
-        status = vector3_cross(z_vector, rotationV1, crossVal);
-    }
-    if (RET_OK == status) {
-        Quaternion_fromAxisAngle(crossVal,acos(dotVal),&q1bs);
-    }
+    if (RET_OK == status) status = vector3_dot(z_vector, rotationV1, &dotVal);
+    if (RET_OK == status) status = vector3_cross(z_vector, rotationV1, crossVal);
+    if (RET_OK == status) Quaternion_fromAxisAngle(crossVal,acos(dotVal),&q1bs);
 
     // Segment to sensor 2 compute 
-    if (RET_OK == status) {
-        status = vector3_dot(y_vector, rotationV2, &dotVal);
-    }
-    if (RET_OK == status) {
-        status = vector3_cross(y_vector, rotationV2, crossVal);
-    }
-    if (RET_OK == status) {
-        Quaternion_fromAxisAngle(crossVal,acos(dotVal),&q2bs);
-    }
+    if (RET_OK == status) status = vector3_dot(y_vector, rotationV2, &dotVal);
+    if (RET_OK == status) status = vector3_cross(y_vector, rotationV2, crossVal);
+    if (RET_OK == status) Quaternion_fromAxisAngle(crossVal,acos(dotVal),&q2bs);
 
-    // Compute relative segment orientation
-    Quaternion q_relative;
+    // Compute non zeroed relative segment orientation
     if (RET_OK == status) {
         Quaternion q_aux1, q_aux2, q_aux3;
-
         Quaternion_multiply(&q_sensor1, &q1bs, &q_aux1);
         Quaternion_conjugate(&q_aux1, &q_aux2);
         Quaternion_multiply(&q_aux2, &q_sensor2, &q_aux3);
         Quaternion_multiply(&q_aux3, &q2bs, &q_relative);
     }
 
-    // Compute Euler angles ZXY to get FE and PS angles
-    double eulerZXY[3];
+    // Compute Euler angles ZXY to get non zero FE and PS angles
+    double eulerZXY_preZero[ARM_ELBOW_NUMBER_OF_ANGLES];
+    if (RET_OK == status) quaternion_toEulerZXY(&q_relative, eulerZXY_preZero);
+
+    // Adjust to zero point
+    Quaternion zeroAlpha = {.w = alpha0-eulerZXY_preZero[ALPHA_FE], .v = {0,0,1}};
+    Quaternion zeroGamma = {.w = eulerZXY_preZero[GAMMA_PS]-gamma0, .v = {0,1,0}};
     if (RET_OK == status) {
-        quaternion_toEulerZXY(&q_relative, eulerZXY);
-        *angleFE         = eulerZXY[0];
-        *carryingAngle   = eulerZXY[1];
-        *anglePS         = eulerZXY[2];
+        // Caluclate zeroed sensor to segment 
+        Quaternion_multiply(&q1bs,&zeroAlpha,&q1bs_zeroed);
+        Quaternion_multiply(&q2bs,&zeroGamma,&q2bs_zeroed);
+        // Calculate the zeroed relative orientation 
+        Quaternion q_aux1, q_aux2, q_aux3;
+        Quaternion_multiply(&q_sensor1, &q1bs_zeroed, &q_aux1);
+        Quaternion_conjugate(&q_aux1, &q_aux2);
+        Quaternion_multiply(&q_aux2, &q_sensor2, &q_aux3);
+        Quaternion_multiply(&q_aux3, &q2bs_zeroed, &q_relative);
+    }
+
+    // Compute Euler angles ZXY to get non zero FE and PS angles
+    if (RET_OK == status) {
+        quaternion_toEulerZXY(&q_relative, anglesFE_B_PS);
         dbg_str("%s -> quat <%f,%f,%f,%f>, eulerZXY <%f,%f,%f>",__FUNCTION__,
             q_relative.w,q_relative.v[0],q_relative.v[1],q_relative.v[2],
-            eulerZXY[0],eulerZXY[1],eulerZXY[2]);
+            anglesFE_B_PS[ALPHA_FE],anglesFE_B_PS[BETA_CARRYING],anglesFE_B_PS[GAMMA_PS]);
     }
 
     // Update database
     if (RET_OK == status) {
-        /*DB_ARM_ELBOW_ANGLES*/
-        status = db_write(DB_ARM_ELBOW_ANGLES,0,eulerZXY);
+        status = db_write(DB_ARM_ELBOW_ANGLES,0,anglesFE_B_PS);
     }
     
     return status;

@@ -147,7 +147,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     double buffTime    = -1.0;
     Quaternion q1,q2;
     Quaternion q12;
-    double fe, ps, carryingAngle;
+    double anglesFE_B_PS[ARM_ELBOW_NUMBER_OF_ANGLES];
 
     /* Set the csv logging from the database */
     log_str("Set the database fields to track into the csv");
@@ -222,7 +222,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
 
         /* Compute current elbow angles */
         if (RET_OK == status) status = arm_elbow_angles_from_rotation_vectors_get(
-            q1, q2, rotationV1, rotationV2_2,&fe, &ps, &carryingAngle);
+            q1, q2, rotationV1, rotationV2_2, anglesFE_B_PS);
 
         /* Retrieve current timestamp from database */
         if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
