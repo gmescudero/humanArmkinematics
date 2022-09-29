@@ -20,7 +20,7 @@
 #include "tst_lib.h"
 
 
-#define IMUS_CONNECTED (0)
+#define IMUS_CONNECTED (1)
 
 
 bool tst_math_001() 
@@ -2062,7 +2062,7 @@ bool tst_arm_016()
             Quaternion_multiply(&q1_2, &q1, &q1_into2);
             Quaternion_multiply(&q2,&q1_into2,&q2);
 
-            tst_str("Angles: %f, %f",ang1,ang2);
+            // tst_str("Angles: %f, %f",ang1,ang2);
 
             ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
             ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get pre zero");
@@ -3023,8 +3023,8 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    ok &= tst_battery_all();
-    // ok &= tst_battery_imu_single();
+    // ok &= tst_battery_all();
+    ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
     // ok &= tst_cal_xxx();

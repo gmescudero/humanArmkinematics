@@ -53,8 +53,8 @@ ERROR_CODE imu_initialize(const char *com_port){
 
     // Add a new sensor to the list
     lpms[index] = manager->addSensor(DEVICE_LPMS_U2, com_port);
-    lpms[index]->setVerbose(false);
     if (NULL == lpms[index]) return RET_ERROR;
+    lpms[index]->setVerbose(false); // Set IMU logging flag
 
     // Retrieve cthe connection status
     connection_status = lpms[index]->getConnectionStatus();

@@ -333,7 +333,7 @@ ERROR_CODE arm_elbow_angles_zero(
     if (NULL == rotationV1)    return RET_ARG_ERROR;
     if (NULL == rotationV2)    return RET_ARG_ERROR;
 
-    // Reset zero quaternion
+    // Reset zeroing quaternions
     Quaternion_set(1,0,0,0,&zeroAlpha);
     Quaternion_set(1,0,0,0,&zeroGamma);
 
@@ -349,6 +349,8 @@ ERROR_CODE arm_elbow_angles_zero(
             zeroAlpha.w,zeroAlpha.v[0],zeroAlpha.v[1],zeroAlpha.v[2],
             zeroGamma.w,zeroGamma.v[0],zeroGamma.v[1],zeroGamma.v[2]);
     }
+    /* Compute the new angles after the zero */
+    if (RET_OK == status) status = arm_elbow_angles_from_rotation_vectors_get(q_sensor1,q_sensor2,rotationV1,rotationV2,anglesFE_B_PS);
 
     return status;
 }
@@ -376,15 +378,19 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     double dotVal;
     double crossVal[3];
     
-    // Segment to sensor 1 compute 
+    // Segment to sensor 1 compute  
     if (RET_OK == status) status = vector3_dot(z_vector, rotationV1, &dotVal);
     if (RET_OK == status) status = vector3_cross(z_vector, rotationV1, crossVal);
+    if (RET_OK == status && 1-EPSI > fabs(dotVal)) status = vector3_normalize(crossVal, crossVal);
     if (RET_OK == status) Quaternion_fromAxisAngle(crossVal,acos(dotVal),&q1bs);
+    // if (RET_OK == status) Quaternion_normalize(&q1bs,&q1bs);
 
     // Segment to sensor 2 compute 
     if (RET_OK == status) status = vector3_dot(y_vector, rotationV2, &dotVal);
     if (RET_OK == status) status = vector3_cross(y_vector, rotationV2, crossVal);
+    if (RET_OK == status && 1-EPSI > fabs(dotVal)) status = vector3_normalize(crossVal, crossVal);
     if (RET_OK == status) Quaternion_fromAxisAngle(crossVal,acos(dotVal),&q2bs);
+    // if (RET_OK == status) Quaternion_normalize(&q2bs,&q2bs);
 
     if (RET_OK == status) {
         // Caluclate zeroed sensor to segment 
@@ -408,8 +414,10 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
 
     // Update database
     if (RET_OK == status) {
-        status = db_write(DB_ARM_ELBOW_ANGLES,0,anglesFE_B_PS);
+        double q_buff[4] = {q_relative.w,q_relative.v[0],q_relative.v[1],q_relative.v[2]};
+        status = db_write(DB_ARM_ELBOW_QUATERNION,0,q_buff);
     }
+    if (RET_OK == status) status = db_write(DB_ARM_ELBOW_ANGLES,0,anglesFE_B_PS);
     
     return status;
 }

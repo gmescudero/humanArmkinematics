@@ -160,34 +160,41 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
-    if (RET_OK == status) status = db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,0);
-    if (RET_OK == status) status = db_csv_field_add(DB_CALIB_SPHERICAL_COORDS,1);
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ERROR,0);
     if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_ANGLES,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_QUATERNION,0);
     if (RET_OK != status) err_str("Failed to setup database CSV logging");
 
     /* Look for IMU sensors and initialize the required of them */
-    if (imus_num > imu_number_get()) {
-        if (RET_OK == status) status = imu_batch_search_and_initialize(imus_num);
+    if (RET_OK == status && imus_num > imu_number_get()) {
+        status = imu_batch_search_and_initialize(imus_num);
         if (RET_OK != status) err_str("Failed to setup IMU sensors");
     }
 
-    /* Read IMUs data for the given amount of time */
-    log_str("Starting loop gathering IMU sensors data to calibrate rotation axes");
-    log_str(" -> [USER]: Perform arbitrary motions of the elbow including flexion/extension and pronation/supination for %f seconds",time);
-    if (RET_OK == status) sleep_s(2);
+    /* Reset IMUs offset */
+    if (RET_OK == status) {
+        status = imu_orientation_offset_reset();
+        if (RET_OK != status) err_str("Failed to reset IMU sensors orientation");
+    }
 
-    /* Start IMU reading callbacks */
-    for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
-        status = imu_read_callback_attach(imu, 0==imu);
-        if (RET_OK != status) err_str("Failed to initialize reading callback for IMU sensor %d",imu);
-        else sleep_s(2);
+    /* Read IMUs data for the given amount of time */
+    if (RET_OK == status) {
+        log_str("Starting loop gathering IMU sensors data to calibrate rotation axes");
+        log_str(" -> [USER]: Perform arbitrary motions of the elbow including flexion/extension and pronation/supination for %f seconds",time);
+
+        /* Start IMU reading callbacks */
+        for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
+            status = imu_read_callback_attach(imu, 0==imu);
+            if (RET_OK != status) err_str("Failed to initialize reading callback for IMU sensor %d",imu);
+        }
+        sleep_s(2);
     }
 
     /* Loop while data keeps beeing gathered */
     do {
         if (RET_OK == status) sleep_s(1);
         if (RET_OK == status) status = cal_two_rot_axes_calib_observations_from_database_update();
+        log_str("Current observations count: %d/%d",db_field_buffer_current_size_get(DB_CALIB_OMEGA,0),CALIB_TWO_ROT_AXES_WINDOW);
     } while (RET_OK == status && CALIB_TWO_ROT_AXES_WINDOW > db_field_buffer_current_size_get(DB_CALIB_OMEGA,0));
     log_str(" -> [USER]: Finished recording calibration data");
 
@@ -200,6 +207,30 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     log_str("Finished two axes calibration: ");
     log_str("\tRotation vector 1:[%f,%f,%f]", rotationV1[0],rotationV1[1], rotationV1[2]);
     log_str("\tRotation vector 2:[%f,%f,%f]", rotationV2[0],rotationV2[1], rotationV2[2]);
+
+    /* Set zero value for elbow angles */
+    if (RET_OK == status) {
+        log_str("Set the zero point");
+        log_str(" -> [USER]: Stand in a pose to be considered as zero for the elbow angles in 5");
+        for (int i = 4; RET_OK == status && i >= 0; i--) {
+            sleep_s(1);
+            log_str(" -> [USER]: %d",i);
+        }
+        if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,0,q_buff);
+        if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q1);
+        if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,1,q_buff);
+        if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q2);
+        if (RET_OK == status) q12 = arm_quaternion_between_two_get(q2,q1);
+        if (RET_OK == status) Quaternion_rotate(&q12,rotationV2,rotationV2_2);
+        if (RET_OK == status) status = arm_elbow_angles_zero(0.0, 0.0, q1, q12, rotationV1, rotationV2);
+        if (RET_OK == status) {
+            log_str(" -> [USER]: Elbow angles zero position set ");
+            status = db_field_print(DB_ARM_ELBOW_ANGLES,0);
+        }
+        else {
+            err_str("Failed to perform zero procedure");
+        }
+    }
 
     /* Apply calibration functions to imu readings */
     log_str("Starting loop printing arm angles");
@@ -222,7 +253,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
 
         /* Compute current elbow angles */
         if (RET_OK == status) status = arm_elbow_angles_from_rotation_vectors_get(
-            q1, q2, rotationV1, rotationV2_2, anglesFE_B_PS);
+            q1, q12, rotationV1, rotationV2, anglesFE_B_PS);
 
         /* Retrieve current timestamp from database */
         if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);

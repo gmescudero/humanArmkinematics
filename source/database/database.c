@@ -98,6 +98,7 @@ static DB_FIELD database[DB_NUMBER_OF_ENTRIES] = {
     DB_FIELD_INIT(DB_ARM_WRIST_POSITION,       "ARM_WRIST_POSITION",       DB_REAL,1,3),
     DB_FIELD_INIT(DB_ARM_WRIST_ORIENTATION,    "ARM_WRIST_ORIENTATION",    DB_REAL,1,4),
     DB_FIELD_INIT(DB_ARM_ELBOW_ANGLES,         "ARM_ELBOW_ANGLES",         DB_REAL,1,3),    
+    DB_FIELD_INIT(DB_ARM_ELBOW_QUATERNION,     "ARM_ELBOW_QUATERNION",     DB_REAL,1,4),    
 
 /* 
     {.identifier=DB_IMU_TIMESTAMP  , .name="TIMESTAMP"  , .type=DB_REAL, .multiplicity=1, .mutex={{0}}, .data_ptr=NULL},
