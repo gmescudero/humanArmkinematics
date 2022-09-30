@@ -174,6 +174,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     /* Reset IMUs offset */
     if (RET_OK == status) {
         status = imu_orientation_offset_reset();
+        if (RET_OK == status) status = imu_orientation_offset_set(1);
         if (RET_OK != status) err_str("Failed to reset IMU sensors orientation");
     }
 
@@ -222,7 +223,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
         if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q2);
         if (RET_OK == status) q12 = arm_quaternion_between_two_get(q2,q1);
         if (RET_OK == status) Quaternion_rotate(&q12,rotationV2,rotationV2_2);
-        if (RET_OK == status) status = arm_elbow_angles_zero(0.0, 0.0, q1, q12, rotationV1, rotationV2);
+        if (RET_OK == status) status = arm_elbow_angles_zero(0.0, 0.0, q1, q12, rotationV1, rotationV2_2);
         if (RET_OK == status) {
             log_str(" -> [USER]: Elbow angles zero position set ");
             status = db_field_print(DB_ARM_ELBOW_ANGLES,0);
@@ -253,7 +254,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
 
         /* Compute current elbow angles */
         if (RET_OK == status) status = arm_elbow_angles_from_rotation_vectors_get(
-            q1, q12, rotationV1, rotationV2, anglesFE_B_PS);
+            q1, q12, rotationV1, rotationV2_2, anglesFE_B_PS);
 
         /* Retrieve current timestamp from database */
         if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);

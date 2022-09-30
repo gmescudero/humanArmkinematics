@@ -82,14 +82,14 @@ double Quaternion_toAxisAngle(Quaternion* q, double output[3]);
 /**
  * Set the quaternion to the equivalent of euler angles.
  * @param eulerZYX
- *      Euler angles in ZYX, but stored in array as [x'', y', z].
+ *      Euler angles in ZYX, but stored in array as [z, y', x''].
  */
 void Quaternion_fromEulerZYX(double eulerZYX[3], Quaternion* output);
 
 /**
  * Calculates the euler angles of a quaternion.
  * @param output
- *      Euler angles in ZYX, but stored in array as [x'', y', z].
+ *      Euler angles in ZYX, but stored in array as [z, y', x''].
  */
 void Quaternion_toEulerZYX(Quaternion* q, double output[3]);
 
