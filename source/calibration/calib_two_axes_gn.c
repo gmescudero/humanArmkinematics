@@ -525,6 +525,7 @@ ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV
         {0,1,0}
     };
     double tempV1[3],tempV2[3];
+    static int totalIteration = 0;
 
     scal_data.error = 1e99;
 
@@ -543,8 +544,17 @@ ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV
 
             dbg_str("%s -> [try: %d, it: %d] Current calib error: %.10f (best error: %.10f)",__FUNCTION__, 
                 try, iteration, error, scal_data.error);
+
+            if (db_csv_field_logging_check(DB_CALIB_ITERATIONS,0)) {
+                // dbg_str("%s -> Logging calibration method iteration: %d",__FUNCTION__,totalIteration);
+                if (RET_OK == status) totalIteration++;
+                if (RET_OK == status) status = db_write(DB_CALIB_ITERATIONS,0,&totalIteration);
+                if (RET_OK == status) status = db_write(DB_CALIB_ERROR, 0, &scal_data.error);
+                if (RET_OK == status) status = db_csv_dump();
+            }
         }
         if (RET_NO_EXEC == status) status = RET_OK;
+        
     }
     
     // Update database
