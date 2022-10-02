@@ -387,7 +387,7 @@ void quaternion_toEulerZXY(Quaternion* q, double output[3]) {
 
     // Roll (x-axis rotation)
     double sin1 = 2.0*(q->v[1]*q->v[2] + q->w*q->v[0]);
-    if (fabs(sin1) > 1.0-EPSI)
+    if (fabs(sin1) > 1.0-QUATERNION_EPS)
         output[1] = copysign(M_PI / 2, sin1); // use 90 degrees if out of range
     else
         output[1] = asin(sin1);
@@ -396,4 +396,21 @@ void quaternion_toEulerZXY(Quaternion* q, double output[3]) {
     output[2] = atan2( 
         -2.0*(q->v[0]*q->v[2] - q->w*q->v[1]), 
         q->w*q->w - q->v[0]*q->v[0] - q->v[1]*q->v[1] + q->v[2]*q->v[2] );
+}
+
+ERROR_CODE quaternion_between_two_vectors_compute(double v1[3], double v2[3], Quaternion *output) {
+    ERROR_CODE status = RET_OK;
+    double dotVal;
+    double crossVal[3];
+
+    // Get dot product
+    status = vector3_dot(v1, v2, &dotVal);
+    // Get cross product
+    if (RET_OK == status) status = vector3_cross(v1,v2,crossVal);
+    // Normalize cross product to serve as rotation axis
+    if (RET_OK == status && 1.0-QUATERNION_EPS > fabs(dotVal)) status = vector3_normalize(crossVal, crossVal);
+    // Use the rotation axis obtained and the arccosine of the dot value to compute the rotation quaternion
+    if (RET_OK == status) Quaternion_fromAxisAngle(crossVal,acos(dotVal),output);
+
+    return status;
 }

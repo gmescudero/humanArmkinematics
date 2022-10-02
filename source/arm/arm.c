@@ -375,22 +375,12 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     double x_vector[] = {-1.0,0.0,0.0};
     // double y_vector[] = {0.0,1.0,0.0};
     double z_vector[] = {0.0,0.0,1.0};
-    double dotVal;
-    double crossVal[3];
     
     // Segment to sensor 1 compute  
-    if (RET_OK == status) status = vector3_dot(z_vector, rotationV1, &dotVal);
-    if (RET_OK == status) status = vector3_cross(z_vector, rotationV1, crossVal);
-    if (RET_OK == status && 1-EPSI > fabs(dotVal)) status = vector3_normalize(crossVal, crossVal);
-    if (RET_OK == status) Quaternion_fromAxisAngle(crossVal,acos(dotVal),&q1bs);
-    // if (RET_OK == status) Quaternion_normalize(&q1bs,&q1bs);
+    if (RET_OK == status) status = quaternion_between_two_vectors_compute(z_vector,rotationV1,&q1bs);
 
     // Segment to sensor 2 compute 
-    if (RET_OK == status) status = vector3_dot(x_vector, rotationV2, &dotVal);
-    if (RET_OK == status) status = vector3_cross(x_vector, rotationV2, crossVal);
-    if (RET_OK == status && 1-EPSI > fabs(dotVal)) status = vector3_normalize(crossVal, crossVal);
-    if (RET_OK == status) Quaternion_fromAxisAngle(crossVal,acos(dotVal),&q2bs);
-    // if (RET_OK == status) Quaternion_normalize(&q2bs,&q2bs);
+    if (RET_OK == status) status = quaternion_between_two_vectors_compute(x_vector,rotationV2,&q2bs);
 
     if (RET_OK == status) {
         // Caluclate zeroed sensor to segment 
