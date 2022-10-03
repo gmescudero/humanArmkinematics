@@ -114,6 +114,14 @@ ERROR_CODE cal_two_rot_axes_calib_observations_from_database_update();
 ERROR_CODE cal_two_rot_axes_calib_root_mean_square(double rotationV1[3], double rotationV2[3], double *error);
 ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV2[3]);
 
-
+ERROR_CODE cal_two_axes_calib_at_zero_pose_orientation_set(
+    double rotationV1[3],
+    double rotationV2[3], 
+    Quaternion q_sensor1, 
+    Quaternion q_sensor2,
+    Quaternion q1gb_expected,
+    Quaternion q2gb_expected,
+    Quaternion *q1_zeroAndBody,
+    Quaternion *q2_zeroAndBody);
 
 #endif /* __calib_h__ */

@@ -578,3 +578,51 @@ ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV
 
     return status;
 }
+
+ERROR_CODE cal_two_axes_calib_at_zero_pose_orientation_set(
+    double rotationV1[3],
+    double rotationV2[3], 
+    Quaternion q_sensor1, 
+    Quaternion q_sensor2,
+    Quaternion q1_g_bp_expected,
+    Quaternion q2_g_bp_expected,
+    Quaternion *q1_zeroAndBody,
+    Quaternion *q2_zeroAndBody)
+{
+    ERROR_CODE status = RET_OK;
+    double x_vector[] = {1.0,0.0,0.0};
+    // double y_vector[] = {0.0,1.0,0.0};
+    double z_vector[] = {0.0,0.0,1.0};
+
+    Quaternion q1_s_b, q2_s_b;
+    Quaternion q1_g_bp, q2_g_bp;
+    Quaternion q1_bp_g, q2_bp_g;
+    Quaternion q1_bp_b, q2_bp_b;
+
+    // Check arguments
+    if (NULL == rotationV1) return RET_ARG_ERROR;
+    if (NULL == rotationV2) return RET_ARG_ERROR;
+
+    // Segment to sensor 1 compute  
+    if (RET_OK == status) status = quaternion_between_two_vectors_compute(z_vector,rotationV1,&q1_s_b);
+    // Segment to sensor 2 compute 
+    if (RET_OK == status) status = quaternion_between_two_vectors_compute(x_vector,rotationV2,&q2_s_b);
+    
+    quaternion_print(q2_s_b,"q2_s_b");
+
+    if (RET_OK == status) {                                                                                                                                                                                                     
+        // Compute nonzero sensor to nonzero body
+        Quaternion_multiply(&q_sensor1, &q1_s_b, &q1_g_bp);
+        Quaternion_multiply(&q_sensor2, &q2_s_b, &q2_g_bp);
+        // Compute nonzero body to expected body at zero
+        Quaternion_conjugate(&q1_g_bp,&q1_bp_g);
+        Quaternion_multiply(&q1_bp_g,&q1_g_bp_expected,&q1_bp_b);
+        Quaternion_conjugate(&q2_g_bp,&q2_bp_g);
+        Quaternion_multiply(&q2_bp_g,&q2_g_bp_expected,&q2_bp_b);
+        // Compute nonzero sensor to zero body
+        Quaternion_multiply(&q1_bp_b,&q1_s_b, q1_zeroAndBody);
+        Quaternion_multiply(&q2_bp_b,&q2_s_b, q2_zeroAndBody);
+    }
+
+    return status;
+}

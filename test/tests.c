@@ -270,15 +270,19 @@ bool tst_math_007()
 
     // Test Steps
     ret = quaternion_ang_vel_apply(q, T1, w, &q_result);
+    ok &= assert_OK(ret,"quaternion_ang_vel_apply 1");
     ok &= assert_quaternion(q_result, q1_exp_expected,"quaternion_ang_vel_apply result");
 
     ret = quaternion_ang_vel_apply(q, T2, w, &q_result);
+    ok &= assert_OK(ret,"quaternion_ang_vel_apply 2");
     ok &= assert_quaternion(q_result, q2_exp_expected,"quaternion_ang_vel_apply result");
 
     ret = quaternion_ang_vel_apply(q, T3, w, &q_result);
+    ok &= assert_OK(ret,"quaternion_ang_vel_apply 3");
     ok &= assert_quaternion(q_result, q3_exp_expected,"quaternion_ang_vel_apply result");
 
     ret = quaternion_ang_vel_apply(q, T4, w, &q_result);
+    ok &= assert_OK(ret,"quaternion_ang_vel_apply 4");
     ok &= assert_quaternion(q_result, q4_exp_expected,"quaternion_ang_vel_apply result");
 
     testCleanUp();
@@ -314,15 +318,19 @@ bool tst_math_008()
 
     // Test Steps
     ret = quaternion_ang_vel_apply(q, T1, w, &q_result);
+    ok &= assert_OK(ret,"quaternion_ang_vel_apply 1");
     ok &= assert_quaternion(q_result, q1_exp_expected,"quaternion_ang_vel_apply result");
 
     ret = quaternion_ang_vel_apply(q, T2, w, &q_result);
+    ok &= assert_OK(ret,"quaternion_ang_vel_apply 2");
     ok &= assert_quaternion(q_result, q2_exp_expected,"quaternion_ang_vel_apply result");
 
     ret = quaternion_ang_vel_apply(q, T3, w, &q_result);
+    ok &= assert_OK(ret,"quaternion_ang_vel_apply 3");
     ok &= assert_quaternion(q_result, q3_exp_expected,"quaternion_ang_vel_apply result");
 
     ret = quaternion_ang_vel_apply(q, T4, w, &q_result);
+    ok &= assert_OK(ret,"quaternion_ang_vel_apply 4");
     ok &= assert_quaternion(q_result, q4_exp_expected,"quaternion_ang_vel_apply result");
 
     testCleanUp();
@@ -2543,242 +2551,57 @@ bool tst_cal_006()
 }
 
 
-#if 0 // To be reviewed
-bool tst_cal_005() 
+bool tst_cal_007() 
 {
     bool ok = true;
     ERROR_CODE ret = RET_OK;
 
-    // const char csvFile[] = "test/tst_data/data5_tst_cal_004_onArmArbitraryMotions.csv";
-    // const char csvFile[] = "test/tst_data/data6_tst_cal_004_onArmArbitraryMotions.csv";
-    const char csvFile[] = "test/tst_data/data7_tst_cal_004_onArmArbitraryMotions.csv";
-    char headers[TST_MAX_CSV_DATA_VALUES][TST_MAX_CSV_HEADER_LENGTH] = {'\0'};
-    double data[TST_MAX_CSV_DATA_VALUES];
+    double x[3]={1,0,0};
+    double z[3]={0,0,1};
 
-    double rotVector1[3];
-    double rotVector2[3];
+    double angle1 = M_PI/12;
+    double angle2 = M_PI/6;
+    double rotVector1[3] = {0.0, sin(angle1), cos(angle1)};
+    double rotVector2[3] = {cos(angle2), sin(angle2), 0.0};
 
-    double omega1[3] = {0.0};
-    double omega2[3] = {0.0};
+    Quaternion q_sensor1;
+    Quaternion q_sensor2;
 
-    double q_buff[4] = {0.0};
-    Quaternion q_sensor1 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
-    Quaternion q_sensor2 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
+    Quaternion q_body1;
+    Quaternion q_body2;
 
-    double v1_expected[3] = {0.0,0.0,1.0};
-    double v2_expected[3] = {1.0,0.0,0.0};
+    Quaternion q_zeroAndBody1, q_zeroAndBody2;
 
-    int observations_window = CALIB_TWO_ROT_AXES_WINDOW;
+    Quaternion q_zab1_expected;
+    Quaternion q_zab2_expected;
 
-    testDescription(__FUNCTION__, "Test two rotation axis calibration by using real data");
-    ok = preconditions_init_databaseCalib(__FUNCTION__,20,observations_window);
+    testDescription(__FUNCTION__, "Test zeroing of calibration procedure with rotation vectors to define the sensor to segment alignment");
+    ok = preconditions_init(__FUNCTION__);
+
+    // Set simulated IMU readings
+    Quaternion_fromAxisAngle(x, -M_PI/4,  &q_sensor1);
+    Quaternion_fromAxisAngle(z, -M_PI/12, &q_sensor2);
+    // Set expected body positions at zero 
+    Quaternion_fromAxisAngle(x, 0,       &q_body1);
+    Quaternion_fromAxisAngle(z, -M_PI/2, &q_body2);
+    // Set zero to body conversion to be expected
+    Quaternion_fromAxisAngle(x, M_PI/4,     &q_zab1_expected);
+    Quaternion_fromAxisAngle(z, -5*M_PI/12, &q_zab2_expected);
 
     // Test Steps
-    tstRandomUnitVector3Generate(rotVector1);
-    tstRandomUnitVector3Generate(rotVector2);
-    
-    ok &= tstCsvLoad(csvFile);
-
-    int line = 1;
-    while (tstCsvDataLineGet(line++, data)) {
-        /*
-        status += db_csv_field_add(DB_IMU_TIMESTAMP,0); 0
-        status += db_csv_field_add(DB_IMU_GYROSCOPE,0); 1 2 3
-        status += db_csv_field_add(DB_IMU_GYROSCOPE,1); 4 5 6
-        status += db_csv_field_add(DB_IMU_ACCELEROMETER,0); 7 8 9
-        status += db_csv_field_add(DB_IMU_ACCELEROMETER,1); 10 11 12
-        status += db_csv_field_add(DB_IMU_MAGNETOMETER,0); 13 14 15
-        status += db_csv_field_add(DB_IMU_MAGNETOMETER,1); 16 17 18
-        status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,0); 19 20 21
-        status += db_csv_field_add(DB_IMU_ANGULAR_VELOCITY,1); 22 23 24
-        status += db_csv_field_add(DB_IMU_LINEAR_ACCELERATION,0); 25 26 27
-        status += db_csv_field_add(DB_IMU_LINEAR_ACCELERATION,1); 28 29 30
-        status += db_csv_field_add(DB_IMU_QUATERNION,0); 31 32 33 34
-        status += db_csv_field_add(DB_IMU_QUATERNION,1); 35 36 37 38
-        */
-        // Set gyroscope readings
-        omega1[0] = data[1]; omega1[1] = data[2]; omega1[2] = data[3];
-        ret = db_write(DB_IMU_GYROSCOPE,0,omega1);
-        ok &= assert_OK(ret, "db_write DB_IMU_GYROSCOPE_0");
-        omega2[0] = data[4]; omega2[1] = data[5]; omega2[2] = data[6];
-        ret = db_write(DB_IMU_GYROSCOPE,1,omega2);
-        ok &= assert_OK(ret, "db_write DB_IMU_GYROSCOPE_1");
-        // Set quaternion values
-        q_buff[0] = data[31]; q_buff[1] = data[32]; q_buff[2] = data[33]; q_buff[3] = data[34];
-        quaternion_from_buffer_build(q_buff, &q_sensor1);
-        ret = db_write(DB_IMU_QUATERNION,0,q_buff);
-        ok &= assert_OK(ret, "db_write DB_IMU_QUATERNION_0");
-        q_buff[0] = data[35]; q_buff[1] = data[36]; q_buff[2] = data[37]; q_buff[3] = data[38];
-        quaternion_from_buffer_build(q_buff, &q_sensor2);
-        ret = db_write(DB_IMU_QUATERNION,1,q_buff);
-        ok &= assert_OK(ret, "db_write DB_IMU_QUATERNION_1");
-        // Set timestamp
-        ret = db_write(DB_IMU_TIMESTAMP,0,&data[0]);
-        ok &= assert_OK(ret, "db_write");
-
-        // Call autocalibration procedure
-        if (0 == line % (observations_window/2)) {
-            ret = cal_automatic_two_rotation_axes_calibrate(omega1,omega2,q_sensor1,q_sensor2,rotVector1,rotVector2);
-            // ret = cal_automatic_two_rotation_axes_ga_calibrate(q_sensor1,q_sensor2, rotVector1, rotVector2);
-            ok &= assert_OK(ret, "cal_automatic_two_rotation_axes_calibrate");
-        }
-
-        // Dump database data
-        ret = db_csv_dump();
-        ok &= assert_OK(ret, "db_csv_dump");
-    }
-
-    tst_str("V1: <%f, %f, %f>, V2: <%f, %f, %f>", 
-        rotVector1[0],rotVector1[1], rotVector1[2],
-        rotVector2[0],rotVector2[1], rotVector2[2]);
-    ok &= assert_vector3EqualNoSignThreshold(rotVector1,v1_expected,5e-2,"cal_automatic_rotation_axis_calibrate result1");
-    ok &= assert_vector3EqualNoSignThreshold(rotVector2,v2_expected,5e-2,"cal_automatic_rotation_axis_calibrate result2");
-#if (0)
-    line = 1;
-    double lastTimestamp = data[0];
-    while (tstCsvDataLineGet(line++, data)) {
-        // Set quaternion values
-        q_buff[0] = data[31]; q_buff[1] = data[32]; q_buff[2] = data[33]; q_buff[3] = data[34];
-        quaternion_from_buffer_build(q_buff, &q_sensor1);
-        q_buff[0] = data[35]; q_buff[1] = data[36]; q_buff[2] = data[37]; q_buff[3] = data[38];
-        quaternion_from_buffer_build(q_buff, &q_sensor2);
-
-        double timestamp = lastTimestamp + data[0];
-        // Set timestamp
-        ret = db_write(DB_IMU_TIMESTAMP,0,&timestamp);
-        ok &= assert_OK(ret, "db_write");
-
-        // Calculate elbow angles
-        double fe, ps, carryingAngle;
-        ret = arm_elbow_angles_from_rotation_vectors_get(q_sensor1, q_sensor2, rotVector1, rotVector2,
-            &fe, &ps, &carryingAngle);
-        ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get");
-        // tst_str("[Angles: fe <%f>, ps <%f>, beta <%f>",fe,ps,carryingAngle);
-
-        // Dump database data
-        ret = db_csv_dump();
-        ok &= assert_OK(ret, "db_csv_dump");
-    }
-#endif
+    ret = cal_two_axes_calib_at_zero_pose_orientation_set(
+        rotVector1,rotVector2,
+        q_sensor1, q_sensor2,
+        q_body1, q_body2,
+        &q_zeroAndBody1,&q_zeroAndBody2);
+    ok &= assert_OK(ret, "cal_two_axes_calib_at_zero_pose_orientation_set");
+    ok &= assert_quaternion(q_zeroAndBody1,q_zab1_expected,"cal_two_axes_calib_at_zero_pose_orientation_set result 1");
+    ok &= assert_quaternion(q_zeroAndBody2,q_zab2_expected,"cal_two_axes_calib_at_zero_pose_orientation_set result 2");
 
     testCleanUp();
     testReport(ok);
     return ok;
 }
-
-bool tst_cal_006() 
-{
-    bool ok = true;
-    ERROR_CODE ret = RET_OK;
-
-    const char csvFile[] = "test/tst_data/data5_tst_cal_004_onArmArbitraryMotions.csv";
-    // const char csvFile[] = "test/tst_data/data6_tst_cal_004_onArmArbitraryMotions.csv";
-    // const char csvFile[] = "test/tst_data/data7_tst_cal_004_onArmArbitraryMotions.csv";
-    char headers[TST_MAX_CSV_DATA_VALUES][TST_MAX_CSV_HEADER_LENGTH] = {'\0'};
-    double buff[TST_MAX_CSV_DATA_VALUES];
-    TST_CSV_IMU_DATA *data = (TST_CSV_IMU_DATA*)buff;
-
-    int iterations = 10;
-    double initVector1[7][3] = {
-        {1,0,0},
-        {0,1,0},
-        {1,1,0},
-        {0,0,1},
-        {1,0,1},
-        {0,1,1},
-        {1,1,1},
-    };
-    double initVector2[7][3] = {
-        {1,1,1},
-        {0,1,1},
-        {1,0,1},
-        {0,0,1},
-        {1,1,0},
-        {0,1,0},
-        {1,0,0},
-    };
-
-    double rotVector1[3];
-    double rotVector2[3];
-
-    double prevRotV1[3];
-    double prevRotV2[3];
-
-    Quaternion q_sensor1 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
-    Quaternion q_sensor2 = {.w = 1.0, .v={0.0, 0.0, 0.0}};
-
-    double v1_expected[3] = {0.0,0.0,1.0};
-    double v2_expected[3] = {1.0,0.0,0.0};
-
-    int observations_window = CALIB_TWO_ROT_AXES_WINDOW;
-
-    testDescription(__FUNCTION__, "Test two rotation axis calibration by using real data with different set of initialization vectors");
-    ok = preconditions_init_databaseCalib(__FUNCTION__,50,observations_window);
-
-    // Test Steps
-    ok &= tstCsvLoad(csvFile);
-    
-    for (int i = 0; i < iterations; i++) {
-        // Set initial vector
-        if (7 < i) {
-            tstRandomUnitVector3Generate(rotVector1);
-            tstRandomUnitVector3Generate(rotVector2);
-        }else{
-            ret = vector3_normalize(initVector1[i],rotVector1);
-            ok &= assert_OK(ret, "vector3_normalize");
-            ret = vector3_normalize(initVector2[i],rotVector2);
-            ok &= assert_OK(ret, "vector3_normalize");
-        }
-
-        int line = 1;
-        while (tstCsvDataLineGet(line++, buff)) {
-            // Set gyroscope readings
-            ret = db_write(DB_IMU_GYROSCOPE,0,data->gyr0);
-            ok &= assert_OK(ret, "db_write DB_IMU_GYROSCOPE_0");
-            ret = db_write(DB_IMU_GYROSCOPE,1,data->gyr1);
-            ok &= assert_OK(ret, "db_write DB_IMU_GYROSCOPE_1");
-            // Set quaternion values
-            quaternion_from_buffer_build(data->quat0, &q_sensor1);
-            ret = db_write(DB_IMU_QUATERNION,0,data->quat0);
-            ok &= assert_OK(ret, "db_write DB_IMU_QUATERNION_0");
-            quaternion_from_buffer_build(data->quat1, &q_sensor2);
-            ret = db_write(DB_IMU_QUATERNION,1,data->quat1);
-            ok &= assert_OK(ret, "db_write DB_IMU_QUATERNION_1");
-            // Set timestamp
-            ret = db_write(DB_IMU_TIMESTAMP,0,&data->timestamp);
-            ok &= assert_OK(ret, "db_write");
-
-            // Call autocalibration procedure
-            if (0 == line % (observations_window/2)) {
-                ret = cal_automatic_two_rotation_axes_calibrate(data->gyr0,data->gyr1,q_sensor1,q_sensor2,rotVector1,rotVector2);
-                // ret = cal_automatic_two_rotation_axes_ga_calibrate(q_sensor1,q_sensor2, rotVector1, rotVector2);
-                ok &= assert_OK(ret, "cal_automatic_two_rotation_axes_calibrate");
-            }
-
-            // Dump database data
-            ret = db_csv_dump();
-            ok &= assert_OK(ret, "db_csv_dump");
-        }
-
-        tst_str("V1: <%f, %f, %f>,\tV2: <%f, %f, %f>", 
-            rotVector1[0],rotVector1[1], rotVector1[2],
-            rotVector2[0],rotVector2[1], rotVector2[2]);
-        if (0 < i) {
-            ok &= assert_vector3EqualNoSignThreshold(rotVector1,prevRotV1,5e-2,"cal_automatic_rotation_axis_calibrate result1");
-            ok &= assert_vector3EqualNoSignThreshold(rotVector2,prevRotV2,5e-2,"cal_automatic_rotation_axis_calibrate result2");
-        }
-        ret = vector3_copy(rotVector1,prevRotV1);
-        ok &= assert_OK(ret, "vector3_copy");
-        ret = vector3_copy(rotVector2,prevRotV2);
-        ok &= assert_OK(ret, "vector3_copy");
-    }
-
-    testCleanUp();
-    testReport(ok);
-    return ok;
-}
-
-#endif
 
 #if 1 <= IMUS_CONNECTED
 bool tst_imu_single_001() 
@@ -3002,6 +2825,7 @@ bool tst_battery_all()
     ok &= tst_cal_002();
     ok &= tst_cal_003();
     ok &= tst_cal_004();
+    ok &= tst_cal_007();
 
 #if 1 <= IMUS_CONNECTED
     ok &= tst_battery_imu_single();
@@ -3030,7 +2854,7 @@ int main(int argc, char **argv)
     // ok &= tst_cal_xxx();
     // ok &= tst_arm_015();
     // ok &= tst_cal_005();
-    // ok &= tst_cal_006();
+    // ok &= tst_cal_007();
     // ok &= tst_arm_016();
 
     return (ok)? RET_OK : RET_ERROR;
