@@ -608,8 +608,6 @@ ERROR_CODE cal_two_axes_calib_at_zero_pose_orientation_set(
     // Segment to sensor 2 compute 
     if (RET_OK == status) status = quaternion_between_two_vectors_compute(x_vector,rotationV2,&q2_s_b);
     
-    quaternion_print(q2_s_b,"q2_s_b");
-
     if (RET_OK == status) {                                                                                                                                                                                                     
         // Compute nonzero sensor to nonzero body
         Quaternion_multiply(&q_sensor1, &q1_s_b, &q1_g_bp);
