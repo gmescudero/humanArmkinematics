@@ -13,12 +13,18 @@
 #define CAL_ERROR_MIN_DIFF (1e-6)
 #define CAL_ERROR_STALLED_COUTDOWN (15)
 
+#define QUAT_ZERO_INIT {.w=1.0,.v={0.0,0.0,0.0}}
+
 typedef struct CAL_DATA_STRUCT {
     bool initialized;
     MATRIX phi;
     int sph_alt1;
     int sph_alt2;
     double error;
+    Quaternion q_sensor_to_body_arm;
+    Quaternion q_sensor_to_body_forearm;
+    Quaternion q_body_zero_arm;
+    Quaternion q_body_zero_forearm;
 
 } CAL_DATA;
 
@@ -26,7 +32,11 @@ static CAL_DATA scal_data = {
     .initialized = false,
     .sph_alt1 = 0,
     .sph_alt2 = 0,
-    .error = 1e300
+    .error = 1e300,
+    .q_body_zero_arm = QUAT_ZERO_INIT,
+    .q_body_zero_forearm = QUAT_ZERO_INIT,
+    .q_sensor_to_body_arm = QUAT_ZERO_INIT,
+    .q_sensor_to_body_forearm = QUAT_ZERO_INIT
 };
 
 /**
@@ -620,6 +630,14 @@ ERROR_CODE cal_two_axes_calib_at_zero_pose_orientation_set(
         // Compute nonzero sensor to zero body
         Quaternion_multiply(&q1_bp_b,&q1_s_b, q1_zeroAndBody);
         Quaternion_multiply(&q2_bp_b,&q2_s_b, q2_zeroAndBody);
+    }
+    if (RET_OK == status) {
+        // Store transformation from raw body frames to zeroed body frames
+        Quaternion_copy(&q1_bp_b,&scal_data.q_body_zero_arm); 
+        Quaternion_copy(&q2_bp_b,&scal_data.q_body_zero_forearm); 
+        // Store transformation from raw sensors to zeroed body frames
+        Quaternion_copy(q1_zeroAndBody,&scal_data.q_sensor_to_body_arm); 
+        Quaternion_copy(q2_zeroAndBody,&scal_data.q_sensor_to_body_forearm);
     }
 
     return status;
