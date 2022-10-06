@@ -78,8 +78,8 @@ ERROR_CODE arm_segments_length_set(double upper_arm, double forearm) {
 
     // Adapt kinematic table
     if (RET_OK == status) {
-        arm_kinematic_table[ELBOW].position[0] = upper_arm;
-        arm_kinematic_table[WRIST].position[0] = forearm;
+        arm_kinematic_table[ELBOW].position[0] = -upper_arm;
+        arm_kinematic_table[WRIST].position[0] = -forearm;
     }
 
     return status;
@@ -88,6 +88,33 @@ ERROR_CODE arm_segments_length_set(double upper_arm, double forearm) {
 void arm_pose_set(ARM_POSE initial_arm_pose)
 {
     memcpy(&arm_current_pose, &initial_arm_pose, sizeof(ARM_POSE));
+}
+
+ARM_POSE arm_orientations_set(Quaternion q_arm, Quaternion q_forearm, Quaternion q_wrist)
+{
+    ERROR_CODE status = RET_OK;
+    ARM_POSE pose;
+    double v[3];
+
+    // SHOULDER
+    if (RET_OK == status) status = vector3_copy(arm_kinematic_table[SHOULDER].position, pose.shoulder.position);
+    if (RET_OK == status) Quaternion_copy(&q_arm, &pose.shoulder.orientation);
+    // ELBOW
+    if (RET_OK == status) Quaternion_rotate(&q_arm, arm_kinematic_table[ELBOW].position, v);
+    if (RET_OK == status) status = vector3_add(pose.shoulder.position, v, pose.elbow.position);
+    if (RET_OK == status) Quaternion_copy(&q_forearm, &pose.elbow.orientation);
+    // WRIST
+    if (RET_OK == status) Quaternion_rotate(&q_forearm, arm_kinematic_table[WRIST].position, v);
+    if (RET_OK == status) status = vector3_add(pose.elbow.position, v, pose.wrist.position);
+    if (RET_OK == status) Quaternion_copy(&q_wrist, &pose.wrist.orientation);
+
+    if (RET_OK == status) {
+        arm_pose_set(pose);
+    }
+    else {
+        wrn_str("Failed to set new orientation (Error code: %d)", status);
+    }
+    return arm_current_pose;
 }
 
 /**

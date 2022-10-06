@@ -194,7 +194,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     /* Loop while data keeps beeing gathered */
     do {
         if (RET_OK == status) sleep_s(1);
-        if (RET_OK == status) status = cal_two_rot_axes_calib_observations_from_database_update();
+        if (RET_OK == status) status = cal_gn2_observations_from_database_update();
         log_str("Current observations count: %d/%d",db_field_buffer_current_size_get(DB_CALIB_OMEGA,0),CALIB_TWO_ROT_AXES_WINDOW);
     } while (RET_OK == status && CALIB_TWO_ROT_AXES_WINDOW > db_field_buffer_current_size_get(DB_CALIB_OMEGA,0));
     log_str(" -> [USER]: Finished recording calibration data");
@@ -202,7 +202,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     /* Perform calibration algorithm */
     log_str("Calibrating rotation two axes");
     if (RET_OK == status) {
-        status = cal_two_rot_axes_calib_compute(rotationV1,rotationV2);
+        status = cal_gn2_two_rot_axes_calib(rotationV1,rotationV2);
         if (RET_OK != status) err_str("Failed to initialize reading callback for IMU sensors");
     }
     log_str("Finished two axes calibration: ");

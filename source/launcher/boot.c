@@ -19,7 +19,7 @@ ERROR_CODE hak_initialize() {
     
     if (RET_OK == status) status = log_file_initalize(); 
     if (RET_OK == status) status = db_initialize();
-    if (RET_OK == status) status = cal_two_rot_axes_calib_initialize(CALIB_TWO_ROT_AXES_IMU_DATA_BUFF_SIZE, CALIB_TWO_ROT_AXES_WINDOW);
+    if (RET_OK == status) status = cal_gn2_initialize(CALIB_TWO_ROT_AXES_IMU_DATA_BUFF_SIZE, CALIB_TWO_ROT_AXES_WINDOW);
 
     return status;
 }
@@ -30,7 +30,7 @@ ERROR_CODE hak_terminate() {
     log_str("Cleaning all resources used for Human Arm Kinematics");
 
     imu_terminate();
-    cal_two_rot_axes_calib_terminate();
+    cal_gn2_terminate();
     status = db_terminate();
     if (RET_OK != status) wrn_str("Failed to clean all resources");
 

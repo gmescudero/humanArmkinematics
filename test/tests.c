@@ -1752,9 +1752,9 @@ bool tst_arm_010()
     const ARM_POSE expected = {
         .shoulder.position    = {0.0, 0.0, 0.0},
         .shoulder.orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
-        .elbow.position       = {10.0, 0.0, 0.0},
+        .elbow.position       = {-10.0, 0.0, 0.0},
         .elbow.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
-        .wrist.position       = {15.0, 0.0, 0.0},
+        .wrist.position       = {-15.0, 0.0, 0.0},
         .wrist.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
     };
     double expected_quat_buff[4];
@@ -1793,17 +1793,17 @@ bool tst_arm_011()
     bool ok = true;
     ERROR_CODE ret = RET_OK;
     Quaternion joints[ARM_NUMBER_OF_JOINTS] = {
-        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
         {.w = 1.0, .v = {0.0, 0.0, 0.0}},
     };
     ARM_POSE result;
     ARM_POSE expected = {
         .shoulder.position    = {0.0, 0.0, 0.0},
-        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
         .elbow.position       = {0.0, 0.0, -10.0},
-        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
         .wrist.position       = {0.0, 0.0, -15.0},
-        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
     };
     double expected_quat_buff[4];
 
@@ -1857,9 +1857,9 @@ bool tst_arm_012()
     ARM_POSE expected2 = {
         .shoulder.position    = {0.0, 0.0, 0.0},
         .shoulder.orientation = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
-        .elbow.position       = {11.0, 0.0, 0.0},
+        .elbow.position       = {-11.0, 0.0, 0.0},
         .elbow.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
-        .wrist.position       = {17.0, 0.0, 0.0},
+        .wrist.position       = {-17.0, 0.0, 0.0},
         .wrist.orientation    = {.w = 1.0, .v = {0.0, 0.0, 0.0}},
     };
     double expected_quat_buff[4];
@@ -1903,41 +1903,41 @@ bool tst_arm_013()
     bool ok = true;
     ERROR_CODE ret = RET_OK;
     Quaternion joints1[ARM_NUMBER_OF_JOINTS] = {
-        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
         {.w = 1.0, .v = {0.0, 0.0, 0.0}},
     };
     Quaternion joints2[ARM_NUMBER_OF_JOINTS] = {
-        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
-        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
+        {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
     };
     Quaternion joints3[ARM_NUMBER_OF_JOINTS] = {
-        {.w = 0.5, .v = {0.5, 0.5,-0.5}},
-        {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        {.w = 0.5, .v = {0.5, -0.5, 0.5}},
+        {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
     };    
     ARM_POSE result;
     ARM_POSE expected1 = {
         .shoulder.position    = {0.0, 0.0, 0.0},
-        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
         .elbow.position       = {0.0, 0.0, -10.0},
-        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
         .wrist.position       = {0.0, 0.0, -15.0},
-        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
     };
     ARM_POSE expected2 = {
         .shoulder.position    = {0.0, 0.0, 0.0},
-        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+        .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
         .elbow.position       = {0.0, 0.0, -10.0},
-        .elbow.orientation    = {.w = 0.0, .v = {0.0, 1.0, 0.0}},
-        .wrist.position       = {-5.0, 0.0, -10.0},
-        .wrist.orientation    = {.w = 0.0, .v = {0.0, 1.0, 0.0}},
+        .elbow.orientation    = {.w = 0.0, .v = {0.0, -1.0, 0.0}},
+        .wrist.position       = {5.0, 0.0, -10.0},
+        .wrist.orientation    = {.w = 0.0, .v = {0.0, -1.0, 0.0}},
     };
     ARM_POSE expected3 = {
         .shoulder.position    = {0.0, 0.0, 0.0},
-        .shoulder.orientation = {.w = 0.5, .v = {0.5, 0.5,-0.5}},
+        .shoulder.orientation = {.w = 0.5, .v = {0.5, -0.5, 0.5}},
         .elbow.position       = {0.0, 0.0, -10.0},
-        .elbow.orientation    = {.w = 0.0, .v = {M_SQRT1_2, M_SQRT1_2, 0.0}},
+        .elbow.orientation    = {.w = 0.0, .v = {M_SQRT1_2, -M_SQRT1_2, 0.0}},
         .wrist.position       = {0.0, 5.0, -10.0},
-        .wrist.orientation    = {.w = 0.0, .v = {M_SQRT1_2, M_SQRT1_2, 0.0}},
+        .wrist.orientation    = {.w = 0.0, .v = {M_SQRT1_2, -M_SQRT1_2, 0.0}},
     };
 
     testDescription(__FUNCTION__, "Apply direct kinematics for different sets of joint values for shoulder and elbow");
@@ -1946,15 +1946,15 @@ bool tst_arm_013()
     // Test Steps
     ret = arm_direct_kinematics_compute(joints1, &result);
     ok &= assert_OK(ret, "arm_direct_kinematics_compute");
-    ok &= assert_armEqual(result, expected1, "arm_direct_kinematics_compute result");
+    ok &= assert_armEqual(result, expected1, "arm_direct_kinematics_compute result 1");
 
     ret = arm_direct_kinematics_compute(joints2, &result);
     ok &= assert_OK(ret, "arm_direct_kinematics_compute");
-    ok &= assert_armEqual(result, expected2, "arm_direct_kinematics_compute result");
+    ok &= assert_armEqual(result, expected2, "arm_direct_kinematics_compute result 2");
 
     ret = arm_direct_kinematics_compute(joints3, &result);
     ok &= assert_OK(ret, "arm_direct_kinematics_compute");
-    ok &= assert_armEqual(result, expected3, "arm_direct_kinematics_compute result");
+    ok &= assert_armEqual(result, expected3, "arm_direct_kinematics_compute result 3");
 
     testCleanUp();
     testReport(ok);
@@ -2041,7 +2041,6 @@ bool tst_arm_015()
     return ok;
 }
 
-
 bool tst_arm_016() 
 {
     bool ok = true;
@@ -2079,6 +2078,33 @@ bool tst_arm_016()
             ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get zeroed gamma");
         }
     }
+    
+    testCleanUp();
+    testReport(ok);
+    return ok;
+} 
+
+bool tst_arm_017() 
+{
+    bool ok = true;
+    Quaternion q_zero = {.w=1,.v={0,0,0}};
+
+    ARM_POSE result;
+    ARM_POSE expected = {
+        .shoulder.position = {0,0,0},
+        .shoulder.orientation = {.w=1,.v={0,0,0}},
+        .elbow.position = {-10,0,0},
+        .elbow.orientation    = {.w=1,.v={0,0,0}},
+        .wrist.position = {-15,0,0},
+        .wrist.orientation    = {.w=1,.v={0,0,0}},
+    };
+
+    testDescription(__FUNCTION__, "Set orientation of arm and forearm");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    result = arm_orientations_set(q_zero,q_zero,q_zero);
+    ok &= assert_armEqual(result,expected,"arm_orientations_set result");
     
     testCleanUp();
     testReport(ok);
@@ -2319,8 +2345,8 @@ bool tst_cal_004()
 
             if (imu_data_window <= db_field_buffer_current_size_get(DB_IMU_GYROSCOPE,0)) {
                 // Set observations
-                ret = cal_two_rot_axes_calib_observations_from_database_update();
-                ok &= assert_OK(ret, "cal_two_rot_axes_calib_observations_from_database_update");
+                ret = cal_gn2_observations_from_database_update();
+                ok &= assert_OK(ret, "cal_gn2_observations_from_database_update");
             }
 
             // Dump database data
@@ -2328,11 +2354,11 @@ bool tst_cal_004()
             ok &= assert_OK(ret, "db_csv_dump");
         }
         // Call autocalib procedure
-        ret = cal_two_rot_axes_calib_compute(rotVector1,rotVector2);
+        ret = cal_gn2_two_rot_axes_calib(rotVector1,rotVector2);
         tst_str("[%d] -> V1: <%f, %f, %f>, V2: <%f, %f, %f>", i,
             rotVector1[0],rotVector1[1], rotVector1[2],
             rotVector2[0],rotVector2[1], rotVector2[2]);
-        ok &= assert_OK(ret, "cal_two_rot_axes_calib_compute");
+        ok &= assert_OK(ret, "cal_gn2_two_rot_axes_calib");
 
         if (0 < i) {
             ok &= assert_vector3EqualNoSignThreshold(rotVector1,prevRotV1,5e-2,"cal_automatic_rotation_axis_calibrate result1");
@@ -2373,6 +2399,10 @@ bool tst_cal_005()
     Quaternion q_zab1_expected;
     Quaternion q_zab2_expected;
 
+    Quaternion q_expected1, q_expected2;
+    double q_buff[4] = {1.0,0.0,0.0,0.0};
+    Quaternion q_arm, q_forearm;
+
     testDescription(__FUNCTION__, "Test zeroing of calibration procedure with rotation vectors to define the sensor to segment alignment");
     ok = preconditions_init(__FUNCTION__);
 
@@ -2387,14 +2417,45 @@ bool tst_cal_005()
     Quaternion_fromAxisAngle(z, -5*M_PI/12, &q_zab2_expected);
 
     // Test Steps
-    ret = cal_two_axes_calib_at_zero_pose_orientation_set(
+    ret = cal_gn2_zero_pose_calibrate(
         rotVector1,rotVector2,
         q_sensor1, q_sensor2,
         q_body1, q_body2,
         &q_zeroAndBody1,&q_zeroAndBody2);
-    ok &= assert_OK(ret, "cal_two_axes_calib_at_zero_pose_orientation_set");
-    ok &= assert_quaternion(q_zeroAndBody1,q_zab1_expected,"cal_two_axes_calib_at_zero_pose_orientation_set result 1");
-    ok &= assert_quaternion(q_zeroAndBody2,q_zab2_expected,"cal_two_axes_calib_at_zero_pose_orientation_set result 2");
+    ok &= assert_OK(ret, "cal_gn2_zero_pose_calibrate");
+    ok &= assert_quaternion(q_zeroAndBody1,q_zab1_expected,"cal_gn2_zero_pose_calibrate result 1");
+    ok &= assert_quaternion(q_zeroAndBody2,q_zab2_expected,"cal_gn2_zero_pose_calibrate result 2");
+
+    ret = db_write(DB_IMU_QUATERNION,0,q_buff);
+    ok &= assert_OK(ret, "db_write");
+    ret = db_write(DB_IMU_QUATERNION,1,q_buff);
+    ok &= assert_OK(ret, "db_write");
+
+    Quaternion_fromAxisAngle(x,M_PI/4,    &q_expected1);
+    Quaternion_fromAxisAngle(z,-5*M_PI/12,&q_expected2);
+
+    ret = cal_gn2_orientations_from_database_calib_apply(&q_arm, &q_forearm);
+    ok &= assert_OK(ret, "cal_gn2_orientations_from_database_calib_apply 1");
+    ok &= assert_quaternion(q_arm,    q_expected1,"cal_gn2_orientations_from_database_calib_apply 1 result 1");
+    ok &= assert_quaternion(q_forearm,q_expected2,"cal_gn2_orientations_from_database_calib_apply 1 result 2");
+
+    Quaternion_fromAxisAngle(x, M_PI/6, &q_sensor1);
+    Quaternion_fromAxisAngle(z, M_PI/4, &q_sensor2);
+
+    quaternion_buffer_build(q_sensor1,q_buff);
+    ret = db_write(DB_IMU_QUATERNION,0,q_buff);
+    ok &= assert_OK(ret, "db_write");
+    quaternion_buffer_build(q_sensor2,q_buff);
+    ret = db_write(DB_IMU_QUATERNION,1,q_buff);
+    ok &= assert_OK(ret, "db_write");
+
+    Quaternion_fromAxisAngle(x,5*M_PI/12,&q_expected1);
+    Quaternion_fromAxisAngle(z,-M_PI/6, &q_expected2);
+    
+    ret = cal_gn2_orientations_from_database_calib_apply(&q_arm, &q_forearm);
+    ok &= assert_OK(ret, "cal_gn2_orientations_from_database_calib_apply 2");
+    ok &= assert_quaternion(q_arm,    q_expected1,"cal_gn2_orientations_from_database_calib_apply 2 result 1");
+    ok &= assert_quaternion(q_forearm,q_expected2,"cal_gn2_orientations_from_database_calib_apply 2 result 2");
 
     testCleanUp();
     testReport(ok);
@@ -2618,6 +2679,7 @@ bool tst_battery_all()
     ok &= tst_arm_014();
     // ok &= tst_arm_015();
     ok &= tst_arm_016();
+    ok &= tst_arm_017();
 
     ok &= tst_cal_001();
     ok &= tst_cal_002();
