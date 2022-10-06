@@ -110,6 +110,8 @@ ARM_POSE arm_orientations_set(Quaternion q_arm, Quaternion q_forearm, Quaternion
 
     if (RET_OK == status) {
         arm_pose_set(pose);
+        status = sarm_current_position_update(pose);
+        if (RET_OK == status) wrn_str("Failed to update new pose into database (Error code: %d)", status);
     }
     else {
         wrn_str("Failed to set new orientation (Error code: %d)", status);
