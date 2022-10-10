@@ -635,6 +635,10 @@ ERROR_CODE cal_gn2_zero_pose_calibrate(
         // Set output parameters
         if (NULL != q1_zeroAndBody) Quaternion_copy(&q1_zero,q1_zeroAndBody); 
         if (NULL != q2_zeroAndBody) Quaternion_copy(&q2_zero,q2_zeroAndBody); 
+
+        log_str("Zeroing quats: arm:<%f, %f,%f,%f> forearm:<%f, %f,%f,%f>", 
+            q1_zero.w, q1_zero.v[0], q1_zero.v[1], q1_zero.v[2], 
+            q2_zero.w, q2_zero.v[0], q2_zero.v[1], q2_zero.v[2]);
     }
 
     return status;
