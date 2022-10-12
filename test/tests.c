@@ -2088,15 +2088,40 @@ bool tst_arm_017()
 {
     bool ok = true;
     Quaternion q_zero = {.w=1,.v={0,0,0}};
+    Quaternion q_90z  = {.w=cos(M_PI_2/2),.v={0,0,sin(M_PI_2/2)}};
 
     ARM_POSE result;
-    ARM_POSE expected = {
+    ARM_POSE expected1 = {
         .shoulder.position = {0,0,0},
-        .shoulder.orientation = {.w=1,.v={0,0,0}},
+        .shoulder.orientation = q_zero,
         .elbow.position = {-10,0,0},
-        .elbow.orientation    = {.w=1,.v={0,0,0}},
+        .elbow.orientation    = q_zero,
         .wrist.position = {-15,0,0},
-        .wrist.orientation    = {.w=1,.v={0,0,0}},
+        .wrist.orientation    = q_zero,
+    };
+    ARM_POSE expected2 = {
+        .shoulder.position = {0,0,0},
+        .shoulder.orientation = q_zero,
+        .elbow.position = {-10,0,0},
+        .elbow.orientation    = q_90z,
+        .wrist.position = {-10,-5,0},
+        .wrist.orientation    = q_90z,
+    };
+    ARM_POSE expected3 = {
+        .shoulder.position = {0,0,0},
+        .shoulder.orientation = q_90z,
+        .elbow.position = {0,-10,0},
+        .elbow.orientation    = q_zero,
+        .wrist.position = {-5,-10,0},
+        .wrist.orientation    = q_zero,
+    };
+    ARM_POSE expected4 = {
+        .shoulder.position = {0,0,0},
+        .shoulder.orientation = q_90z,
+        .elbow.position = {0,-10,0},
+        .elbow.orientation    = q_90z,
+        .wrist.position = {0,-15,0},
+        .wrist.orientation    = q_90z,
     };
 
     testDescription(__FUNCTION__, "Set orientation of arm and forearm");
@@ -2104,8 +2129,17 @@ bool tst_arm_017()
 
     // Test Steps
     result = arm_orientations_set(q_zero,q_zero,q_zero);
-    ok &= assert_armEqual(result,expected,"arm_orientations_set result");
+    ok &= assert_armEqual(result,expected1,"arm_orientations_set result 1");
     
+    result = arm_orientations_set(q_zero,q_90z,q_90z);
+    ok &= assert_armEqual(result,expected2,"arm_orientations_set result 2");
+    
+    result = arm_orientations_set(q_90z,q_zero,q_zero);
+    ok &= assert_armEqual(result,expected3,"arm_orientations_set result 3");
+    
+    result = arm_orientations_set(q_90z,q_90z,q_90z);
+    ok &= assert_armEqual(result,expected4,"arm_orientations_set result 4");
+
     testCleanUp();
     testReport(ok);
     return ok;
