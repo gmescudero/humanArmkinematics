@@ -828,6 +828,67 @@ bool tst_math_020()
 bool tst_math_021()
 {
     bool ok = true;
+    double eulerAngles[3];
+    double zyx_result[3];
+    Quaternion q_result;
+    Quaternion expected1 = {.w = 0.8535534, .v = {0.3535534, 0.3535534,-0.1464466}};
+    Quaternion expected2 = {.w = 0.5, .v = {0.5, 0.5, 0.5}};
+
+    testDescription(__FUNCTION__, "Check conversions between euler ZYX an quaternion");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test steps
+    eulerAngles[0] = PI/4; eulerAngles[1] = PI/4; eulerAngles[2] = 0.0; 
+    Quaternion_fromEulerZYX(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected1,"Quaternion_fromEulerZYX result 1");
+    Quaternion_toEulerZYX(&q_result,zyx_result);
+    ok &= assert_vector3Equal(zyx_result,eulerAngles,"Quaternion_toEulerZYX result 1");
+
+    eulerAngles[0] = PI/2; eulerAngles[1] = 0.0; eulerAngles[2] = PI/2; 
+    Quaternion_fromEulerZYX(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected2,"Quaternion_fromEulerZYX result 2");
+    Quaternion_toEulerZYX(&q_result,zyx_result);
+    ok &= assert_vector3Equal(zyx_result,eulerAngles,"Quaternion_toEulerZYX result 2");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+
+bool tst_math_022()
+{
+    bool ok = true;
+    double eulerAngles[3];
+    double zxy_result[3];
+    Quaternion q_result;
+    Quaternion expected1 = {.w = 0.8535534, .v = {0.3535534, 0.3535534, 0.1464466}};
+    Quaternion expected2 = {.w = 0.5, .v = {-0.5, 0.5, 0.5}};
+
+    testDescription(__FUNCTION__, "Check conversions between euler ZXY an quaternion");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test steps
+    eulerAngles[0] = PI/4; eulerAngles[1] = PI/4; eulerAngles[2] = 0.0; 
+    quaternion_fromEulerZXY(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected1,"quaternion_fromEulerZXY result 1");
+    quaternion_toEulerZXY(&q_result,zxy_result);
+    ok &= assert_vector3Equal(zxy_result,eulerAngles,"quaternion_toEulerZXY result 1");
+
+    eulerAngles[0] = PI/2; eulerAngles[1] = 0.0; eulerAngles[2] = PI/2; 
+    quaternion_fromEulerZXY(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected2,"quaternion_fromEulerZXY result 2");
+    quaternion_toEulerZXY(&q_result,zxy_result);
+    ok &= assert_vector3Equal(zxy_result,eulerAngles,"quaternion_toEulerZXY result 2");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+#if 0
+bool tst_math_022()
+{
+    bool ok = true;
     double euler[3];
 
     Quaternion q1 = {.w = 1.0, .v = {0.0,0.0,0.0}};
@@ -868,8 +929,9 @@ bool tst_math_021()
     testReport(ok);
     return ok;
 }
+#endif
 
-bool tst_math_022()
+bool tst_math_023()
 {
     bool ok = true;
     ERROR_CODE ret;
@@ -925,7 +987,7 @@ bool tst_math_022()
     return ok;
 }
 
-bool tst_math_023()
+bool tst_math_024()
 {
     bool ok = true;
     ERROR_CODE ret;
@@ -2741,7 +2803,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    ok &= tst_battery_all();
+    // ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
@@ -2749,6 +2811,9 @@ int main(int argc, char **argv)
     // ok &= tst_arm_015();
     // ok &= tst_cal_005();
     // ok &= tst_arm_016();
+    ok &= tst_math_021();
+    ok &= tst_math_022();
+    
 
     return (ok)? RET_OK : RET_ERROR;
 }
