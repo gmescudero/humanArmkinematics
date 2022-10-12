@@ -78,8 +78,8 @@ ERROR_CODE arm_segments_length_set(double upper_arm, double forearm) {
 
     // Adapt kinematic table
     if (RET_OK == status) {
-        arm_kinematic_table[ELBOW].position[0] = upper_arm;
-        arm_kinematic_table[WRIST].position[0] = forearm;
+        arm_kinematic_table[ELBOW].position[0] = -upper_arm;
+        arm_kinematic_table[WRIST].position[0] = -forearm;
     }
 
     return status;
@@ -88,6 +88,35 @@ ERROR_CODE arm_segments_length_set(double upper_arm, double forearm) {
 void arm_pose_set(ARM_POSE initial_arm_pose)
 {
     memcpy(&arm_current_pose, &initial_arm_pose, sizeof(ARM_POSE));
+}
+
+ARM_POSE arm_orientations_set(Quaternion q_arm, Quaternion q_forearm, Quaternion q_wrist)
+{
+    ERROR_CODE status = RET_OK;
+    ARM_POSE pose;
+    double v[3];
+
+    // SHOULDER
+    if (RET_OK == status) status = vector3_copy(arm_kinematic_table[SHOULDER].position, pose.shoulder.position);
+    if (RET_OK == status) Quaternion_copy(&q_arm, &pose.shoulder.orientation);
+    // ELBOW
+    if (RET_OK == status) Quaternion_rotate(&q_arm, arm_kinematic_table[ELBOW].position, v);
+    if (RET_OK == status) status = vector3_add(pose.shoulder.position, v, pose.elbow.position);
+    if (RET_OK == status) Quaternion_copy(&q_forearm, &pose.elbow.orientation);
+    // WRIST
+    if (RET_OK == status) Quaternion_rotate(&q_forearm, arm_kinematic_table[WRIST].position, v);
+    if (RET_OK == status) status = vector3_add(pose.elbow.position, v, pose.wrist.position);
+    if (RET_OK == status) Quaternion_copy(&q_wrist, &pose.wrist.orientation);
+
+    if (RET_OK == status) {
+        arm_pose_set(pose);
+        status = sarm_current_position_update(pose);
+        if (RET_OK != status) wrn_str("Failed to update new pose into database (Error code: %d)", status);
+    }
+    else {
+        wrn_str("Failed to set new orientation (Error code: %d)", status);
+    }
+    return arm_current_pose;
 }
 
 /**
@@ -325,8 +354,8 @@ ERROR_CODE arm_elbow_angles_zero(
 {
     ERROR_CODE status = RET_OK;
     double anglesFE_B_PS[ARM_ELBOW_NUMBER_OF_ANGLES];
-    // double x_vector[] = {1.0,0.0,0.0};
-    double y_vector[] = {0.0,1.0,0.0};
+    double x_vector[] = {-1.0,0.0,0.0};
+    // double y_vector[] = {0.0,1.0,0.0};
     double z_vector[] = {0.0,0.0,1.0};
 
     // Check arguments
@@ -342,7 +371,7 @@ ERROR_CODE arm_elbow_angles_zero(
     if (RET_OK == status) {
         // Compute zeroing quaternions
         Quaternion_fromAxisAngle(z_vector,anglesFE_B_PS[ALPHA_FE]-alphaR,&zeroAlpha);
-        Quaternion_fromAxisAngle(y_vector,gammaR-anglesFE_B_PS[GAMMA_PS],&zeroGamma);
+        Quaternion_fromAxisAngle(x_vector,gammaR-anglesFE_B_PS[GAMMA_PS],&zeroGamma);
 
         dbg_str("%s -> Raw angles at zero position: <%f,%f,%f>; zeroAlpha: <%f,%f,%f,%f>; zeroGamma: <%f,%f,%f,%f>",__FUNCTION__,
             anglesFE_B_PS[ALPHA_FE],anglesFE_B_PS[BETA_CARRYING],anglesFE_B_PS[GAMMA_PS],
@@ -372,25 +401,15 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     Quaternion q1bs, q2bs;
     Quaternion q1bs_zeroed, q2bs_zeroed;
     Quaternion q_relative;
-    // double x_vector[] = {1.0,0.0,0.0};
-    double y_vector[] = {0.0,1.0,0.0};
+    double x_vector[] = {-1.0,0.0,0.0};
+    // double y_vector[] = {0.0,1.0,0.0};
     double z_vector[] = {0.0,0.0,1.0};
-    double dotVal;
-    double crossVal[3];
     
     // Segment to sensor 1 compute  
-    if (RET_OK == status) status = vector3_dot(z_vector, rotationV1, &dotVal);
-    if (RET_OK == status) status = vector3_cross(z_vector, rotationV1, crossVal);
-    if (RET_OK == status && 1-EPSI > fabs(dotVal)) status = vector3_normalize(crossVal, crossVal);
-    if (RET_OK == status) Quaternion_fromAxisAngle(crossVal,acos(dotVal),&q1bs);
-    // if (RET_OK == status) Quaternion_normalize(&q1bs,&q1bs);
+    if (RET_OK == status) status = quaternion_between_two_vectors_compute(z_vector,rotationV1,&q1bs);
 
     // Segment to sensor 2 compute 
-    if (RET_OK == status) status = vector3_dot(y_vector, rotationV2, &dotVal);
-    if (RET_OK == status) status = vector3_cross(y_vector, rotationV2, crossVal);
-    if (RET_OK == status && 1-EPSI > fabs(dotVal)) status = vector3_normalize(crossVal, crossVal);
-    if (RET_OK == status) Quaternion_fromAxisAngle(crossVal,acos(dotVal),&q2bs);
-    // if (RET_OK == status) Quaternion_normalize(&q2bs,&q2bs);
+    if (RET_OK == status) status = quaternion_between_two_vectors_compute(x_vector,rotationV2,&q2bs);
 
     if (RET_OK == status) {
         // Caluclate zeroed sensor to segment 
@@ -406,7 +425,7 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
 
     // Compute Euler angles ZXY to get non zero FE and PS angles
     if (RET_OK == status) {
-        quaternion_toEulerZXY(&q_relative, anglesFE_B_PS);
+        Quaternion_toEulerZYX(&q_relative, anglesFE_B_PS);
         dbg_str("%s -> quat <%f,%f,%f,%f>, eulerZXY <%f,%f,%f>",__FUNCTION__,
             q_relative.w,q_relative.v[0],q_relative.v[1],q_relative.v[2],
             anglesFE_B_PS[ALPHA_FE],anglesFE_B_PS[BETA_CARRYING],anglesFE_B_PS[GAMMA_PS]);

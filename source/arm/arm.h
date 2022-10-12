@@ -58,8 +58,23 @@ enum ARM_ELBOW_ANGLES_ENUM {
  */
 ERROR_CODE arm_segments_length_set(double upper_arm, double forearm);
 
+/**
+ * @brief Set an specific arm pose
+ * 
+ * @param initial_arm_pose (input) Arm pose of each joint and link 
+ */
 void arm_pose_set(
     ARM_POSE initial_arm_pose);
+
+/**
+ * @brief Set the orientation of the arm and forearm body segments
+ * 
+ * @param q_arm (input) Quaternion orientation of the arm segment w.r.t. the global frame
+ * @param q_forearm (input) Quaternion orientation of the forearm segment w.r.t. the global frame
+ * @param q_wrist(input) Quaternion orientation of the wrist w.r.t. the global frame
+ * @return ERROR_CODE 
+ */
+ARM_POSE arm_orientations_set(Quaternion q_arm, Quaternion q_forearm, Quaternion q_wrist);
 
 /**
  * @brief Convert arm pose to a string

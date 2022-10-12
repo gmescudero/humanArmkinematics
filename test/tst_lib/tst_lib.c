@@ -282,6 +282,8 @@ bool preconditions_init_databaseCalib(const char *test_name, int imu_data_window
     /* Set CSV logging */
     ret = db_csv_field_add(DB_IMU_TIMESTAMP,0);
     ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_IMU_TIMESTAMP_0");
+    ret = db_csv_field_add(DB_CALIB_ITERATIONS,0);
+    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_ITERATION_0");
     ret = db_csv_field_add(DB_CALIB_OMEGA,0);
     ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_OMEGA_0");
     ret = db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
@@ -301,8 +303,8 @@ bool preconditions_init_databaseCalib(const char *test_name, int imu_data_window
     ret = db_csv_field_add(DB_CALIB_COST_DERIVATIVE,1);
     ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_COST_DERIVATIVE_1");
     /* Initialize calibration package */
-    ret = cal_two_rot_axes_calib_initialize(imu_data_window, observations_window);
-    ok &= assert_OK(ret, "cal_two_rot_axes_calib_initialize");
+    ret = cal_gn2_initialize(imu_data_window, observations_window);
+    ok &= assert_OK(ret, "cal_gn2_initialize");
 
     return ok;
 }

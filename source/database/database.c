@@ -70,7 +70,7 @@ static void sdb_buffer_free(DB_BUFFER *field_buff);
     void                *data_ptr;
     */
 static DB_FIELD database[DB_NUMBER_OF_ENTRIES] = {
-/*   field_id      , name         , type      , multiplicity, mutex, data_ptr */
+/*   field_id      , name         , type      , instances,  multiplicity, mutex, data_ptr */
     
     /* IMU data */
     DB_FIELD_INIT(DB_IMU_NUMBER,                  "IMU_NUMBER",                 DB_INTEGER, 1, 1),
@@ -90,6 +90,7 @@ static DB_FIELD database[DB_NUMBER_OF_ENTRIES] = {
     DB_FIELD_INIT(DB_CALIB_SPHERICAL_COORDS,        "CALIB_SPHERICAL_COORDS",      DB_REAL,2,3),
     DB_FIELD_INIT(DB_CALIB_COST_DERIVATIVE,         "CALIB_COST_DERIVATIVE",       DB_REAL,2,2),
     DB_FIELD_INIT(DB_CALIB_TWO_AXES_OBSERVATIONS,   "CALIB_TWO_AXES_OBSERVATIONS", DB_REAL,1,3),
+    DB_FIELD_INIT(DB_CALIB_ITERATIONS,              "CALIB_ITERATIONS",            DB_INTEGER,1,1),
     /* Arm positions and orientations */
     DB_FIELD_INIT(DB_ARM_SHOULDER_POSITION,    "ARM_SHOULDER_POSITION",    DB_REAL,1,3),
     DB_FIELD_INIT(DB_ARM_SHOULDER_ORIENTATION, "ARM_SHOULDER_ORIENTATION", DB_REAL,1,4),
@@ -370,6 +371,19 @@ ERROR_CODE db_csv_field_add(DB_FIELD_IDENTIFIER field, int instance) {
     return RET_OK;
 }
 
+bool db_csv_field_logging_check(DB_FIELD_IDENTIFIER field, int instance) {
+    // Check arguments
+    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return false;
+    if (0 > instance || database[field].instances <= instance) return false;
+
+    // Go over all logging fields looking for the one requested
+    for (int i = 0; i < csv_logging_fields.fields_num; i++) {
+        if (csv_logging_fields.fields[i] == field && csv_logging_fields.instances[i] == instance)
+            return true;
+    }
+    return false;
+}
+
 ERROR_CODE db_csv_dump(void) {
     ERROR_CODE status = RET_OK;
     double csv_buff[CSV_FILE_VALUES_NUMBER] = {0.0};
@@ -388,7 +402,14 @@ ERROR_CODE db_csv_dump(void) {
         current_field   = csv_logging_fields.fields[ind];
         instance        = csv_logging_fields.instances[ind];
         index           = csv_logging_fields.indexes[ind];
-        status = db_index_read(current_field, instance, index, &(csv_buff[ind]));
+        if (DB_REAL == database[current_field].type) {
+            status = db_index_read(current_field, instance, index, &(csv_buff[ind]));
+        }
+        else { // DB_INTEGER
+            int buff;
+            status = db_index_read(current_field, instance, index, &buff);
+            csv_buff[ind] = (double)buff;
+        }
         // dbg_str("\t -> Retrieve data from field %s(%d)_%d -> %f",
             // database[current_field].name, instance, index, csv_buff[ind]);
     }

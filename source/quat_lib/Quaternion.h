@@ -82,14 +82,14 @@ double Quaternion_toAxisAngle(Quaternion* q, double output[3]);
 /**
  * Set the quaternion to the equivalent of euler angles.
  * @param eulerZYX
- *      Euler angles in ZYX, but stored in array as [x'', y', z].
+ *      Euler angles in ZYX, but stored in array as [z, y', x''].
  */
 void Quaternion_fromEulerZYX(double eulerZYX[3], Quaternion* output);
 
 /**
  * Calculates the euler angles of a quaternion.
  * @param output
- *      Euler angles in ZYX, but stored in array as [x'', y', z].
+ *      Euler angles in ZYX, but stored in array as [z, y', x''].
  */
 void Quaternion_toEulerZYX(Quaternion* q, double output[3]);
 
@@ -217,3 +217,12 @@ void quaternion_print(Quaternion q, const char *name);
  *      Euler angles in ZYX, but stored in array as [z, x', y''].
  */
 void quaternion_toEulerZXY(Quaternion* q, double output[3]);
+/**
+ * @brief Calculate the quaternion that rotates from v1 to v2 
+ * 
+ * @param v1 (input) Vector where to start rotation from
+ * @param v2 (input) Vector where to end rotation
+ * @param output (output) Quaternion from v1 to v2
+ * @return ERROR_CODE 
+ */
+ERROR_CODE quaternion_between_two_vectors_compute(double v1[3], double v2[3], Quaternion *output);

@@ -27,11 +27,6 @@ extern "C" {
 #endif
 
 /**
- * @brief Conversion from Degrees to Radians
- */
-#define DEG_2_RAD(x) (x * M_PI/180)
-
-/**
  * @brief Maximum number of IMU sensors
  */
 #define IMU_MAX_NUMBER (COM_PORTS_MAX_NUM)

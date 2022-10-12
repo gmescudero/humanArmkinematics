@@ -13,12 +13,18 @@
 #define CAL_ERROR_MIN_DIFF (1e-6)
 #define CAL_ERROR_STALLED_COUTDOWN (15)
 
+#define QUAT_ZERO_INIT {.w=1.0,.v={0.0,0.0,0.0}}
+
 typedef struct CAL_DATA_STRUCT {
     bool initialized;
     MATRIX phi;
     int sph_alt1;
     int sph_alt2;
     double error;
+    Quaternion q_sensor_to_body_arm;
+    Quaternion q_sensor_to_body_forearm;
+    Quaternion q_body_zero_arm;
+    Quaternion q_body_zero_forearm;
 
 } CAL_DATA;
 
@@ -26,7 +32,11 @@ static CAL_DATA scal_data = {
     .initialized = false,
     .sph_alt1 = 0,
     .sph_alt2 = 0,
-    .error = 1e300
+    .error = 1e300,
+    .q_body_zero_arm = QUAT_ZERO_INIT,
+    .q_body_zero_forearm = QUAT_ZERO_INIT,
+    .q_sensor_to_body_arm = QUAT_ZERO_INIT,
+    .q_sensor_to_body_forearm = QUAT_ZERO_INIT
 };
 
 /**
@@ -276,7 +286,7 @@ static void scal_spherical(double x, double y, double z, int *spherical_alt, dou
  * @param obs_data_buff_size (input) Size of the observations buffer
  * @return ERROR_CODE 
  */
-ERROR_CODE cal_two_rot_axes_calib_initialize(int imu_data_buff_size, int obs_data_buff_size) {
+ERROR_CODE cal_gn2_initialize(int imu_data_buff_size, int obs_data_buff_size) {
     ERROR_CODE status = RET_OK;
 
     // Initialize IMU measures buffer
@@ -305,7 +315,7 @@ ERROR_CODE cal_two_rot_axes_calib_initialize(int imu_data_buff_size, int obs_dat
 /**
  * @brief Terminate the calibration package and destroy all used resources
  */
-void cal_two_rot_axes_calib_terminate() {
+void cal_gn2_terminate() {
     matrix_free(scal_data.phi);
     scal_data.initialized = false;
 }
@@ -319,7 +329,7 @@ void cal_two_rot_axes_calib_terminate() {
  * @param q_sensor2 (input) Orientation quaternnion of the second IMU sensor
  * @return ERROR_CODE 
  */
-ERROR_CODE cal_two_rot_axes_calib_observations_update(double omega1_from1[3], double omega2_from2[3], Quaternion q_sensor1, Quaternion q_sensor2) {
+ERROR_CODE cal_gn2_observations_update(double omega1_from1[3], double omega2_from2[3], Quaternion q_sensor1, Quaternion q_sensor2) {
     ERROR_CODE status = RET_OK;
     Quaternion qR;
     double omega2_from1[3];
@@ -349,7 +359,7 @@ ERROR_CODE cal_two_rot_axes_calib_observations_update(double omega1_from1[3], do
  * 
  * @return ERROR_CODE 
  */
-ERROR_CODE cal_two_rot_axes_calib_observations_from_database_update() {
+ERROR_CODE cal_gn2_observations_from_database_update() {
     ERROR_CODE status = RET_OK;
     double omega1_from1[3];
     double omega2_from2[3];
@@ -371,7 +381,7 @@ ERROR_CODE cal_two_rot_axes_calib_observations_from_database_update() {
         if (RET_OK == status) status = db_field_buffer_from_tail_data_get(DB_IMU_QUATERNION,1,i,q_buff);
         if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q_sensor2);
         // Compute observations and log them into the database
-        if (RET_OK == status) status = cal_two_rot_axes_calib_observations_update(omega1_from1, omega2_from2, q_sensor1, q_sensor2);
+        if (RET_OK == status) status = cal_gn2_observations_update(omega1_from1, omega2_from2, q_sensor1, q_sensor2);
     }
     if (RET_OK == status) {
         // Clear buffers
@@ -391,7 +401,7 @@ ERROR_CODE cal_two_rot_axes_calib_observations_from_database_update() {
  * @param error (output) Mean error of the new solution
  * @return ERROR_CODE 
  */
-ERROR_CODE cal_two_rot_axes_calib_root_mean_square(double rotationV1[3], double rotationV2[3], double *error) {
+ERROR_CODE cal_gn2_root_mean_square(double rotationV1[3], double rotationV2[3], double *error) {
     ERROR_CODE status = RET_OK;
     int observations_num = db_field_buffer_current_size_get(DB_CALIB_OMEGA,0);  // Number of managed observations
     double obs_err;
@@ -423,7 +433,7 @@ ERROR_CODE cal_two_rot_axes_calib_root_mean_square(double rotationV1[3], double 
  * @param error (output) Mean error of the new solution
  * @return ERROR_CODE 
  */
-ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double rotationV1[3], double rotationV2[3], double *error) {
+ERROR_CODE cal_gn2_gauss_newton_iteration(double rotationV1[3], double rotationV2[3], double *error) {
     ERROR_CODE status = RET_OK;
 
     int observations_num = db_field_buffer_current_size_get(DB_CALIB_OMEGA,0);  // Number of managed observations
@@ -480,7 +490,7 @@ ERROR_CODE cal_two_rot_axes_calib_gauss_newton_iteration(double rotationV1[3], d
     matrix_free(Jacobian);
 
     // Compute total Root Mean Square value after correction
-    if (RET_OK == status) status = cal_two_rot_axes_calib_root_mean_square(rotationV1,rotationV2,error);
+    if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2,error);
 
     // Set vectors with new parameters
     scal_spherical_2_vec(scal_data.phi.data[0][0], scal_data.phi.data[1][0], scal_data.sph_alt1, rotationV1);
@@ -498,14 +508,7 @@ static double scal_rnd(){
     return 2*M_PI*((double)rand()/(double)RAND_MAX - 0.5);
 }
 
-/**
- * @brief Compute two rotation axes automatic calibration from arbitrary motion
- * 
- * @param rotationV1 (output) First rotation vector 
- * @param rotationV2 (output) Second rotation vector 
- * @return ERROR_CODE 
- */
-ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV2[3]) {
+ERROR_CODE cal_gn2_two_rot_axes_calib(double rotationV1[3], double rotationV2[3]) {
     ERROR_CODE status = RET_OK;
 
     double error; // Error value
@@ -525,6 +528,7 @@ ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV
         {0,1,0}
     };
     double tempV1[3],tempV2[3];
+    static int totalIteration = 0;
 
     scal_data.error = 1e99;
 
@@ -533,7 +537,7 @@ ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV
         if (RET_OK == status) status = vector3_copy(initVector2[try],tempV2);
         for (int iteration = 0; RET_OK == status && CALIB_TWO_ROT_AXES_MAX_ITERATIONS > iteration; iteration++){
             // Execute one iteration of the gauss newton algorithm
-            status = cal_two_rot_axes_calib_gauss_newton_iteration(tempV1,tempV2, &error);
+            status = cal_gn2_gauss_newton_iteration(tempV1,tempV2, &error);
             // Use only the best set of rotation axes
             if (RET_OK == status && scal_data.error + EPSI > error) {
                 scal_data.error = error;
@@ -543,8 +547,17 @@ ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV
 
             dbg_str("%s -> [try: %d, it: %d] Current calib error: %.10f (best error: %.10f)",__FUNCTION__, 
                 try, iteration, error, scal_data.error);
+
+            if (db_csv_field_logging_check(DB_CALIB_ITERATIONS,0)) {
+                // dbg_str("%s -> Logging calibration method iteration: %d",__FUNCTION__,totalIteration);
+                if (RET_OK == status) totalIteration++;
+                if (RET_OK == status) status = db_write(DB_CALIB_ITERATIONS,0,&totalIteration);
+                if (RET_OK == status) status = db_write(DB_CALIB_ERROR, 0, &scal_data.error);
+                if (RET_OK == status) status = db_csv_dump();
+            }
         }
         if (RET_NO_EXEC == status) status = RET_OK;
+        
     }
     
     // Update database
@@ -564,6 +577,89 @@ ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV
     }
     if (RET_OK == status) {
         status = db_write(DB_CALIB_ROT_VECTOR, 1, rotationV2);
+    }
+
+    return status;
+}
+
+ERROR_CODE cal_gn2_zero_pose_calibrate(
+    double rotationV1[3],
+    double rotationV2[3], 
+    Quaternion q_sensor1, 
+    Quaternion q_sensor2,
+    Quaternion q1_g_bp_expected,
+    Quaternion q2_g_bp_expected,
+    Quaternion *q1_zeroAndBody,
+    Quaternion *q2_zeroAndBody)
+{
+    ERROR_CODE status = RET_OK;
+    double x_vector[] = {1.0,0.0,0.0};
+    // double y_vector[] = {0.0,1.0,0.0};
+    double z_vector[] = {0.0,0.0,1.0};
+
+    Quaternion q1_s_b, q2_s_b;
+    Quaternion q1_g_bp, q2_g_bp;
+    Quaternion q1_bp_g, q2_bp_g;
+    Quaternion q1_bp_b, q2_bp_b;
+    Quaternion q1_zero, q2_zero;
+
+    // Check arguments
+    if (NULL == rotationV1) return RET_ARG_ERROR;
+    if (NULL == rotationV2) return RET_ARG_ERROR;
+
+    // Segment to sensor 1 compute  
+    if (RET_OK == status) status = quaternion_between_two_vectors_compute(z_vector,rotationV1,&q1_s_b);
+    // Segment to sensor 2 compute 
+    if (RET_OK == status) status = quaternion_between_two_vectors_compute(x_vector,rotationV2,&q2_s_b);
+    
+    if (RET_OK == status) {                                                                                                                                                                                                     
+        // Compute nonzero sensor to nonzero body
+        Quaternion_multiply(&q_sensor1, &q1_s_b, &q1_g_bp);
+        Quaternion_multiply(&q_sensor2, &q2_s_b, &q2_g_bp);
+        // Compute nonzero body to expected body at zero
+        Quaternion_conjugate(&q1_g_bp,&q1_bp_g);
+        Quaternion_multiply(&q1_bp_g,&q1_g_bp_expected,&q1_bp_b);
+        Quaternion_conjugate(&q2_g_bp,&q2_bp_g);
+        Quaternion_multiply(&q2_bp_g,&q2_g_bp_expected,&q2_bp_b);
+        // Compute nonzero sensor to zero body
+        Quaternion_multiply(&q1_bp_b,&q1_s_b, &q1_zero);
+        Quaternion_multiply(&q2_bp_b,&q2_s_b, &q2_zero);
+    }
+    if (RET_OK == status) {
+        // Store transformation from raw body frames to zeroed body frames
+        Quaternion_copy(&q1_bp_b, &scal_data.q_body_zero_arm); 
+        Quaternion_copy(&q2_bp_b, &scal_data.q_body_zero_forearm); 
+        // Store transformation from raw sensors to zeroed body frames
+        Quaternion_copy(&q1_zero, &scal_data.q_sensor_to_body_arm); 
+        Quaternion_copy(&q2_zero, &scal_data.q_sensor_to_body_forearm);
+        // Set output parameters
+        if (NULL != q1_zeroAndBody) Quaternion_copy(&q1_zero,q1_zeroAndBody); 
+        if (NULL != q2_zeroAndBody) Quaternion_copy(&q2_zero,q2_zeroAndBody); 
+
+        log_str("Zeroing quats: arm:<%f, %f,%f,%f> forearm:<%f, %f,%f,%f>", 
+            q1_zero.w, q1_zero.v[0], q1_zero.v[1], q1_zero.v[2], 
+            q2_zero.w, q2_zero.v[0], q2_zero.v[1], q2_zero.v[2]);
+    }
+
+    return status;
+}
+
+ERROR_CODE cal_gn2_orientations_from_database_calib_apply(Quaternion *q1, Quaternion *q2)
+{
+    ERROR_CODE status = RET_OK;
+    double q_buff[4];
+    Quaternion q1_toCalib,q2_toCalib;
+
+    // Get the current quaternions 
+    if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,0,q_buff);
+    if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q1_toCalib);
+    if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,1,q_buff);
+    if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q2_toCalib);
+
+    // Apply conversion to body global orientation
+    if (RET_OK == status) {
+        Quaternion_multiply(&scal_data.q_sensor_to_body_arm,     &q1_toCalib, q1);
+        Quaternion_multiply(&scal_data.q_sensor_to_body_forearm, &q2_toCalib, q2);
     }
 
     return status;

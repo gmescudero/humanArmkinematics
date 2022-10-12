@@ -32,4 +32,13 @@
  */
 #define EPSI (1e-9)
 
+/**
+ * @brief Conversion from Degrees to Radians
+ */
+#define DEG_2_RAD(x) (x * M_PI/180)
+/**
+ * @brief Conversion from Radians to Degrees
+ */
+#define RAD_2_DEG(x) (x * 180/M_PI)
+
 #endif

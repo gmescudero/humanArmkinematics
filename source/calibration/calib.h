@@ -107,13 +107,52 @@ ERROR_CODE cal_automatic_two_rotation_axes_ga_calibrate(
 /**
  * @brief TODO: make descriptions and clear everything
  */
-ERROR_CODE cal_two_rot_axes_calib_initialize(int imu_data_buff_size, int obs_data_buff_size);
-void cal_two_rot_axes_calib_terminate();
-ERROR_CODE cal_two_rot_axes_calib_observations_update(double omega1_from1[3], double omega2_from2[3], Quaternion q_sensor1, Quaternion q_sensor2);
-ERROR_CODE cal_two_rot_axes_calib_observations_from_database_update();
-ERROR_CODE cal_two_rot_axes_calib_root_mean_square(double rotationV1[3], double rotationV2[3], double *error);
-ERROR_CODE cal_two_rot_axes_calib_compute(double rotationV1[3], double rotationV2[3]);
+ERROR_CODE cal_gn2_initialize(int imu_data_buff_size, int obs_data_buff_size);
+void cal_gn2_terminate();
+ERROR_CODE cal_gn2_observations_update(double omega1_from1[3], double omega2_from2[3], Quaternion q_sensor1, Quaternion q_sensor2);
+ERROR_CODE cal_gn2_observations_from_database_update();
+ERROR_CODE cal_gn2_root_mean_square(double rotationV1[3], double rotationV2[3], double *error);
 
 
+/**
+ * @brief Compute two rotation axes automatic calibration from arbitrary motion
+ * 
+ * @param rotationV1 (output) First rotation vector 
+ * @param rotationV2 (output) Second rotation vector 
+ * @return ERROR_CODE 
+ */
+ERROR_CODE cal_gn2_two_rot_axes_calib(double rotationV1[3], double rotationV2[3]);
+
+/**
+ * @brief Calibrate the orientation zero of the body segments 
+ * 
+ * @param rotationV1 (input) First rotation vector
+ * @param rotationV2 (input) Second rotation vector
+ * @param q_sensor1 (input) Arm sensor quaternion reading 
+ * @param q_sensor2 (input) Forearm sensor quaternion reading
+ * @param q1gb_expected (input) Arm orientation at current position
+ * @param q2gb_expected (input) Forearm orientation at current postion
+ * @param q1_zeroAndBody (output) Quaternion conversion from raw sensor reading to arm body segment
+ * @param q2_zeroAndBody (output) Quaternion conversion from raw sensor reading to forearm body segment
+ * @return ERROR_CODE 
+ */
+ERROR_CODE cal_gn2_zero_pose_calibrate(
+    double rotationV1[3],
+    double rotationV2[3], 
+    Quaternion q_sensor1, 
+    Quaternion q_sensor2,
+    Quaternion q1gb_expected,
+    Quaternion q2gb_expected,
+    Quaternion *q1_zeroAndBody,
+    Quaternion *q2_zeroAndBody);
+
+/**
+ * @brief Retrieve the IMU quaternions from database and apply calibration
+ * 
+ * @param q1 (output) Arm quaternion
+ * @param q2 (output) Forearm quaternion
+ * @return ERROR_CODE 
+ */
+ERROR_CODE cal_gn2_orientations_from_database_calib_apply(Quaternion *q1, Quaternion *q2);
 
 #endif /* __calib_h__ */

@@ -42,7 +42,7 @@ OBJS = 	$(BINARIES_DIR)/arm.o  $(BINARIES_DIR)/database.o $(BINARIES_DIR)/functi
 		$(BINARIES_DIR)/calib_two_axes_ga.o $(BINARIES_DIR)/calib_two_axes_gn.o
 all: tst_lib.o tests.c $(OBJS)
 	$(info building tests ... )
-	$(CC) $(INC) $(OBJS) $(PTHREADSERIAL) $(IMULIB) tests.c tst_lib/*.o -o $(TARGET) -lm -ldl
+	$(CC) $(INC) $(OBJS) $(PTHREADSERIAL) $(CCFLAGS) $(IMULIB) tests.c tst_lib/*.o -o $(TARGET) -lm -ldl
 
 tst_lib.o: tst_lib/tst_lib.c
 	$(CC) $(INC) -c tst_lib/tst_lib.c -o tst_lib/$@ 

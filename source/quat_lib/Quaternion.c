@@ -122,10 +122,10 @@ void Quaternion_fromEulerZYX(double eulerZYX[3], Quaternion* output)
 {
     assert(output != NULL);
     // Based on https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-    double cy = cos(eulerZYX[2] * 0.5);
-    double sy = sin(eulerZYX[2] * 0.5);
-    double cr = cos(eulerZYX[0] * 0.5);
-    double sr = sin(eulerZYX[0] * 0.5);
+    double cy = cos(eulerZYX[0] * 0.5);
+    double sy = sin(eulerZYX[0] * 0.5);
+    double cr = cos(eulerZYX[2] * 0.5);
+    double sr = sin(eulerZYX[2] * 0.5);
     double cp = cos(eulerZYX[1] * 0.5);
     double sp = sin(eulerZYX[1] * 0.5);
 
@@ -142,7 +142,7 @@ void Quaternion_toEulerZYX(Quaternion* q, double output[3])
     // Roll (x-axis rotation)
     double sinr_cosp = +2.0 * (q->w * q->v[0] + q->v[1] * q->v[2]);
     double cosr_cosp = +1.0 - 2.0 * (q->v[0] * q->v[0] + q->v[1] * q->v[1]);
-    output[0] = atan2(sinr_cosp, cosr_cosp);
+    output[2] = atan2(sinr_cosp, cosr_cosp);
 
     // Pitch (y-axis rotation)
     double sinp = +2.0 * (q->w * q->v[1] - q->v[2] * q->v[0]);
@@ -154,7 +154,7 @@ void Quaternion_toEulerZYX(Quaternion* q, double output[3])
     // Yaw (z-axis rotation)
     double siny_cosp = +2.0 * (q->w * q->v[2] + q->v[0] * q->v[1]);
     double cosy_cosp = +1.0 - 2.0 * (q->v[1] * q->v[1] + q->v[2] * q->v[2]);
-    output[2] = atan2(siny_cosp, cosy_cosp);
+    output[0] = atan2(siny_cosp, cosy_cosp);
 }
 
 void Quaternion_conjugate(Quaternion* q, Quaternion* output)
@@ -387,7 +387,7 @@ void quaternion_toEulerZXY(Quaternion* q, double output[3]) {
 
     // Roll (x-axis rotation)
     double sin1 = 2.0*(q->v[1]*q->v[2] + q->w*q->v[0]);
-    if (fabs(sin1) > 1.0-EPSI)
+    if (fabs(sin1) > 1.0-QUATERNION_EPS)
         output[1] = copysign(M_PI / 2, sin1); // use 90 degrees if out of range
     else
         output[1] = asin(sin1);
@@ -396,4 +396,21 @@ void quaternion_toEulerZXY(Quaternion* q, double output[3]) {
     output[2] = atan2( 
         -2.0*(q->v[0]*q->v[2] - q->w*q->v[1]), 
         q->w*q->w - q->v[0]*q->v[0] - q->v[1]*q->v[1] + q->v[2]*q->v[2] );
+}
+
+ERROR_CODE quaternion_between_two_vectors_compute(double v1[3], double v2[3], Quaternion *output) {
+    ERROR_CODE status = RET_OK;
+    double dotVal;
+    double crossVal[3];
+
+    // Get dot product
+    status = vector3_dot(v1, v2, &dotVal);
+    // Get cross product
+    if (RET_OK == status) status = vector3_cross(v1,v2,crossVal);
+    // Normalize cross product to serve as rotation axis
+    if (RET_OK == status && 1.0-QUATERNION_EPS > fabs(dotVal)) status = vector3_normalize(crossVal, crossVal);
+    // Use the rotation axis obtained and the arccosine of the dot value to compute the rotation quaternion
+    if (RET_OK == status) Quaternion_fromAxisAngle(crossVal,acos(dotVal),output);
+
+    return status;
 }
