@@ -240,7 +240,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_elbow_angles(double time) {
     double buffTime    = -1.0;
     Quaternion q1,q2;
     Quaternion q12;
-    double anglesFE_B_PS[ARM_ELBOW_NUMBER_OF_ANGLES];
+    double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER];
 
     /* Set the csv logging from the database */
     log_str("Set the database fields to track into the csv");
