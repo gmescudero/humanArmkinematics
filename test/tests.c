@@ -1707,7 +1707,7 @@ bool tst_arm_008()
     bool ok = true;
     ARM_POSE arm;
     Quaternion q1, q2;
-    double eulerAngles[3] = {0.0, PI/2, PI/4};
+    double eulerAngles[3] = { PI/4, PI/2, 0.0};
     const ARM_POSE expected = {
         .shoulder.position    = {0.0, 0.0, 0.0},
         .shoulder.orientation = {.w = 0.0, .v = {0.382683, 0.923880, 0.0}},
@@ -2786,7 +2786,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    // ok &= tst_battery_all();
+    ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
@@ -2794,8 +2794,8 @@ int main(int argc, char **argv)
     // ok &= tst_arm_015();
     // ok &= tst_cal_005();
     // ok &= tst_arm_016();
-    ok &= tst_math_021();
-    ok &= tst_math_022();
+    // ok &= tst_math_021();
+    // ok &= tst_math_022();
     
 
     return (ok)? RET_OK : RET_ERROR;

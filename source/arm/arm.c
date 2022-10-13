@@ -441,20 +441,7 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     return status;
 }
 
-ERROR_CODE arm_shoulder_angles_compute(Quaternion q_shoulder, double shoulderAngles[ARM_SHOULDER_NUMBER_OF_ANGLES])
+void arm_shoulder_angles_compute(Quaternion q_shoulder, double shoulderAngles[ARM_SHOULDER_NUMBER_OF_ANGLES])
 {
-    double sh_abd_fl[3];
-    double sh_rot;
-
-    Quaternion q_conj;
-    Quaternion_conjugate(&q_shoulder,&q_conj);
-
-    double sinr_cosp = 2.0 * (q_conj.w * q_conj.v[0] + q_conj.v[1] * q_conj.v[2]);
-    double cosr_cosp = 1.0 - 2.0 * (q_conj.v[0] * q_conj.v[0] + q_conj.v[1] * q_conj.v[1]);
-    shoulderAngles[SH_ROTATION] = atan2(sinr_cosp, cosr_cosp);
-
-    double siny_cosp = 2.0 * (q_shoulder.w * q_shoulder.v[2] + q_shoulder.v[0] * q_shoulder.v[1]);
-    double cosy_cosp = 1.0 - 2.0 * (q_shoulder.v[1] * q_shoulder.v[1] + q_shoulder.v[2] * q_shoulder.v[2]);
-    shoulderAngles[SH_ABDUCTION] = atan2(siny_cosp, cosy_cosp);
-    
+    Quaternion_toEulerZYX(&q_shoulder, shoulderAngles);
 }
