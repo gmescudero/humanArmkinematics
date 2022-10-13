@@ -45,6 +45,13 @@ enum ARM_ELBOW_ANGLES_ENUM {
     ARM_ELBOW_NUMBER_OF_ANGLES
 } ARM_ELBOW_ANGLES;
 
+enum ARM_SHOULDER_ANGLES_ENUM {
+    SH_ABDUCTION = 0,
+    SH_FLEXION,
+    SH_ROTATION,
+    ARM_SHOULDER_NUMBER_OF_ANGLES
+} ARM_SHOULDER_ANGLES;
+
 /******************************************************************************/
 /* Function Declarations                                                      */
 /******************************************************************************/

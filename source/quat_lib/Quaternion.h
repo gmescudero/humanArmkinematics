@@ -82,14 +82,14 @@ double Quaternion_toAxisAngle(Quaternion* q, double output[3]);
 /**
  * Set the quaternion to the equivalent of euler angles.
  * @param eulerZYX
- *      Euler angles in ZYX, but stored in array as [z, y', x''].
+ *      Euler angles in ZYX, but stored in array as [x'', y', z].
  */
 void Quaternion_fromEulerZYX(double eulerZYX[3], Quaternion* output);
 
 /**
  * Calculates the euler angles of a quaternion.
  * @param output
- *      Euler angles in ZYX, but stored in array as [z, y', x''].
+ *      Euler angles in ZYX, but stored in array as [x'', y', z].
  */
 void Quaternion_toEulerZYX(Quaternion* q, double output[3]);
 
@@ -211,10 +211,16 @@ void quaternion_from_float_buffer_build(float buffer[4], Quaternion *q);
  */
 void quaternion_print(Quaternion q, const char *name);
 /**
+ * Calculates the euler angles of a quaternion.
+ * @param output
+ *      Euler angles in ZXY, but stored in array as [y'', x', z].
+ */
+void quaternion_fromEulerZXY(double eulerZXY[3], Quaternion* output);
+/**
  * @brief Calculates the euler angles of a quaternion in zxy order.
  * 
  * @param output 
- *      Euler angles in ZYX, but stored in array as [z, x', y''].
+ *      Euler angles in ZXY, but stored in array as [y'', x', z].
  */
 void quaternion_toEulerZXY(Quaternion* q, double output[3]);
 /**

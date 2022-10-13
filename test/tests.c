@@ -828,48 +828,93 @@ bool tst_math_020()
 bool tst_math_021()
 {
     bool ok = true;
-    double euler[3];
+    double eulerAngles[3];
+    double zyx_result[3];
+    Quaternion q_result;
+    Quaternion expected1 = {.w = 0.8535534, .v = {0.3535534, 0.3535534,-0.1464466}};
+    Quaternion expected2 = {.w = 0.5, .v = {0.5, 0.5, 0.5}};
 
-    Quaternion q1 = {.w = 1.0, .v = {0.0,0.0,0.0}};
-    double expected_1[3] = {0.0,0.0,0.0};
-
-    Quaternion q2 = {.w = M_SQRT1_2, .v = {0.0,0.0,M_SQRT1_2}};
-    double expected_2[3] = {M_PI_2,0.0,0.0};
-
-    Quaternion q3 = {.w = M_SQRT1_2, .v = {0.0,M_SQRT1_2,0.0}};
-    double expected_3[3] = {0.0,0.0,M_PI_2};
-
-    Quaternion q4 = {.w = M_SQRT1_2, .v = {M_SQRT1_2,0.0,0.0}};
-    double expected_4[3] = {0.0,M_PI_2,0.0};
-
-    Quaternion q5 = {.w = 0.5, .v = {-0.5,0.5,0.5}};
-    double expected_5[3] = {M_PI_2,0.0,M_PI_2};
-
-    testDescription(__FUNCTION__, "Check the conversion from quaternion to EulerZXY");
+    testDescription(__FUNCTION__, "Check conversions between euler ZYX and quaternion");
     ok = preconditions_init(__FUNCTION__); 
-    
+
     // Test steps
-    quaternion_toEulerZXY(&q1,euler);
-    ok &= assert_vector3Equal(euler, expected_1, "quaternion_toEulerZXY result 1");
+    eulerAngles[0] = PI/4; eulerAngles[1] = PI/4; eulerAngles[2] = 0.0; 
+    Quaternion_fromEulerZYX(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected1,"Quaternion_fromEulerZYX result 1");
+    Quaternion_toEulerZYX(&q_result,zyx_result);
+    ok &= assert_vector3Equal(zyx_result,eulerAngles,"Quaternion_toEulerZYX result 1");
 
-    quaternion_toEulerZXY(&q2,euler);
-    ok &= assert_vector3Equal(euler, expected_2, "quaternion_toEulerZXY result 2");
-
-    quaternion_toEulerZXY(&q3,euler);
-    ok &= assert_vector3Equal(euler, expected_3, "quaternion_toEulerZXY result 3");
-
-    quaternion_toEulerZXY(&q4,euler);
-    ok &= assert_vector3Equal(euler, expected_4, "quaternion_toEulerZXY result 4");
-
-    quaternion_toEulerZXY(&q5,euler);
-    ok &= assert_vector3Equal(euler, expected_5, "quaternion_toEulerZXY result 5");
+    eulerAngles[0] = PI/2; eulerAngles[1] = 0.0; eulerAngles[2] = PI/2; 
+    Quaternion_fromEulerZYX(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected2,"Quaternion_fromEulerZYX result 2");
+    Quaternion_toEulerZYX(&q_result,zyx_result);
+    ok &= assert_vector3Equal(zyx_result,eulerAngles,"Quaternion_toEulerZYX result 2");
 
     testCleanUp();
     testReport(ok);
     return ok;
 }
 
+
 bool tst_math_022()
+{
+    bool ok = true;
+    double eulerAngles[3];
+    double zxy_result[3];
+    Quaternion q_result;
+    Quaternion expected0 = {.w = 1.0, .v = {0.0, 0.0, 0.0}};
+    Quaternion expected1 = {.w = 0.8535534, .v = {0.3535534, 0.3535534, 0.1464466}};
+    Quaternion expected2 = {.w = 0.5, .v = {-0.5, 0.5, 0.5}};
+    Quaternion expected3 = {.w = M_SQRT1_2, .v = {0.0,M_SQRT1_2,0.0}};
+    Quaternion expected4 = {.w = M_SQRT1_2, .v = {M_SQRT1_2,0.0,0.0}};
+    Quaternion expected5 = {.w = M_SQRT1_2, .v = {0.0,0.0,M_SQRT1_2}};
+
+    testDescription(__FUNCTION__, "Check conversions between euler ZXY and quaternion");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test steps
+    eulerAngles[0] = 0.0; eulerAngles[1] = 0.0; eulerAngles[2] = 0.0; 
+    quaternion_fromEulerZXY(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected0,"quaternion_fromEulerZXY result 0");
+    quaternion_toEulerZXY(&q_result,zxy_result);
+    ok &= assert_vector3Equal(zxy_result,eulerAngles,"quaternion_toEulerZXY result 0");
+
+    eulerAngles[0] = PI/4; eulerAngles[1] = PI/4; eulerAngles[2] = 0.0; 
+    quaternion_fromEulerZXY(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected1,"quaternion_fromEulerZXY result 1");
+    quaternion_toEulerZXY(&q_result,zxy_result);
+    ok &= assert_vector3Equal(zxy_result,eulerAngles,"quaternion_toEulerZXY result 1");
+
+    eulerAngles[0] = PI/2; eulerAngles[1] = 0.0; eulerAngles[2] = PI/2; 
+    quaternion_fromEulerZXY(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected2,"quaternion_fromEulerZXY result 2");
+    quaternion_toEulerZXY(&q_result,zxy_result);
+    ok &= assert_vector3Equal(zxy_result,eulerAngles,"quaternion_toEulerZXY result 2");
+
+    eulerAngles[0] = M_PI_2; eulerAngles[1] = 0.0; eulerAngles[2] = 0.0; 
+    quaternion_fromEulerZXY(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected3,"quaternion_fromEulerZXY result 3");
+    quaternion_toEulerZXY(&q_result,zxy_result);
+    ok &= assert_vector3Equal(zxy_result,eulerAngles,"quaternion_toEulerZXY result 3");
+
+    eulerAngles[0] = 0.0; eulerAngles[1] = M_PI_2; eulerAngles[2] = 0.0; 
+    quaternion_fromEulerZXY(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected4,"quaternion_fromEulerZXY result 4");
+    quaternion_toEulerZXY(&q_result,zxy_result);
+    ok &= assert_vector3Equal(zxy_result,eulerAngles,"quaternion_toEulerZXY result 4");
+
+    eulerAngles[0] = 0.0; eulerAngles[1] = 0.0; eulerAngles[2] = M_PI_2; 
+    quaternion_fromEulerZXY(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected5,"quaternion_fromEulerZXY result 5");
+    quaternion_toEulerZXY(&q_result,zxy_result);
+    ok &= assert_vector3Equal(zxy_result,eulerAngles,"quaternion_toEulerZXY result 5");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_math_023()
 {
     bool ok = true;
     ERROR_CODE ret;
@@ -925,7 +970,7 @@ bool tst_math_022()
     return ok;
 }
 
-bool tst_math_023()
+bool tst_math_024()
 {
     bool ok = true;
     ERROR_CODE ret;
@@ -2741,7 +2786,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    ok &= tst_battery_all();
+    // ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
@@ -2749,6 +2794,9 @@ int main(int argc, char **argv)
     // ok &= tst_arm_015();
     // ok &= tst_cal_005();
     // ok &= tst_arm_016();
+    ok &= tst_math_021();
+    ok &= tst_math_022();
+    
 
     return (ok)? RET_OK : RET_ERROR;
 }

@@ -122,10 +122,10 @@ void Quaternion_fromEulerZYX(double eulerZYX[3], Quaternion* output)
 {
     assert(output != NULL);
     // Based on https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-    double cy = cos(eulerZYX[0] * 0.5);
-    double sy = sin(eulerZYX[0] * 0.5);
-    double cr = cos(eulerZYX[2] * 0.5);
-    double sr = sin(eulerZYX[2] * 0.5);
+    double cy = cos(eulerZYX[2] * 0.5);
+    double sy = sin(eulerZYX[2] * 0.5);
+    double cr = cos(eulerZYX[0] * 0.5);
+    double sr = sin(eulerZYX[0] * 0.5);
     double cp = cos(eulerZYX[1] * 0.5);
     double sp = sin(eulerZYX[1] * 0.5);
 
@@ -142,7 +142,7 @@ void Quaternion_toEulerZYX(Quaternion* q, double output[3])
     // Roll (x-axis rotation)
     double sinr_cosp = +2.0 * (q->w * q->v[0] + q->v[1] * q->v[2]);
     double cosr_cosp = +1.0 - 2.0 * (q->v[0] * q->v[0] + q->v[1] * q->v[1]);
-    output[2] = atan2(sinr_cosp, cosr_cosp);
+    output[0] = atan2(sinr_cosp, cosr_cosp);
 
     // Pitch (y-axis rotation)
     double sinp = +2.0 * (q->w * q->v[1] - q->v[2] * q->v[0]);
@@ -154,7 +154,7 @@ void Quaternion_toEulerZYX(Quaternion* q, double output[3])
     // Yaw (z-axis rotation)
     double siny_cosp = +2.0 * (q->w * q->v[2] + q->v[0] * q->v[1]);
     double cosy_cosp = +1.0 - 2.0 * (q->v[1] * q->v[1] + q->v[2] * q->v[2]);
-    output[0] = atan2(siny_cosp, cosy_cosp);
+    output[2] = atan2(siny_cosp, cosy_cosp);
 }
 
 void Quaternion_conjugate(Quaternion* q, Quaternion* output)
@@ -377,25 +377,42 @@ void quaternion_print(Quaternion q, const char *name) {
         log_str("Quaternion: %f, [%f, %f, %f]", q.w, q.v[0], q.v[1], q.v[2]);
 }
 
+void quaternion_fromEulerZXY(double eulerZXY[3], Quaternion* output)
+{
+    assert(output != NULL);
+
+    double cy = cos(eulerZXY[0] * 0.5);
+    double sy = sin(eulerZXY[0] * 0.5);
+    double cx = cos(eulerZXY[1] * 0.5);
+    double sx = sin(eulerZXY[1] * 0.5);
+    double cz = cos(eulerZXY[2] * 0.5);
+    double sz = sin(eulerZXY[2] * 0.5);
+
+    output->w    = cy*cx*cz - sy*sx*sz;
+    output->v[0] = cy*sx*cz - sy*cx*sz;
+    output->v[1] = sy*cx*cz + cy*sx*sz;
+    output->v[2] = cy*cx*sz + sy*sx*cz;
+}
+
 void quaternion_toEulerZXY(Quaternion* q, double output[3]) {
     assert(output != NULL);
 
-    // Yaw (z-axis rotation)
-    output[0] = atan2(  
-        -2.0*(q->v[0]*q->v[1] - q->w*q->v[2]), 
-        q->w*q->w - q->v[0]*q->v[0] + q->v[1]*q->v[1] - q->v[2]*q->v[2] );
+    // y-axis rotation
+    double sy_cx = 2.0*(-q->w*q->v[1] + q->v[0]*q->v[2]);
+    double cy_cx = 1.0 - 2.0*(q->v[0]*q->v[0] + q->v[1]*q->v[1]);
+    output[0] = -atan2(sy_cx,cy_cx);
 
-    // Roll (x-axis rotation)
-    double sin1 = 2.0*(q->v[1]*q->v[2] + q->w*q->v[0]);
-    if (fabs(sin1) > 1.0-QUATERNION_EPS)
-        output[1] = copysign(M_PI / 2, sin1); // use 90 degrees if out of range
+    // x-axis rotation
+    double sx = -2.0*(q->v[1]*q->v[2] + q->w*q->v[0]);
+    if (fabs(sx) > 1.0-QUATERNION_EPS)
+        output[1] = -copysign(M_PI / 2, sx); // use 90 degrees if out of range
     else
-        output[1] = asin(sin1);
+        output[1] = -asin(sx);
 
-    // Pitch (y-axis rotation)
-    output[2] = atan2( 
-        -2.0*(q->v[0]*q->v[2] - q->w*q->v[1]), 
-        q->w*q->w - q->v[0]*q->v[0] - q->v[1]*q->v[1] + q->v[2]*q->v[2] );
+    // z-axis rotation
+    double sz_cx = 2.0*(-q->w*q->v[2] + q->v[0]*q->v[1]);
+    double cz_cx = 1.0 - 2.0*(q->v[0]*q->v[0] + q->v[2]*q->v[2]);
+    output[2] = -atan2(sz_cx,cz_cx);
 }
 
 ERROR_CODE quaternion_between_two_vectors_compute(double v1[3], double v2[3], Quaternion *output) {
@@ -413,4 +430,4 @@ ERROR_CODE quaternion_between_two_vectors_compute(double v1[3], double v2[3], Qu
     if (RET_OK == status) Quaternion_fromAxisAngle(crossVal,acos(dotVal),output);
 
     return status;
-}
+} 
