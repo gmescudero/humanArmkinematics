@@ -220,7 +220,7 @@ void quaternion_fromEulerZXY(double eulerZXY[3], Quaternion* output);
  * @brief Calculates the euler angles of a quaternion in zxy order.
  * 
  * @param output 
- *      Euler angles in ZYX, but stored in array as [z, x', y''].
+ *      Euler angles in ZXY, but stored in array as [y'', x', z].
  */
 void quaternion_toEulerZXY(Quaternion* q, double output[3]);
 /**
