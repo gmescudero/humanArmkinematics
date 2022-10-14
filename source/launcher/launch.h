@@ -79,3 +79,21 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time);
  * @return ERROR_CODE 
  */
 ERROR_CODE hak_static_calib_kinematics(double time);
+
+/**
+ * @brief A program that calibrates using a predefined pose and uses it on shoulder angles calculation
+ * 
+ * @details
+ *      The program performs the following steps:
+ *      - Set up database logging to CSV
+ *      - Search ans initialize 1 or 2 IMU sensors connected to COM ports
+ *      - Attach IMU data retrieve callback 
+ *      - Get IMU data when in T-pose 
+ *      - Set calibration transformation
+ *      - Loop during the requested ammount of time computing shoulder angles
+ *      - End
+ * 
+ * @param time (input) Total monitoring time in seconds
+ * @return ERROR_CODE 
+ */
+ERROR_CODE hak_static_calib_shoulder_angles(double time);

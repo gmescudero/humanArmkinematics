@@ -18,8 +18,9 @@ int main(int argc, char **argv) {
     if (RET_OK == status) status = hak_initialize();
 
     // if (RET_OK == status) status = hak_record_imus_data(2,60,0);
-    if (RET_OK == status) status = hak_two_axes_auto_calib_and_kinematics(40);
+    // if (RET_OK == status) status = hak_two_axes_auto_calib_and_kinematics(40);
     // if (RET_OK == status) status = hak_static_calib_kinematics(60);
+    if (RET_OK == status) status = hak_static_calib_shoulder_angles(40);
 
     if (RET_OK == status) status = hak_terminate();
 

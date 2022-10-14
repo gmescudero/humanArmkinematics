@@ -1707,7 +1707,7 @@ bool tst_arm_008()
     bool ok = true;
     ARM_POSE arm;
     Quaternion q1, q2;
-    double eulerAngles[3] = {0.0, PI/2, PI/4};
+    double eulerAngles[3] = { PI/4, PI/2, 0.0};
     const ARM_POSE expected = {
         .shoulder.position    = {0.0, 0.0, 0.0},
         .shoulder.orientation = {.w = 0.0, .v = {0.382683, 0.923880, 0.0}},
@@ -2092,7 +2092,7 @@ bool tst_arm_016()
     ERROR_CODE ret = RET_OK;
     double rotVector1[3] = {0.0,0.0,1.0};
     double rotVector2[3] = {1.0,0.0,0.0};
-    double anglesFE_B_PS[ARM_ELBOW_NUMBER_OF_ANGLES];
+    double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER];
 
     testDescription(__FUNCTION__, "Compute elbow angles from rotation vectors and quaternion");
     ok = preconditions_init(__FUNCTION__); 
@@ -2189,6 +2189,97 @@ bool tst_arm_017()
     testReport(ok);
     return ok;
 } 
+
+bool tst_arm_018() 
+{
+    bool ok = true;
+    Quaternion q_zero  = {.w=1,.v={0,0,0}};
+    Quaternion q_90x   = {.w=cos(M_PI_2/2),.v={sin(M_PI_2/2),0,0}};
+    Quaternion q_90xy  = {.w=0.5,.v={0.5,-0.5, 0.5}};
+    Quaternion q_45xyz = {.w=0.8446232,.v={0.1913417, 0.4619398, 0.1913417}};
+
+    ARM_POSE result;
+    ARM_POSE expected1 = {
+        .shoulder.position = {0,0,0},
+        .shoulder.orientation = q_90xy,
+        .elbow.position    = {0.0, 0.0,-10.0},
+        .elbow.orientation    = q_90xy,
+        .wrist.position    = {0.0, 0.0,-15.0},
+        .wrist.orientation    = q_90xy,
+    };
+    ARM_POSE expected2 = {
+        .shoulder.position = {0,0,0},
+        .shoulder.orientation = q_zero,
+        .elbow.position    = {-10,0,0},
+        .elbow.orientation    = q_zero,
+        .wrist.position    = {-15,0,0},
+        .wrist.orientation    = q_zero,
+    };
+    ARM_POSE expected3 = {
+        .shoulder.position = {0,0,0},
+        .shoulder.orientation = q_90x,
+        .elbow.position    = {-10,0,0},
+        .elbow.orientation    = q_90x,
+        .wrist.position    = {-15,0,0},
+        .wrist.orientation    = q_90x,
+    };
+    ARM_POSE expected4 = {
+        .shoulder.position = {0,0,0},
+        .shoulder.orientation = q_45xyz,
+        .elbow.position    = {-10.0*cos(M_PI_4)*cos(M_PI_4), -10.0*cos(M_PI_4)*sin(M_PI_4), 10.0*sin(M_PI_4)},
+        .elbow.orientation    = q_45xyz,
+        .wrist.position    = {-15.0*cos(M_PI_4)*cos(M_PI_4), -15.0*cos(M_PI_4)*sin(M_PI_4), 15.0*sin(M_PI_4)},
+        .wrist.orientation    = q_45xyz,
+    };
+    double sh_angles[ARM_SHOULDER_ANGLES_NUMBER];
+    double sh_expected[ARM_SHOULDER_ANGLES_NUMBER];
+
+    testDescription(__FUNCTION__, "Test the shoulder angles computing from quaternion");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    sh_expected[SH_ROTATION] = 0.0;
+    sh_expected[SH_FLEXION]  = -M_PI_2; // Singular
+    sh_expected[SH_ABDUCTION]= 0.0;
+    arm_shoulder_angles_compute(sh_angles);
+    ok &= assert_vector3Equal(sh_angles,sh_expected,"arm_shoulder_angles_compute result 0");
+
+    result = arm_orientations_set(q_90xy,q_90xy,q_90xy);
+    ok &= assert_armEqual(result,expected1,"arm_orientations_set result 1");
+    sh_expected[SH_ROTATION] = M_PI_2;
+    sh_expected[SH_FLEXION]  = M_PI_2; // Singular
+    sh_expected[SH_ABDUCTION]= 0.0;
+    arm_shoulder_angles_compute(sh_angles);
+    ok &= assert_vector3Equal(sh_angles,sh_expected,"arm_shoulder_angles_compute result 1");
+
+    result = arm_orientations_set(q_zero,q_zero,q_zero);
+    ok &= assert_armEqual(result,expected2,"arm_orientations_set result 2");
+    sh_expected[SH_ROTATION] = 0.0;
+    sh_expected[SH_FLEXION]  = 0.0;
+    sh_expected[SH_ABDUCTION]= 0.0;
+    arm_shoulder_angles_compute(sh_angles);
+    ok &= assert_vector3Equal(sh_angles,sh_expected,"arm_shoulder_angles_compute result 2");
+
+    result = arm_orientations_set(q_90x,q_90x,q_90x);
+    ok &= assert_armEqual(result,expected3,"arm_orientations_set result 3");
+    sh_expected[SH_ROTATION] = M_PI_2;
+    sh_expected[SH_FLEXION]  = 0.0;
+    sh_expected[SH_ABDUCTION]= 0.0;
+    arm_shoulder_angles_compute(sh_angles);
+    ok &= assert_vector3Equal(sh_angles,sh_expected,"arm_shoulder_angles_compute result 3");
+
+    result = arm_orientations_set(q_45xyz,q_45xyz,q_45xyz);
+    ok &= assert_armEqualThreshold(result,expected4,2e-6,"arm_orientations_set result 4");
+    sh_expected[SH_ROTATION] = M_PI_4;
+    sh_expected[SH_FLEXION]  = M_PI_4;
+    sh_expected[SH_ABDUCTION]= M_PI_4;
+    arm_shoulder_angles_compute(sh_angles);
+    ok &= assert_vector3Equal(sh_angles,sh_expected,"arm_shoulder_angles_compute result 4");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
 
 bool tst_cal_001() 
 {
@@ -2759,6 +2850,7 @@ bool tst_battery_all()
     // ok &= tst_arm_015();
     ok &= tst_arm_016();
     ok &= tst_arm_017();
+    ok &= tst_arm_018();
 
     ok &= tst_cal_001();
     ok &= tst_cal_002();
@@ -2786,16 +2878,16 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    // ok &= tst_battery_all();
+    ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
     // ok &= tst_cal_xxx();
-    // ok &= tst_arm_015();
+    // ok &= tst_arm_018();
     // ok &= tst_cal_005();
     // ok &= tst_arm_016();
-    ok &= tst_math_021();
-    ok &= tst_math_022();
+    // ok &= tst_math_021();
+    // ok &= tst_math_022();
     
 
     return (ok)? RET_OK : RET_ERROR;

@@ -30,11 +30,11 @@ static ARM_FRAME arm_kinematic_table[NUMBER_OF_NODES] = {
 
 static ARM_POSE arm_current_pose = {
     .shoulder.position    = {0.0, 0.0, 0.0},
-    .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    .shoulder.orientation = {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
     .elbow.position       = {0.0, 0.0, -DEFAULT_SHOULDER_2_ELBOW_LENGTH},
-    .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    .elbow.orientation    = {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
     .wrist.position       = {0.0, 0.0, -DEFAULT_TOTAL_ARM_LENGTH},
-    .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, M_SQRT1_2, 0.0}},
+    .wrist.orientation    = {.w = M_SQRT1_2, .v = {0.0, -M_SQRT1_2, 0.0}},
 };
 
 ERROR_CODE arm_segments_length_set(double upper_arm, double forearm) {
@@ -353,7 +353,7 @@ ERROR_CODE arm_elbow_angles_zero(
     double rotationV2[3])
 {
     ERROR_CODE status = RET_OK;
-    double anglesFE_B_PS[ARM_ELBOW_NUMBER_OF_ANGLES];
+    double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER];
     double x_vector[] = {-1.0,0.0,0.0};
     // double y_vector[] = {0.0,1.0,0.0};
     double z_vector[] = {0.0,0.0,1.0};
@@ -389,7 +389,7 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     Quaternion q_sensor2, 
     double rotationV1[3], 
     double rotationV2[3],
-    double anglesFE_B_PS[ARM_ELBOW_NUMBER_OF_ANGLES]) 
+    double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER]) 
 {
     ERROR_CODE status = RET_OK;
 
@@ -441,20 +441,26 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     return status;
 }
 
-ERROR_CODE arm_shoulder_angles_compute(Quaternion q_shoulder, double shoulderAngles[ARM_SHOULDER_NUMBER_OF_ANGLES])
+void arm_shoulder_angles_compute(double shoulderAngles[ARM_SHOULDER_ANGLES_NUMBER])
 {
-    double sh_abd_fl[3];
-    double sh_rot;
+    double angles[ARM_SHOULDER_ANGLES_NUMBER];
+    Quaternion_toEulerZYX(&arm_current_pose.shoulder.orientation, angles);
+    if (M_PI/3 < fabs(angles[SH_FLEXION])) {
+        // Avoid Euler angles singularity at 90º in Y axis
+        double angle = -copysign(M_PI_2,angles[SH_FLEXION]);
+        Quaternion q_45y = {.w = cos(angle/2), .v = {0.0, sin(angle/2), 0.0}};
+        Quaternion q_aux;
+        Quaternion_multiply(&q_45y,&arm_current_pose.shoulder.orientation,&q_aux);
+        Quaternion_toEulerZYX(&q_aux, angles);
+        angles[SH_FLEXION] += angle;
+    }
 
-    Quaternion q_conj;
-    Quaternion_conjugate(&q_shoulder,&q_conj);
-
-    double sinr_cosp = 2.0 * (q_conj.w * q_conj.v[0] + q_conj.v[1] * q_conj.v[2]);
-    double cosr_cosp = 1.0 - 2.0 * (q_conj.v[0] * q_conj.v[0] + q_conj.v[1] * q_conj.v[1]);
-    shoulderAngles[SH_ROTATION] = atan2(sinr_cosp, cosr_cosp);
-
-    double siny_cosp = 2.0 * (q_shoulder.w * q_shoulder.v[2] + q_shoulder.v[0] * q_shoulder.v[1]);
-    double cosy_cosp = 1.0 - 2.0 * (q_shoulder.v[1] * q_shoulder.v[1] + q_shoulder.v[2] * q_shoulder.v[2]);
-    shoulderAngles[SH_ABDUCTION] = atan2(siny_cosp, cosy_cosp);
-    
+    if (RET_OK != db_write(DB_ARM_SHOULDER_ANGLES,0,angles)) {
+        wrn_str("Failed to update database shoulder angles");
+    }
+    if (NULL != shoulderAngles) {
+        shoulderAngles[SH_ROTATION]  = angles[SH_ROTATION];
+        shoulderAngles[SH_FLEXION]   = angles[SH_FLEXION];
+        shoulderAngles[SH_ABDUCTION] = angles[SH_ABDUCTION];
+    }
 }

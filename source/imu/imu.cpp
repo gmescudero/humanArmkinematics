@@ -106,13 +106,13 @@ ERROR_CODE imu_batch_search_and_initialize(unsigned int imus_num) {
         log_str("Retrieve available COM ports");
         status = com_ports_list(&discoveredPorts);
         if (RET_OK == status && discoveredPorts.ports_number < imus_num) {
-            err_str("Found only %d when %d IMU sensors required");
-            status = RET_ERROR;
+            wrn_str("Found only %d when %d IMU sensors required",discoveredPorts.ports_number,imus_num);
+            status = RET_RESOURCE_UNAVAILABLE;
         }
     }
 
     /* Initialize required IMU sensors */
-    status  = imu_batch_initialize(discoveredPorts, imus_num);
+    if (RET_OK == status) status  = imu_batch_initialize(discoveredPorts, imus_num);
 
     return status;
 }

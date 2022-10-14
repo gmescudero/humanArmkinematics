@@ -42,14 +42,14 @@ enum ARM_ELBOW_ANGLES_ENUM {
     ALPHA_FE = 0,
     BETA_CARRYING,
     GAMMA_PS,
-    ARM_ELBOW_NUMBER_OF_ANGLES
+    ARM_ELBOW_ANGLES_NUMBER
 } ARM_ELBOW_ANGLES;
 
 enum ARM_SHOULDER_ANGLES_ENUM {
-    SH_ABDUCTION = 0,
+    SH_ROTATION = 0,
     SH_FLEXION,
-    SH_ROTATION,
-    ARM_SHOULDER_NUMBER_OF_ANGLES
+    SH_ABDUCTION,
+    ARM_SHOULDER_ANGLES_NUMBER
 } ARM_SHOULDER_ANGLES;
 
 /******************************************************************************/
@@ -203,6 +203,13 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     Quaternion q_sensor2, 
     double rotationV1[3], 
     double rotationV2[3],
-    double anglesFE_B_PS[ARM_ELBOW_NUMBER_OF_ANGLES]);
+    double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER]);
+
+/**
+ * @brief Retrive shoulder angles from its quaternions representation
+ * 
+ * @param shoulderAngles (output) shoulder angles as [ROTATION, FLEXION/EXTENSION, ABDUCTION/ADDUCTION]
+ */
+void arm_shoulder_angles_compute(double shoulderAngles[ARM_SHOULDER_ANGLES_NUMBER]);
 
 #endif
