@@ -443,18 +443,24 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
 
 void arm_shoulder_angles_compute(double shoulderAngles[ARM_SHOULDER_ANGLES_NUMBER])
 {
-    Quaternion_toEulerZYX(&arm_current_pose.shoulder.orientation, shoulderAngles);
-    if (M_PI/3 < fabs(shoulderAngles[SH_FLEXION])) {
+    double angles[ARM_SHOULDER_ANGLES_NUMBER];
+    Quaternion_toEulerZYX(&arm_current_pose.shoulder.orientation, angles);
+    if (M_PI/3 < fabs(angles[SH_FLEXION])) {
         // Avoid Euler angles singularity at 90º in Y axis
-        double angle = -copysign(M_PI_2,shoulderAngles[SH_FLEXION]);
+        double angle = -copysign(M_PI_2,angles[SH_FLEXION]);
         Quaternion q_45y = {.w = cos(angle/2), .v = {0.0, sin(angle/2), 0.0}};
         Quaternion q_aux;
         Quaternion_multiply(&q_45y,&arm_current_pose.shoulder.orientation,&q_aux);
-        Quaternion_toEulerZYX(&q_aux, shoulderAngles);
-        shoulderAngles[SH_FLEXION] += angle;
+        Quaternion_toEulerZYX(&q_aux, angles);
+        angles[SH_FLEXION] += angle;
     }
 
-    if (RET_OK != db_write(DB_ARM_SHOULDER_ANGLES,0,shoulderAngles)) {
+    if (RET_OK != db_write(DB_ARM_SHOULDER_ANGLES,0,angles)) {
         wrn_str("Failed to update database shoulder angles");
+    }
+    if (NULL != shoulderAngles) {
+        shoulderAngles[SH_ROTATION]  = angles[SH_ROTATION];
+        shoulderAngles[SH_FLEXION]   = angles[SH_FLEXION];
+        shoulderAngles[SH_ABDUCTION] = angles[SH_ABDUCTION];
     }
 }
