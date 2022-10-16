@@ -276,7 +276,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_elbow_angles(double time) {
     return status;
 }
 
-ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
+ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoulderAngles, bool computeElbowAngles) {
     ERROR_CODE status = RET_OK;
     int imus_num = 2;
     double rotationV1[3] = {0,0,1};
@@ -287,6 +287,8 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     double q_buff[4];
     Quaternion q1,q2;
     Quaternion q_zero = {.w=1,.v={0,0,0}};
+    ARM_POSE pose;
+    double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER];
 
     /* Set the csv logging from the database */
     log_str("Set the database fields to track into the csv");
@@ -300,10 +302,9 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ERROR,0);
-    // if (RET_OK == status) status = db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
-    // if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_POSITION,0);
-    // if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
     if (RET_OK == status) status = db_csv_field_add(DB_ARM_WRIST_POSITION,0);
+    if (RET_OK == status && computeShoulderAngles) status = db_csv_field_add(DB_ARM_SHOULDER_ANGLES,0);
+    if (RET_OK == status && computeElbowAngles)    status = db_csv_field_add(DB_ARM_ELBOW_ANGLES,0);
     if (RET_OK != status) err_str("Failed to setup database CSV logging");
 
     /* Look for IMU sensors and initialize the required of them */
@@ -368,6 +369,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
         if (RET_OK == status) quaternion_from_buffer_build(q_buff,&q2);
         if (RET_OK == status) status = cal_gn2_zero_pose_calibrate(
             rotationV1,rotationV2, q1, q2, q_zero, q_zero, NULL, NULL);
+        if (RET_OK == status) status = arm_elbow_angles_zero(0.0, 0.0, q1, q2, rotationV1, rotationV2);
         if (RET_OK == status) {
             log_str(" -> [USER]: Elbow angles zero position set ");
             status = db_field_print(DB_ARM_WRIST_POSITION,0);
@@ -389,16 +391,24 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
             if (RET_OK == status) status = cal_gn2_orientations_from_database_calib_apply(&q1,&q2);
 
             /* Compute arm positions */
-            if (RET_OK == status) arm_orientations_set(q1,q2,q2);
+            if (RET_OK == status) pose = arm_orientations_set(q1,q2,q2);
+
+            /* Compute current shoulder angles */
+            if (RET_OK == status && computeShoulderAngles) arm_shoulder_angles_compute(NULL);
+
+            /* Compute current elbow angles */
+            if (RET_OK == status && computeElbowAngles) status = arm_elbow_angles_from_rotation_vectors_get(
+                q1, q2, rotationV1, rotationV2, anglesFE_B_PS);
 
             /* Retrieve current timestamp from database */
             if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
             if (RET_OK == status) currentTime = buffTime - startTime;
             
-            /* Log data throug terminal and log file */
-            log_str("Quats: arm:<%f, %f,%f,%f> forearm:<%f, %f,%f,%f>", q1.w, q1.v[0], q1.v[1], q1.v[2], q2.w, q2.v[0], q2.v[1], q2.v[2]);
+            /* Log data through terminal and log file */
             dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
-            if (RET_OK == status) status = db_field_print(DB_ARM_WRIST_POSITION,0);
+            if (RET_OK == status && computeShoulderAngles) status = db_field_print(DB_ARM_SHOULDER_ANGLES,0);
+            if (RET_OK == status && computeElbowAngles)    status = db_field_print(DB_ARM_ELBOW_ANGLES,0);
+            if (RET_OK == status) arm_pose_print(pose);
 
             /* Wait for next iteration */
             if (RET_OK == status) sleep_ms(100);
@@ -415,99 +425,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     return status;
 }
 
-ERROR_CODE hak_static_calib_kinematics(double time)
-{
-    ERROR_CODE status = RET_OK;
-    int imus_num = 2;
-    double startTime   = -1.0;
-    double currentTime = -1.0;
-    double buffTime    = -1.0;
-    Quaternion known_quats[2] = { /* Quats for T-pose */
-        {.w = 1.0, .v={0.0, 0.0, 0.0}},
-        {.w = 1.0, .v={0.0, 0.0, 0.0}},
-    };
-    Quaternion read_quats[2];
-
-    /* Set the csv logging from the database */
-    log_str("Set the database fields to track into the csv");
-    if (RET_OK == status) status = db_csv_field_add(DB_IMU_TIMESTAMP,0);
-    if (RET_OK == status) status = db_csv_field_add(DB_IMU_QUATERNION,0);
-    if (RET_OK == status) status = db_csv_field_add(DB_IMU_QUATERNION,1);
-    if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_POSITION,0);
-    if (RET_OK == status) status = db_csv_field_add(DB_ARM_WRIST_POSITION,0);
-    if (RET_OK == status) status = db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
-    if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
-    if (RET_OK != status) err_str("Failed to setup database CSV logging");
-
-    /* Look for IMU sensors and initialize the required of them */
-    if (imus_num > imu_number_get()) {
-        if (RET_OK == status) status = imu_batch_search_and_initialize(imus_num);
-        if (RET_OK != status) err_str("Failed to setup IMU sensors");
-    }
-
-    /* Retrieve current IMU data */
-    ImuData data[2];
-    log_str("Calibrate IMU sensors");
-    log_str("USER -> STAND IN T-POSE TO CALIBRATE");
-    log_str(" -> [USER]: Stand in T-pose to calibrate IMU orientations");
-    if (RET_OK == status) sleep_s(2);
-    if (RET_OK == status) status = imu_batch_read(imus_num, data);
-
-    /* Set calibration data */    
-    for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
-        quaternion_from_float_buffer_build(data[imu].q, &read_quats[imu]);
-    }
-    if (RET_OK == status) cal_static_imu_quat_calibration_set(known_quats, read_quats);
-
-    /* Start IMU reading callbacks */
-    for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
-        status = imu_read_callback_attach(imu, 0==imu);
-        if (RET_OK != status) err_str("Failed to initialize reading callback for IMU sensor %d",imu);
-        else sleep_s(2);
-    }
-
-    /* Apply calibration functions to imu readings */
-    log_str("Starting loop printing arm wrist position and recording kinematic data");
-    log_str(" -> [USER]: Starting recording for %f seconds",time);
-    if (RET_OK == status) sleep_s(2);
-
-    /* Set starting time */
-    if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP,0,&startTime);
-
-    do {
-        /* Get the current quaternions */
-        if (RET_OK == status) status = cal_static_imu_quat_calibrated_data_get(read_quats);
-
-        /* Compute joint values */
-        Quaternion joints[ARM_NUMBER_OF_JOINTS];
-        if (RET_OK == status) status = arm_inverse_kinematics_compute(read_quats[0], read_quats[1], joints); 
-
-        /* Compute arm positions */
-        if (RET_OK == status) status = arm_direct_kinematics_compute(joints, NULL);
-
-        /* Retrieve current timestamp from database */
-        if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
-        if (RET_OK == status) currentTime = buffTime - startTime;
-
-        dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
-
-        if (RET_OK == status) status = db_field_print(DB_ARM_WRIST_POSITION,0);
-
-        /* Wait for next iteration */
-        if (RET_OK == status) sleep_ms(100);
-
-    } while (RET_OK == status && time > currentTime);
-    if (RET_OK != status) err_str("Failed to apply calibration");
-
-    /* Remove used resources */
-    for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
-        status = imu_read_callback_detach(imu);
-    }
-
-    return status;
-}
-
-ERROR_CODE hak_static_calib_shoulder_angles(double time)
+ERROR_CODE hak_static_calib_kinematics(double time, bool computeShoulderAngles)
 {
     ERROR_CODE status = RET_OK;
     int imus_num = 2;
@@ -531,7 +449,7 @@ ERROR_CODE hak_static_calib_shoulder_angles(double time)
     if (RET_OK == status) status = db_csv_field_add(DB_ARM_WRIST_POSITION,0);
     if (RET_OK == status) status = db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
     if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
-    if (RET_OK == status) status = db_csv_field_add(DB_ARM_SHOULDER_ANGLES,0);
+    if (RET_OK == status && computeShoulderAngles) status = db_csv_field_add(DB_ARM_SHOULDER_ANGLES,0);
     if (RET_OK != status) err_str("Failed to setup database CSV logging");
 
     /* Look for IMU sensors and initialize the required of them */
@@ -593,7 +511,7 @@ ERROR_CODE hak_static_calib_shoulder_angles(double time)
             if (RET_OK == status) pose = arm_orientations_set(read_quats[0],read_quats[1],read_quats[1]);
 
             /* Get the shoudler angles */
-            if (RET_OK == status) arm_shoulder_angles_compute(NULL);
+            if (RET_OK == status && computeShoulderAngles) arm_shoulder_angles_compute(NULL);
 
             /* Retrieve current timestamp from database */
             if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
@@ -601,7 +519,7 @@ ERROR_CODE hak_static_calib_shoulder_angles(double time)
 
             /* Log relevant data */
             dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
-            if (RET_OK == status) status = db_field_print(DB_ARM_SHOULDER_ANGLES,0);
+            if (RET_OK == status && computeShoulderAngles) status = db_field_print(DB_ARM_SHOULDER_ANGLES,0);
             if (RET_OK == status) arm_pose_print(pose);
 
             /* Wait for next iteration */
