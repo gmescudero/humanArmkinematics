@@ -575,14 +575,14 @@ ERROR_CODE cal_gn2_zero_pose_calibrate(
     if (NULL == rotationV2) return RET_ARG_ERROR;
 
     // Segment to sensor 1 compute  
-    if (RET_OK == status) status = quaternion_between_two_vectors_compute(z_vector,rotationV1,&q1_s_b);
+    if (RET_OK == status) status = quaternion_between_two_vectors_compute(rotationV1,z_vector,&q1_s_b);
     // Segment to sensor 2 compute 
-    if (RET_OK == status) status = quaternion_between_two_vectors_compute(x_vector,rotationV2,&q2_s_b);
+    if (RET_OK == status) status = quaternion_between_two_vectors_compute(rotationV2,x_vector,&q2_s_b);
     
     if (RET_OK == status) {                                                                                                                                                                                                     
         // Compute nonzero sensor to nonzero body
-        Quaternion_multiply(&q_sensor1, &q1_s_b, &q1_g_bp);
-        Quaternion_multiply(&q_sensor2, &q2_s_b, &q2_g_bp);
+        Quaternion_multiply(&q1_s_b, &q_sensor1, &q1_g_bp);
+        Quaternion_multiply(&q2_s_b, &q_sensor2, &q2_g_bp);
         // Compute nonzero body to expected body at zero
         Quaternion_conjugate(&q1_g_bp,&q1_bp_g);
         Quaternion_multiply(&q1_bp_g,&q1_g_bp_expected,&q1_bp_b);
@@ -611,7 +611,7 @@ ERROR_CODE cal_gn2_zero_pose_calibrate(
     return status;
 }
 
-ERROR_CODE cal_gn2_orientations_from_database_calib_apply(Quaternion *q1, Quaternion *q2)
+ERROR_CODE cal_gn2_calibrated_orientations_from_database_get(Quaternion *q1, Quaternion *q2)
 {
     ERROR_CODE status = RET_OK;
     double q_buff[4];
@@ -628,6 +628,21 @@ ERROR_CODE cal_gn2_orientations_from_database_calib_apply(Quaternion *q1, Quater
         Quaternion_multiply(&scal_data.q_sensor_to_body_arm,     &q1_toCalib, q1);
         Quaternion_multiply(&scal_data.q_sensor_to_body_forearm, &q2_toCalib, q2);
     }
+
+    return status;
+}
+
+ERROR_CODE cal_gn2_calibrated_relative_orientation_get(Quaternion *q, double angles[3]) {
+    ERROR_CODE status = RET_OK;
+    Quaternion q1, q2;
+    Quaternion qR;
+
+    if (NULL == q && NULL == angles) return RET_ARG_ERROR;
+
+    status = cal_gn2_calibrated_orientations_from_database_get(&q1,&q2);
+    if (RET_OK == status) qR = arm_quaternion_between_two_get(q2,q1);
+    if (RET_OK == status && NULL != q) Quaternion_copy(&qR,q);
+    if (RET_OK == status && NULL != angles) Quaternion_toEulerZYX(&qR,angles); // [PS,CARRYING,FE]
 
     return status;
 }

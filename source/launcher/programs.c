@@ -245,7 +245,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
 
         do {
             /* Compute the calibrated segment orientations */
-            if (RET_OK == status) status = cal_gn2_orientations_from_database_calib_apply(&q1,&q2);
+            if (RET_OK == status) status = cal_gn2_calibrated_orientations_from_database_get(&q1,&q2);
 
             /* Compute arm positions */
             if (RET_OK == status) pose = arm_orientations_set(q1,q2,q2);

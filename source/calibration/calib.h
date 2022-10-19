@@ -158,6 +158,15 @@ ERROR_CODE cal_gn2_zero_pose_calibrate(
  * @param q2 (output) Forearm quaternion
  * @return ERROR_CODE 
  */
-ERROR_CODE cal_gn2_orientations_from_database_calib_apply(Quaternion *q1, Quaternion *q2);
+ERROR_CODE cal_gn2_calibrated_orientations_from_database_get(Quaternion *q1, Quaternion *q2);
+
+/**
+ * @brief Retrieve the calibrated relative elbow quaternion and/or the elbow angles
+ * 
+ * @param q (output) Relative elbow quaternion
+ * @param angles (output) Elbow angles as [PS,CARRYING,FE]
+ * @return ERROR_CODE 
+ */
+ERROR_CODE cal_gn2_calibrated_relative_orientation_get(Quaternion *q, double angles[3]);
 
 #endif /* __calib_h__ */
