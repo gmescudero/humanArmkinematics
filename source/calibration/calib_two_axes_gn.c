@@ -278,14 +278,6 @@ static void scal_spherical(double x, double y, double z, int *spherical_alt, dou
     }
 }
 
-/**
- * @brief Initialize two rotation axes calibration resources. It requires to set up buffers for database field 
- *  including gyroscope and quaternion measures as well as relative angular velocity.
- * 
- * @param imu_data_buff_size (input) Size of the imu measures buffer
- * @param obs_data_buff_size (input) Size of the observations buffer
- * @return ERROR_CODE 
- */
 ERROR_CODE cal_gn2_initialize(int imu_data_buff_size, int obs_data_buff_size) {
     ERROR_CODE status = RET_OK;
 
@@ -312,23 +304,11 @@ ERROR_CODE cal_gn2_initialize(int imu_data_buff_size, int obs_data_buff_size) {
     return status;
 }
 
-/**
- * @brief Terminate the calibration package and destroy all used resources
- */
 void cal_gn2_terminate() {
     matrix_free(scal_data.phi);
     scal_data.initialized = false;
 }
 
-/**
- * @brief Update database observations.
- * 
- * @param omega1_from1 (input) Angular velocity of the first IMU sensor in IMU ref. frame
- * @param omega2_from2 (input) Angular velocity of the second IMU sensor in IMU ref. frame
- * @param q_sensor1 (input) Orientation quaternnion of the first IMU sensor
- * @param q_sensor2 (input) Orientation quaternnion of the second IMU sensor
- * @return ERROR_CODE 
- */
 ERROR_CODE cal_gn2_observations_update(double omega1_from1[3], double omega2_from2[3], Quaternion q_sensor1, Quaternion q_sensor2) {
     ERROR_CODE status = RET_OK;
     Quaternion qR;
@@ -354,11 +334,6 @@ ERROR_CODE cal_gn2_observations_update(double omega1_from1[3], double omega2_fro
     return status;
 }
 
-/**
- * @brief Update database observations from database values.
- * 
- * @return ERROR_CODE 
- */
 ERROR_CODE cal_gn2_observations_from_database_update() {
     ERROR_CODE status = RET_OK;
     double omega1_from1[3];
@@ -393,14 +368,6 @@ ERROR_CODE cal_gn2_observations_from_database_update() {
     return status;
 }
 
-/**
- * @brief Compute total Root Mean Square value for Gauss-Newton
- * 
- * @param rotationV1 (input/output) First rotation vector
- * @param rotationV2 (input/output) Second rotation vector
- * @param error (output) Mean error of the new solution
- * @return ERROR_CODE 
- */
 ERROR_CODE cal_gn2_root_mean_square(double rotationV1[3], double rotationV2[3], double *error) {
     ERROR_CODE status = RET_OK;
     int observations_num = db_field_buffer_current_size_get(DB_CALIB_OMEGA,0);  // Number of managed observations
