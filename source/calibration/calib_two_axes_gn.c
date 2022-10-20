@@ -560,7 +560,7 @@ ERROR_CODE cal_gn2_zero_pose_calibrate(
     Quaternion *q2_zeroAndBody)
 {
     ERROR_CODE status = RET_OK;
-    double x_vector[] = {1.0,0.0,0.0};
+    double x_vector[] = {-1.0,0.0,0.0};
     // double y_vector[] = {0.0,1.0,0.0};
     double z_vector[] = {0.0,0.0,1.0};
 
@@ -608,6 +608,34 @@ ERROR_CODE cal_gn2_zero_pose_calibrate(
             q2_zero.w, q2_zero.v[0], q2_zero.v[1], q2_zero.v[2]);
     }
 
+    // TODO: remove this after debugging
+    /*
+    dbg_str("%s -> Check the following",__FUNCTION__);
+    vector3_print(rotationV1,"rotationV1");
+    vector3_print(z_vector,"z_vector");
+    quaternion_print(q1_s_b,"q1_s_b");
+    quaternion_print(q_sensor1,"q_sensor1");
+    quaternion_print(q1_g_bp,"q1_g_bp");
+    quaternion_print(q1_bp_g,"q1_bp_g");
+    quaternion_print(q1_g_bp_expected,"q1_g_bp_expected");
+    quaternion_print(q1_bp_b,"q1_bp_b");
+    quaternion_print(q1_zero,"q1_zero");
+
+    vector3_print(rotationV2,"rotationV2");
+    vector3_print(x_vector,"x_vector");
+    quaternion_print(q2_s_b,"q2_s_b");
+    quaternion_print(q_sensor2,"q_sensor2");
+    quaternion_print(q2_g_bp,"q2_g_bp");
+    quaternion_print(q2_bp_g,"q2_bp_g");
+    quaternion_print(q2_g_bp_expected,"q2_g_bp_expected");
+    quaternion_print(q2_bp_b,"q2_bp_b");
+    quaternion_print(q2_zero,"q2_zero");
+
+    Quaternion q1,q2;
+    cal_gn2_calibrated_orientations_from_database_get(&q1,&q2);
+    */
+
+
     return status;
 }
 
@@ -628,6 +656,12 @@ ERROR_CODE cal_gn2_calibrated_orientations_from_database_get(Quaternion *q1, Qua
         Quaternion_multiply(&scal_data.q_sensor_to_body_arm,     &q1_toCalib, q1);
         Quaternion_multiply(&scal_data.q_sensor_to_body_forearm, &q2_toCalib, q2);
     }
+
+    dbg_str("%s -> \n\tRAW:   <%f, %f,%f,%f> ; <%f, %f,%f,%f> \n\tCALIB: <%f, %f,%f,%f> ; <%f, %f,%f,%f>",__FUNCTION__,
+        q1_toCalib.w, q1_toCalib.v[0], q1_toCalib.v[1], q1_toCalib.v[2], 
+        q2_toCalib.w, q2_toCalib.v[0], q2_toCalib.v[1], q2_toCalib.v[2], 
+        q1->w, q1->v[0], q1->v[1], q1->v[2], 
+        q2->w, q2->v[0], q2->v[1], q2->v[2]);
 
     return status;
 }

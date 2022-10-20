@@ -160,6 +160,8 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ERROR,0);
     if (RET_OK == status) status = db_csv_field_add(DB_ARM_WRIST_POSITION,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
     if (RET_OK == status && computeShoulderAngles) status = db_csv_field_add(DB_ARM_SHOULDER_ANGLES,0);
     if (RET_OK == status && computeElbowAngles)    status = db_csv_field_add(DB_ARM_ELBOW_ANGLES,0);
     if (RET_OK != status) err_str("Failed to setup database CSV logging");
