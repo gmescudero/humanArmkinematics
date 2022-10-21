@@ -57,7 +57,7 @@ void cal_static_imu_quat_calibration_set(
         // Conjugate the imu reading
         Quaternion_conjugate(&imus_quat[i], &imu_quat_conj);
         // Compute the raw to calibrated quaternion
-        Quaternion_multiply(&imu_quat_conj, &(known_quat[i]), &(cal_imus_calibration_data[i].raw_to_calib));
+        Quaternion_multiply(&imu_quat_conj,&(known_quat[i]), &(cal_imus_calibration_data[i].raw_to_calib));
         // Set the imu calibration as "done"
         cal_imus_calibration_data[i].calibration_done = true;
     }
@@ -77,7 +77,7 @@ ERROR_CODE cal_static_imu_quat_calibration_apply(
         }
         else {
             // Apply the calibration
-            Quaternion_multiply(&imus_quat[i], &(cal_imus_calibration_data[i].raw_to_calib), &(calibrated_data[i]));
+            Quaternion_multiply(&(cal_imus_calibration_data[i].raw_to_calib), &imus_quat[i], &(calibrated_data[i]));
         }
     }
 
@@ -101,7 +101,7 @@ ERROR_CODE cal_static_imu_quat_calibrated_data_get(Quaternion calib_quat[IMU_MAX
             if (RET_OK == status) {
                 quaternion_from_buffer_build(q_buff, &q_tmp);
                 // Apply the calibration
-                Quaternion_multiply(&q_tmp, &(cal_imus_calibration_data[i].raw_to_calib), &calib_quat[i]);
+                Quaternion_multiply(&(cal_imus_calibration_data[i].raw_to_calib), &q_tmp, &calib_quat[i]);
             }
         }
     }

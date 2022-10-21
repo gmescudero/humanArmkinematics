@@ -554,8 +554,8 @@ ERROR_CODE cal_gn2_zero_pose_calibrate(
     double rotationV2[3], 
     Quaternion q_sensor1, 
     Quaternion q_sensor2,
-    Quaternion q1_g_bp_expected,
-    Quaternion q2_g_bp_expected,
+    Quaternion q1_g_b_expected,
+    Quaternion q2_g_b_expected,
     Quaternion *q1_zeroAndBody,
     Quaternion *q2_zeroAndBody)
 {
@@ -564,34 +564,39 @@ ERROR_CODE cal_gn2_zero_pose_calibrate(
     // double y_vector[] = {0.0,1.0,0.0};
     double z_vector[] = {0.0,0.0,1.0};
 
-    Quaternion q1_s_b, q2_s_b;
-    Quaternion q1_g_bp, q2_g_bp;
-    Quaternion q1_bp_g, q2_bp_g;
-    Quaternion q1_bp_b, q2_bp_b;
+    Quaternion q1_sp_g, q2_sp_g;
     Quaternion q1_zero, q2_zero;
+    Quaternion q1_s_b,  q2_s_b;
+    Quaternion q1_b_s,  q2_b_s;
+    Quaternion q1_bp_b, q2_bp_b;
 
     // Check arguments
     if (NULL == rotationV1) return RET_ARG_ERROR;
     if (NULL == rotationV2) return RET_ARG_ERROR;
 
+    if (RET_OK == status) {
+        // Invert global to sensor transform (IMU reading)
+        Quaternion_conjugate(&q_sensor1, &q1_sp_g);
+        Quaternion_conjugate(&q_sensor2, &q2_sp_g);
+        // Compute the sensor to body transform  
+        Quaternion_multiply(&q1_sp_g,&q1_g_b_expected, &q1_zero);
+        Quaternion_multiply(&q2_sp_g,&q2_g_b_expected, &q2_zero);
+    }
+
     // Segment to sensor 1 compute  
     if (RET_OK == status) status = quaternion_between_two_vectors_compute(rotationV1,z_vector,&q1_s_b);
     // Segment to sensor 2 compute 
     if (RET_OK == status) status = quaternion_between_two_vectors_compute(rotationV2,x_vector,&q2_s_b);
-    
-    if (RET_OK == status) {                                                                                                                                                                                                     
-        // Compute nonzero sensor to nonzero body
-        Quaternion_multiply(&q1_s_b, &q_sensor1, &q1_g_bp);
-        Quaternion_multiply(&q2_s_b, &q_sensor2, &q2_g_bp);
-        // Compute nonzero body to expected body at zero
-        Quaternion_conjugate(&q1_g_bp,&q1_bp_g);
-        Quaternion_multiply(&q1_bp_g,&q1_g_bp_expected,&q1_bp_b);
-        Quaternion_conjugate(&q2_g_bp,&q2_bp_g);
-        Quaternion_multiply(&q2_bp_g,&q2_g_bp_expected,&q2_bp_b);
-        // Compute nonzero sensor to zero body
-        Quaternion_multiply(&q1_bp_b,&q1_s_b, &q1_zero);
-        Quaternion_multiply(&q2_bp_b,&q2_s_b, &q2_zero);
+
+    if (RET_OK == status) {
+        // Invert sensor to body transform
+        Quaternion_conjugate(&q1_s_b, &q1_b_s);
+        Quaternion_conjugate(&q2_s_b, &q2_b_s);
+        // Compute the non zeroed body to zeroed body transform
+        Quaternion_multiply(&q1_b_s,&q1_zero, &q1_bp_b);
+        Quaternion_multiply(&q2_b_s,&q2_zero, &q2_bp_b);
     }
+
     if (RET_OK == status) {
         // Store transformation from raw body frames to zeroed body frames
         Quaternion_copy(&q1_bp_b, &scal_data.q_body_zero_arm); 
@@ -617,7 +622,7 @@ ERROR_CODE cal_gn2_zero_pose_calibrate(
     quaternion_print(q_sensor1,"q_sensor1");
     quaternion_print(q1_g_bp,"q1_g_bp");
     quaternion_print(q1_bp_g,"q1_bp_g");
-    quaternion_print(q1_g_bp_expected,"q1_g_bp_expected");
+    quaternion_print(q1_g_b_expected,"q1_g_b_expected");
     quaternion_print(q1_bp_b,"q1_bp_b");
     quaternion_print(q1_zero,"q1_zero");
 
@@ -627,14 +632,13 @@ ERROR_CODE cal_gn2_zero_pose_calibrate(
     quaternion_print(q_sensor2,"q_sensor2");
     quaternion_print(q2_g_bp,"q2_g_bp");
     quaternion_print(q2_bp_g,"q2_bp_g");
-    quaternion_print(q2_g_bp_expected,"q2_g_bp_expected");
+    quaternion_print(q2_g_b_expected,"q2_g_b_expected");
     quaternion_print(q2_bp_b,"q2_bp_b");
     quaternion_print(q2_zero,"q2_zero");
 
     Quaternion q1,q2;
     cal_gn2_calibrated_orientations_from_database_get(&q1,&q2);
     */
-
 
     return status;
 }

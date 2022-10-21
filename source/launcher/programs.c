@@ -175,7 +175,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
     /* Reset IMUs offset */
     if (RET_OK == status) {
         status = imu_orientation_offset_reset();
-        if (RET_OK == status) status = imu_orientation_offset_set(1);
+        // if (RET_OK == status) status = imu_orientation_offset_set(1);
         if (RET_OK != status) err_str("Failed to reset IMU sensors orientation");
     }
 
@@ -322,12 +322,21 @@ ERROR_CODE hak_static_calib_kinematics(double time, bool computeShoulderAngles)
         if (RET_OK != status) err_str("Failed to setup IMU sensors");
     }
 
+    /* Reset IMUs offset */
+    if (RET_OK == status) {
+        status = imu_orientation_offset_reset();
+        // if (RET_OK == status) status = imu_orientation_offset_set(1);
+        if (RET_OK != status) err_str("Failed to reset IMU sensors orientation");
+    }
+
     /* Retrieve current IMU data */
     if (RET_OK == status) {
         log_str("Calibrate IMU sensors");
         log_str("USER -> STAND IN T-POSE TO CALIBRATE");
         log_str(" -> [USER]: Stand in T-pose to calibrate IMU orientations");
-        if (RET_OK == status) sleep_s(2);
+        if (RET_OK == status) sleep_s(4);
+        if (RET_OK == status) status = imu_orientation_offset_set(1);
+        if (RET_OK == status) sleep_s(1);
         if (RET_OK == status) status = imu_batch_read(imus_num, data);
         if (RET_OK != status) err_str("Failed to read IMUs data");
     }
@@ -379,6 +388,7 @@ ERROR_CODE hak_static_calib_kinematics(double time, bool computeShoulderAngles)
             /* Log relevant data */
             dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
             if (RET_OK == status && computeShoulderAngles) status = db_field_print(DB_ARM_SHOULDER_ANGLES,0);
+            // if (RET_OK == status) status = db_field_print(DB_IMU_QUATERNION,0);
             if (RET_OK == status) arm_pose_print(pose);
 
             /* Wait for next iteration */

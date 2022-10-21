@@ -448,7 +448,7 @@ static ERROR_CODE simu_database_update(ImuData d, int index) {
     double mag[3]    = {(double)d.b[0],(double)d.b[1],(double)d.b[2]};
     double linAcc[3] = {(double)d.linAcc[0],(double)d.linAcc[1],(double)d.linAcc[2]};
     double angVel[3] = {(double)d.w[0],(double)d.w[1],(double)d.w[2]};
-    double quat[4]   = {(double)d.q[0],(double)d.q[1],(double)d.q[2],(double)d.q[3]};
+    double quat[4]   = {(double)d.q[0],-(double)d.q[1],-(double)d.q[2],-(double)d.q[3]};
     int newData      = (int)true;
 
     status = db_write(DB_IMU_TIMESTAMP, index, &timestamp);
