@@ -244,3 +244,8 @@ void vector3_spherical_coordinates_derivatives_compute(double theta, double rho,
           drho[0] = 0.0;   drho[1] = st*cr;   drho[2] = -st*sr;
     }
 }
+
+void vector3_print(double v[3], const char *name) {
+    if (NULL == v) return;
+    log_str("3D Vector (%s): %f, %f, %f",(NULL!=name)?name:"-",v[0],v[1],v[2]);
+}

@@ -371,10 +371,7 @@ void quaternion_from_float_buffer_build(float buffer[4], Quaternion *q) {
 }
 
 void quaternion_print(Quaternion q, const char *name) {
-    if (NULL != name)
-        log_str("Quaternion %s: %f, [%f, %f, %f]",name, q.w, q.v[0], q.v[1], q.v[2]);
-    else
-        log_str("Quaternion: %f, [%f, %f, %f]", q.w, q.v[0], q.v[1], q.v[2]);
+    log_str("Quaternion (%s): %f, [%f, %f, %f]",(NULL!=name)?name:"-", q.w, q.v[0], q.v[1], q.v[2]);
 }
 
 void quaternion_fromEulerZXY(double eulerZXY[3], Quaternion* output)
