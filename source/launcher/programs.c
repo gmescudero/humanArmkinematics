@@ -216,7 +216,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
     /* Set zero value for elbow angles */
     if (RET_OK == status) {
         log_str("Set the zero point");
-        log_str(" -> [USER]: Stand in a pose to be considered as zero for the elbow angles in 5");
+        log_str(" -> [USER]: Stand in a pose to be considered as zero in 5");
         for (int i = 4; RET_OK == status && i >= 0; i--) {
             sleep_s(1);
             log_str(" -> [USER]: %d",i);
@@ -227,9 +227,8 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
         if (RET_OK == status) quaternion_from_buffer_build(q_buff,&q2);
         if (RET_OK == status) status = cal_gn2_zero_pose_calibrate(
             rotationV1,rotationV2, q1, q2, q_zero, q_zero, NULL, NULL);
-        if (RET_OK == status) status = arm_elbow_angles_zero(0.0, 0.0, q1, q2, rotationV1, rotationV2);
         if (RET_OK == status) {
-            log_str(" -> [USER]: Elbow angles zero position set ");
+            log_str(" -> [USER]: Zero position set ");
             status = db_field_print(DB_ARM_WRIST_POSITION,0);
         }
         if (RET_OK != status) err_str("Failed to perform zero procedure");
@@ -244,7 +243,36 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
         /* Set starting time */
         status = db_read(DB_IMU_TIMESTAMP,0,&startTime);
 
+        /* Set inital error value */
+        double calibration_error, current_error;
+        double calibration_timer = 0.0;
+        if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &calibration_error);
+
         do {
+            /* Update observations buffer */
+            if (RET_OK == status) status = cal_gn2_observations_from_database_update();
+
+            /* Update calibration error */
+            if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &current_error);
+
+            /* Correct calibration if the error is 10% worse or 5 senconds have passed */
+            if (RET_OK == status && ((current_error > calibration_error*1.1) || (5 < calibration_timer))) {
+                status = cal_gn2_two_rot_axes_calib_correct(rotationV1,rotationV2);
+                if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &calibration_error);
+                if (RET_OK == status) {
+                    log_str("Online calibration correction performed: \n"
+                        "\tTime since last calibration: %fs\n"
+                        "\tError went from %f to %f",calibration_timer,current_error,calibration_error);
+                    calibration_timer = 0.0;
+                }
+                else if (RET_NO_EXEC == status) {
+                    status = RET_OK;
+                }
+                else {
+                    err_str("Failed to perform online calibration");
+                }
+            }
+
             /* Compute the calibrated segment orientations */
             if (RET_OK == status) status = cal_gn2_calibrated_orientations_from_database_get(&q1,&q2);
 
@@ -262,7 +290,11 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
 
             /* Retrieve current timestamp from database */
             if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
-            if (RET_OK == status) currentTime = buffTime - startTime;
+            if (RET_OK == status) {
+                double previous_time = currentTime;
+                currentTime = buffTime - startTime;
+                calibration_timer += currentTime - previous_time;
+            }
             
             /* Log data through terminal and log file */
             dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
