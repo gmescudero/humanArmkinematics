@@ -674,13 +674,24 @@ ERROR_CODE cal_gn2_calibrated_relative_orientation_get(Quaternion *q, double ang
     ERROR_CODE status = RET_OK;
     Quaternion q1, q2;
     Quaternion qR;
+    double anglesPS_B_FE[3];
 
     if (NULL == q && NULL == angles) return RET_ARG_ERROR;
 
     status = cal_gn2_calibrated_orientations_from_database_get(&q1,&q2);
-    if (RET_OK == status) qR = arm_quaternion_between_two_get(q2,q1);
+    if (RET_OK == status) {
+        qR = arm_quaternion_between_two_get(q2,q1);
+        Quaternion_toEulerZYX(&qR,anglesPS_B_FE); // [PS,CARRYING,FE]
+    }
+    // Update database
+    if (RET_OK == status) {
+        double q_buff[4] = {qR.w,qR.v[0],qR.v[1],qR.v[2]};
+        status = db_write(DB_ARM_ELBOW_QUATERNION,0,q_buff);
+    }
+    if (RET_OK == status) status = db_write(DB_ARM_ELBOW_ANGLES,0,anglesPS_B_FE);
+    // Set output
     if (RET_OK == status && NULL != q) Quaternion_copy(&qR,q);
-    if (RET_OK == status && NULL != angles) Quaternion_toEulerZYX(&qR,angles); // [PS,CARRYING,FE]
+    if (RET_OK == status && NULL != angles) status = vector3_copy(anglesPS_B_FE,angles);
 
     return status;
 }

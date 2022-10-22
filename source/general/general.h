@@ -85,6 +85,12 @@ void sleep_s(int seconds);
  * @param millis (input) Milliseconds to wait
  */
 void sleep_ms(int millis);
+/**
+ * @brief Get the current system timestamp in milliseconds
+ * 
+ * @return double: current system timestamp in milliseconds
+ */
+double sys_timestamp_get();
 
 /**
  * @brief Set up log file 

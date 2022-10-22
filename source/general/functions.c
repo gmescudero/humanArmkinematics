@@ -22,6 +22,12 @@ void sleep_ms(int millis) {
     } while (res);
 }
 
+double sys_timestamp_get() {
+    struct timespec spec;
+    clock_gettime(CLOCK_REALTIME, &spec);
+    return ((double)(spec.tv_sec)*1e3) + ((double)(spec.tv_nsec)*1e-6);
+}
+
 ERROR_CODE com_ports_list(COM_PORTS *discoveredPorts) {
     struct sp_port **ports;
     enum sp_return error;
