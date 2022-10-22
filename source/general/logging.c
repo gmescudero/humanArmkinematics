@@ -235,7 +235,7 @@ static void sstr_file_print(const char file_name[], const char *trace_type, cons
     if ('\0' != file_name[0]) {
         fd = fopen(file_name, "a");
         if (NULL != fd) {
-            fprintf(fd,"%s",trace_type);
+            fprintf(fd,"[%.0f]%s",sys_timestamp_get(),trace_type);
             vfprintf(fd, text, va);
             fprintf(fd,"\n");
             fclose(fd);

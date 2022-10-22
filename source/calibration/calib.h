@@ -26,7 +26,7 @@ void cal_min_velocity_set(double min_vel);
  * @brief Set the calibration data from a given set of IMU sensor readings
  * 
  * @param known_quat (input) Predefined known quaternion during calibration
- * @param imus_quat (input) Readings from IMU sensors
+ * @param im (input) Readings from IMU sensors
  * @param number_of_imus (input) Number of IMU sensors to calibrate
  */
 void cal_static_imu_quat_calibration_set(
@@ -168,5 +168,14 @@ ERROR_CODE cal_gn2_calibrated_orientations_from_database_get(Quaternion *q1, Qua
  * @return ERROR_CODE 
  */
 ERROR_CODE cal_gn2_calibrated_relative_orientation_get(Quaternion *q, double angles[3]);
+
+/**
+ * @brief Perform the two rotation axes calibration from an already calibrated set of rotation vectors
+ * 
+ * @param rotationV1 (output) First rotation vector 
+ * @param rotationV2 (output) Second rotation vector 
+ * @return ERROR_CODE 
+ */
+ERROR_CODE cal_gn2_two_rot_axes_calib_correct(double rotationV1[3], double rotationV2[3]);
 
 #endif /* __calib_h__ */

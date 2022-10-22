@@ -145,7 +145,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
     Quaternion q1,q2;
     Quaternion q_zero = {.w=1,.v={0,0,0}};
     ARM_POSE pose;
-    double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER];
+    double anglesPS_B_FE[ARM_ELBOW_ANGLES_NUMBER];
 
     /* Set the csv logging from the database */
     log_str("Set the database fields to track into the csv");
@@ -159,9 +159,9 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ERROR,0);
-    if (RET_OK == status) status = db_csv_field_add(DB_ARM_WRIST_POSITION,0);
     if (RET_OK == status) status = db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
     if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_ARM_WRIST_POSITION,0);
     if (RET_OK == status && computeShoulderAngles) status = db_csv_field_add(DB_ARM_SHOULDER_ANGLES,0);
     if (RET_OK == status && computeElbowAngles)    status = db_csv_field_add(DB_ARM_ELBOW_ANGLES,0);
     if (RET_OK != status) err_str("Failed to setup database CSV logging");
@@ -175,7 +175,6 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
     /* Reset IMUs offset */
     if (RET_OK == status) {
         status = imu_orientation_offset_reset();
-        // if (RET_OK == status) status = imu_orientation_offset_set(1);
         if (RET_OK != status) err_str("Failed to reset IMU sensors orientation");
     }
 
@@ -217,7 +216,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
     /* Set zero value for elbow angles */
     if (RET_OK == status) {
         log_str("Set the zero point");
-        log_str(" -> [USER]: Stand in a pose to be considered as zero for the elbow angles in 5");
+        log_str(" -> [USER]: Stand in a pose to be considered as zero in 5");
         for (int i = 4; RET_OK == status && i >= 0; i--) {
             sleep_s(1);
             log_str(" -> [USER]: %d",i);
@@ -228,9 +227,8 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
         if (RET_OK == status) quaternion_from_buffer_build(q_buff,&q2);
         if (RET_OK == status) status = cal_gn2_zero_pose_calibrate(
             rotationV1,rotationV2, q1, q2, q_zero, q_zero, NULL, NULL);
-        if (RET_OK == status) status = arm_elbow_angles_zero(0.0, 0.0, q1, q2, rotationV1, rotationV2);
         if (RET_OK == status) {
-            log_str(" -> [USER]: Elbow angles zero position set ");
+            log_str(" -> [USER]: Zero position set ");
             status = db_field_print(DB_ARM_WRIST_POSITION,0);
         }
         if (RET_OK != status) err_str("Failed to perform zero procedure");
@@ -245,7 +243,36 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
         /* Set starting time */
         status = db_read(DB_IMU_TIMESTAMP,0,&startTime);
 
+        /* Set inital error value */
+        double calibration_error, current_error;
+        double calibration_timer = 0.0;
+        if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &calibration_error);
+
         do {
+            /* Update observations buffer */
+            if (RET_OK == status) status = cal_gn2_observations_from_database_update();
+
+            /* Update calibration error */
+            if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &current_error);
+
+            /* Correct calibration if the error is 10% worse or 5 senconds have passed */
+            if (RET_OK == status && ((current_error > calibration_error*1.1) || (5 < calibration_timer))) {
+                status = cal_gn2_two_rot_axes_calib_correct(rotationV1,rotationV2);
+                if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &calibration_error);
+                if (RET_OK == status) {
+                    log_str("Online calibration correction performed: \n"
+                        "\tTime since last calibration: %fs\n"
+                        "\tError went from %f to %f",calibration_timer,current_error,calibration_error);
+                    calibration_timer = 0.0;
+                }
+                else if (RET_NO_EXEC == status) {
+                    status = RET_OK;
+                }
+                else {
+                    err_str("Failed to perform online calibration");
+                }
+            }
+
             /* Compute the calibrated segment orientations */
             if (RET_OK == status) status = cal_gn2_calibrated_orientations_from_database_get(&q1,&q2);
 
@@ -256,12 +283,18 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
             if (RET_OK == status && computeShoulderAngles) arm_shoulder_angles_compute(NULL);
 
             /* Compute current elbow angles */
-            if (RET_OK == status && computeElbowAngles) status = arm_elbow_angles_from_rotation_vectors_get(
-                q1, q2, rotationV1, rotationV2, anglesFE_B_PS);
+            // if (RET_OK == status && computeElbowAngles) status = arm_elbow_angles_from_rotation_vectors_get(
+            //     q1, q2, rotationV1, rotationV2, anglesPS_B_FE);
+            if (RET_OK == status) cal_gn2_calibrated_relative_orientation_get(NULL, anglesPS_B_FE);
+
 
             /* Retrieve current timestamp from database */
             if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
-            if (RET_OK == status) currentTime = buffTime - startTime;
+            if (RET_OK == status) {
+                double previous_time = currentTime;
+                currentTime = buffTime - startTime;
+                calibration_timer += currentTime - previous_time;
+            }
             
             /* Log data through terminal and log file */
             dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
@@ -325,7 +358,6 @@ ERROR_CODE hak_static_calib_kinematics(double time, bool computeShoulderAngles)
     /* Reset IMUs offset */
     if (RET_OK == status) {
         status = imu_orientation_offset_reset();
-        // if (RET_OK == status) status = imu_orientation_offset_set(1);
         if (RET_OK != status) err_str("Failed to reset IMU sensors orientation");
     }
 
@@ -335,8 +367,6 @@ ERROR_CODE hak_static_calib_kinematics(double time, bool computeShoulderAngles)
         log_str("USER -> STAND IN T-POSE TO CALIBRATE");
         log_str(" -> [USER]: Stand in T-pose to calibrate IMU orientations");
         if (RET_OK == status) sleep_s(4);
-        if (RET_OK == status) status = imu_orientation_offset_set(1);
-        if (RET_OK == status) sleep_s(1);
         if (RET_OK == status) status = imu_batch_read(imus_num, data);
         if (RET_OK != status) err_str("Failed to read IMUs data");
     }
