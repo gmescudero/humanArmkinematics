@@ -12,6 +12,13 @@
 #include "imu_config.hpp"
 
 
+void imu_configuration_apply(LpmsSensorI *lpms) {
+    // Save parameters to sensor
+    lpms->saveCalibrationData();
+    WAIT(500);
+}
+
+
 void imu_set_SensorID(int id, LpmsSensorI *lpms) {
     WAIT(100);
     lpms->setConfigurationPrm(PRM_OPENMAT_ID, id);

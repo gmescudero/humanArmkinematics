@@ -24,7 +24,6 @@ static void simu_callback_new_data_update_and_dump(ImuData d, const char *id);
 ERROR_CODE imu_initialize(const char *com_port){
     ERROR_CODE status;
     int   connection_status = SENSOR_CONNECTION_CONNECTED;
-    short timeout_counter   = IMU_CONNECTION_TIMEOUT; 
     unsigned int index      = (unsigned int) num_imus;
 
     dbg_str("%s -> Connect IMU %d through COM port \"%s\" ",__FUNCTION__,index, com_port);
@@ -44,17 +43,24 @@ ERROR_CODE imu_initialize(const char *com_port){
     if (NULL == lpms[index]) return RET_ERROR;
     lpms[index]->setVerbose(false); // Set IMU logging flag
 
-    // Retrieve cthe connection status
+    // Retrieve the connection status
     connection_status = lpms[index]->getConnectionStatus();
     // Wait for the connection status to be CONNECTED
-    while ((connection_status != SENSOR_CONNECTION_CONNECTED) && (timeout_counter > 0)){
+    for(short timeout = IMU_CONNECTION_TIMEOUT; 
+        (connection_status != SENSOR_CONNECTION_CONNECTED) && (timeout > 0); 
+        timeout--) 
+    {
         WAIT(100);
-        timeout_counter--;
-        connection_status = lpms[index]->getConnectionStatus();
     }
+
     if (connection_status != SENSOR_CONNECTION_CONNECTED) {
         err_str("IMU Sensor %d failed to connect through %s", index, com_port);
         return RET_ERROR;
+    }
+    else {
+        // Configure IMU
+        imu_set_SamplingRate(SELECT_STREAM_FREQ_50HZ,lpms[index]);
+        imu_configuration_apply(lpms[index]);
     }
 
     // Update number of imus and database

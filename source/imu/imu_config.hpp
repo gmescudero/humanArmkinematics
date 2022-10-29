@@ -25,12 +25,62 @@
 using namespace std;
 #define WAIT(ms) (this_thread::sleep_for(chrono::milliseconds(ms)))
 
+/*
+#define PRM_NAME                    0 // Sensor name (string)
+#define PRM_DEVICE_ID               1 // Sensor device ID (int)
+#define PRM_GYR_BIAS                2 // Gyroscope bias (Eigen::Vector3f)
+#define PRM_MAG_BIAS                3 // Magnetometer bias (Eigen::Vector3f)
+#define PRM_GYR_THRESHOLD           4 // Gyroscope threshold (Eigen::Vector3f)
+#define PRM_MAG_THRESHOLD           5 // Magnetometer threshold (int)
+#define PRM_ACC_REFERENCE           6 // Accelerometer reference (Eigen::Vector3f)
+#define PRM_MAG_REFERENCE           7 // Magnetometer reference (Eigen::Vector3f)
+#define PRM_OPENMAT_ID              8 // OpenMAT ID (int)
+#define PRM_DEVICE_TYPE             9 // Device type (int)
+#define PRM_GYR_THRESHOLD_ENABLED   10 // Gyroscope threshold enable / disable (int)
+#define PRM_PARAMETER_SET           11 // Sensor filter parameter set (int)
+#define PRM_FILTER_MODE             12 // Sensor filter mode (int)
+#define PRM_GYR_RANGE               13 // Gyroscope range (int)
+#define PRM_MAG_RANGE               14 // Magnetometer range (int)
+#define PRM_ACC_RANGE               15 // Accelerometer range (int)
+#define PRM_SAMPLING_RATE           16 // Sampling rate to be set (int)
+#define PRM_LOCAL_Q                 17 // Enable / disable local quaternion calculation (int)
+#define PRM_ACC_COVARIANCE          18 // Accelerometer covariance (float)
+#define PRM_MAG_COVARIANCE          19 // Magnetometer covariance (float)
+#define PRM_ACC_GAIN                20 // Accelerometer filter gain (float)
+#define PRM_MAG_GAIN                21 // Magnetometer filter gain (float)
+#define PRM_OFFSET_Q                22 // Local offset quaternion (Eigen::Vector4f)
+#define PRM_MAG_AUTOCALIBRATION     23 // Local offset quaternion (Eigen::Vector4f)
+#define PRM_CAN_STREAM_FORMAT       24 // CAN streaming format
+#define PRM_CAN_BAUDRATE            25 // CAN baudrate
+#define PRM_SELF_TEST               26 // Selftest enable / disable
+#define PRM_GYR_AUTOCALIBRATION     27 // Gyroscope autocalibration enable / disable
+#define PRM_SELECT_DATA             28 // Select stream data
+#define PRM_FIRMWARE_VERSION        29 // Firmware version
+#define PRM_LOW_PASS                30 // Low-pass filter setting
+#define PRM_CAN_MAPPING             31 // CANopen mapping
+#define PRM_CAN_HEARTBEAT           32 // CANopen heartbeat timing
+#define PRM_HEAVEMOTION_ENABLED     33 // Heave motion setting
+#define PRM_LIN_ACC_COMP_MODE       34 // Linear acceleration compensation mode
+#define PRM_CENTRI_COMP_MODE        35 // Centripetal acceleration compensation mode
+#define PRM_CAN_CHANNEL_MODE        36
+#define PRM_CAN_POINT_MODE          37
+#define PRM_CAN_START_ID            38
+#define PRM_GAIT_TRACKING_ENABLED   39
+#define PRM_LPBUS_DATA_MODE         40
+#define PRM_UART_BAUDRATE           41
+#define PRM_UART_FORMAT             42
+*/
+
+
+/**
+ * @brief Apply parameters that have been set into the IMU sensor
+ * 
+ * @param lpms (input) IMU sensor handler
+ */
+void imu_configuration_apply(LpmsSensorI *lpms);
 
 /**
  * @brief Set sensor ID
- * 
- * @details The available choices are:
- *      - id >= 0
  * 
  * @param id (input) IMU id to be set. The available choices are:
  *      - id >= 0
@@ -150,7 +200,7 @@ void imu_set_LinAccCompensationMode(int mode, LpmsSensorI *lpms);
  */
 void imu_set_RotationalAccCompensation(int mode, LpmsSensorI *lpms);
 /**
- * @brief Select sensor bus mode
+ * @brief Set data transfer data bit mode (32/16 bit)
  * 
  * @param mode (input) IMU bus mode. The available choices are:
  *     - SELECT_LPMS_LPBUS_DATA_MODE_32          0
@@ -158,3 +208,4 @@ void imu_set_RotationalAccCompensation(int mode, LpmsSensorI *lpms);
  * @param lpms (input) IMU sensor handler
  */
 void imu_set_LpBusMode(int mode, LpmsSensorI *lpms);
+
