@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <signal.h>
 #include "tst_lib.h"
 #include "arm.h"
 #include "vector3.h"
@@ -237,10 +238,20 @@ bool preconditions_initTraces(const char *test_name) {
     return ok;
 }
 
+static void int_handler(int sig) {
+    // tst_str("Testing interrupted by CTRL-C (signal %d)",sig);
+    testCleanUp();
+    exit(0);
+}
+
 bool preconditions_init(const char *test_name)
 {
     bool ok = true;
     ERROR_CODE ret;
+
+    struct sigaction act;
+    act.sa_handler = int_handler;
+    sigaction(SIGINT, &act, NULL);
 
     ok = preconditions_initTraces(test_name);
 

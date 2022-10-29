@@ -2928,7 +2928,7 @@ bool tst_battery_all()
     ok &= tst_cal_001();
     ok &= tst_cal_002();
     ok &= tst_cal_003();
-    // ok &= tst_cal_004(); // TODO: currently working but very slow
+    ok &= tst_cal_004(); // TODO: currently working but very slow
     ok &= tst_cal_005();
     ok &= tst_cal_006();
 
