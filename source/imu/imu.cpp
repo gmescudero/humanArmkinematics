@@ -9,20 +9,8 @@
  * 
  */
 
-#ifdef _WIN32
-#include "LpmsSensorI.h"
-#include "LpmsSensorManagerI.h"
-// #define IMU_CONNECTION_PORT "COM0"
-#endif
-
-#ifdef __GNUC__
-#include "lpsensor/LpmsSensorI.h"
-#include "lpsensor/LpmsSensorManagerI.h"
-// #define IMU_CONNECTION_PORT "/dev/ttyUSB0";
-#endif
-
+#include "imu_config.hpp"
 #include "imu.h"
-#include <unistd.h>
 
 // char imu_conn[15] = IMU_CONNECTION_PORT;
 static unsigned char num_imus = 0;
@@ -60,7 +48,7 @@ ERROR_CODE imu_initialize(const char *com_port){
     connection_status = lpms[index]->getConnectionStatus();
     // Wait for the connection status to be CONNECTED
     while ((connection_status != SENSOR_CONNECTION_CONNECTED) && (timeout_counter > 0)){
-        sleep(1);
+        WAIT(100);
         timeout_counter--;
         connection_status = lpms[index]->getConnectionStatus();
     }

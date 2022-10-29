@@ -33,15 +33,9 @@ extern "C" {
 /**
  * @brief Maximum timeout to wait for IMU connection in seconds
  */
-#define IMU_CONNECTION_TIMEOUT (4)
+#define IMU_CONNECTION_TIMEOUT (40)
 
 // #define M_PI           3.14159265358979323846  /* pi */
-
-typedef enum{
-    IMUS_NOT_CONNECTED = 0,
-    IMUS_CONNECTED,
-    IMUS_READING
-}IMUS_CONNECTION_STATUS;
 
 typedef struct _IMU_NOISE_DATA{
     double accMean[3];
@@ -51,25 +45,6 @@ typedef struct _IMU_NOISE_DATA{
     double magMean[3];
     double magVar[3];
 } IMU_NOISE_DATA;
-
-typedef struct _IMUS_POSE{
-    // Translation vector
-    float t[3];
-    // Quaternion vector
-    float q[4];
-    // Euler angles vector
-    float r[3];
-}IMUS_POSE;
-
-typedef struct _ARM_JOINTS{
-    float elbow_position[3];
-    float wrist_position[3];
-}ARM_JOINTS;
-
-typedef struct _ARM_MEASUREMENT{
-    float arm;
-    float forearm;
-}ARM_MEASUREMENT;
 
 typedef void(*IMU_READ_CALLBACK)(ImuData d, const char* id);
 
@@ -184,6 +159,7 @@ ERROR_CODE imu_static_errors_measure(unsigned int index, int iterations, IMU_NOI
 
 ERROR_CODE imu_orientation_offset_set(int v);
 ERROR_CODE imu_orientation_offset_reset();
+
 
 #endif /*IMU_H*/
 
