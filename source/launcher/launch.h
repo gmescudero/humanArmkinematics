@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2022
  * 
  */
+#include <stdbool.h>
 #include "errors.h"
 
 /**
@@ -58,9 +59,11 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
  *      - End
  * 
  * @param time (input) Total monitoring time in seconds
+ * @param computeShoulderAngles (input) Compute shoulder angles when true
+ * @param computeElbowAngles (input) Compute elbow angles when true
  * @return ERROR_CODE 
  */
-ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time);
+ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoulderAngles, bool computeElbowAngles);
 
 /**
  * @brief A program that calibrates using a predefined pose and uses it on kinematics
@@ -76,6 +79,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time);
  *      - End
  * 
  * @param time (input) Total monitoring time in seconds
+ * @param computeShoulderAngles (input) Compute shoulder angles when true
  * @return ERROR_CODE 
  */
-ERROR_CODE hak_static_calib_kinematics(double time);
+ERROR_CODE hak_static_calib_kinematics(double time, bool computeShoulderAngles);

@@ -133,21 +133,19 @@ ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseItera
     return status;
 }
 
-#define IMUS_NUM (2)
-
-ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
+ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoulderAngles, bool computeElbowAngles) {
     ERROR_CODE status = RET_OK;
-    int imus_num = IMUS_NUM;
+    int imus_num = 2;
     double rotationV1[3] = {0,0,1};
     double rotationV2[3] = {1,0,0};
-    double rotationV2_2[3]; // rotationV2 in coordinates of sensor 2
-    double q_buff[4];
     double startTime   = -1.0;
     double currentTime = -1.0;
     double buffTime    = -1.0;
+    double q_buff[4];
     Quaternion q1,q2;
-    Quaternion q12;
-    double anglesFE_B_PS[ARM_ELBOW_NUMBER_OF_ANGLES];
+    Quaternion q_zero = {.w=1,.v={0,0,0}};
+    ARM_POSE pose;
+    double anglesPS_B_FE[ARM_ELBOW_ANGLES_NUMBER];
 
     /* Set the csv logging from the database */
     log_str("Set the database fields to track into the csv");
@@ -161,8 +159,11 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ROT_VECTOR,0);
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ROT_VECTOR,1);
     if (RET_OK == status) status = db_csv_field_add(DB_CALIB_ERROR,0);
-    if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_ANGLES,0);
-    if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_QUATERNION,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
+    if (RET_OK == status) status = db_csv_field_add(DB_ARM_WRIST_POSITION,0);
+    if (RET_OK == status && computeShoulderAngles) status = db_csv_field_add(DB_ARM_SHOULDER_ANGLES,0);
+    if (RET_OK == status && computeElbowAngles)    status = db_csv_field_add(DB_ARM_ELBOW_ANGLES,0);
     if (RET_OK != status) err_str("Failed to setup database CSV logging");
 
     /* Look for IMU sensors and initialize the required of them */
@@ -190,84 +191,123 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
         sleep_s(2);
     }
 
-    /* Loop while data keeps beeing gathered */
-    do {
-        if (RET_OK == status) sleep_s(1);
-        if (RET_OK == status) status = cal_two_rot_axes_calib_observations_from_database_update();
-        log_str("Current observations count: %d/%d",db_field_buffer_current_size_get(DB_CALIB_OMEGA,0),CALIB_TWO_ROT_AXES_WINDOW);
-    } while (RET_OK == status && CALIB_TWO_ROT_AXES_WINDOW > db_field_buffer_current_size_get(DB_CALIB_OMEGA,0));
-    log_str(" -> [USER]: Finished recording calibration data");
+    /* Loop while gathering data for two axes calibration */
+    if (RET_OK == status) {
+        do {
+            if (RET_OK == status) sleep_s(1);
+            if (RET_OK == status) status = cal_gn2_observations_from_database_update();
+            log_str("Current observations count: %d/%d",db_field_buffer_current_size_get(DB_CALIB_OMEGA,0),CALIB_TWO_ROT_AXES_WINDOW);
+        } while (RET_OK == status && CALIB_TWO_ROT_AXES_WINDOW > db_field_buffer_current_size_get(DB_CALIB_OMEGA,0));
+        log_str(" -> [USER]: Finished recording calibration data");
+    }
 
     /* Perform calibration algorithm */
-    log_str("Calibrating rotation two axes");
     if (RET_OK == status) {
-        status = cal_two_rot_axes_calib_compute(rotationV1,rotationV2);
+        log_str("Calibrating rotation two axes");
+
+        status = cal_gn2_two_rot_axes_calib(rotationV1,rotationV2);
         if (RET_OK != status) err_str("Failed to initialize reading callback for IMU sensors");
+        
+        log_str("Finished two axes calibration: ");
+        log_str("\tRotation vector 1:[%f,%f,%f]", rotationV1[0],rotationV1[1], rotationV1[2]);
+        log_str("\tRotation vector 2:[%f,%f,%f]", rotationV2[0],rotationV2[1], rotationV2[2]);
     }
-    log_str("Finished two axes calibration: ");
-    log_str("\tRotation vector 1:[%f,%f,%f]", rotationV1[0],rotationV1[1], rotationV1[2]);
-    log_str("\tRotation vector 2:[%f,%f,%f]", rotationV2[0],rotationV2[1], rotationV2[2]);
 
     /* Set zero value for elbow angles */
     if (RET_OK == status) {
         log_str("Set the zero point");
-        log_str(" -> [USER]: Stand in a pose to be considered as zero for the elbow angles in 5");
+        log_str(" -> [USER]: Stand in a pose to be considered as zero in 5");
         for (int i = 4; RET_OK == status && i >= 0; i--) {
             sleep_s(1);
             log_str(" -> [USER]: %d",i);
         }
         if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,0,q_buff);
-        if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q1);
+        if (RET_OK == status) quaternion_from_buffer_build(q_buff,&q1);
         if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,1,q_buff);
-        if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q2);
-        if (RET_OK == status) q12 = arm_quaternion_between_two_get(q2,q1);
-        if (RET_OK == status) Quaternion_rotate(&q12,rotationV2,rotationV2_2);
-        if (RET_OK == status) status = arm_elbow_angles_zero(0.0, 0.0, q1, q12, rotationV1, rotationV2);
+        if (RET_OK == status) quaternion_from_buffer_build(q_buff,&q2);
+        if (RET_OK == status) status = cal_gn2_zero_pose_calibrate(
+            rotationV1,rotationV2, q1, q2, q_zero, q_zero, NULL, NULL);
         if (RET_OK == status) {
-            log_str(" -> [USER]: Elbow angles zero position set ");
-            status = db_field_print(DB_ARM_ELBOW_ANGLES,0);
+            log_str(" -> [USER]: Zero position set ");
+            status = db_field_print(DB_ARM_WRIST_POSITION,0);
         }
-        else {
-            err_str("Failed to perform zero procedure");
-        }
+        if (RET_OK != status) err_str("Failed to perform zero procedure");
     }
 
     /* Apply calibration functions to imu readings */
-    log_str("Starting loop printing arm angles");
-    log_str(" -> [USER]: Starting recording for %f seconds",time);
-    if (RET_OK == status) sleep_s(2);
+    if (RET_OK == status) {
+        log_str("Starting loop printing arm angles");
+        log_str(" -> [USER]: Starting recording for %f seconds",time);
+        sleep_s(2);
 
-    /* Set starting time */
-    if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP,0,&startTime);
+        /* Set starting time */
+        status = db_read(DB_IMU_TIMESTAMP,0,&startTime);
 
-    do {
-        /* Get the current quaternions */
-        if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,0,q_buff);
-        if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q1);
-        if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,1,q_buff);
-        if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q2);
+        /* Set inital error value */
+        double calibration_error, current_error;
+        double calibration_timer = 0.0;
+        if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &calibration_error);
 
-        /* Get the second rotation vector in second sensor coordinate system */
-        if (RET_OK == status) q12 = arm_quaternion_between_two_get(q2,q1);
-        if (RET_OK == status) Quaternion_rotate(&q12,rotationV2,rotationV2_2);
+        do {
+            /* Update observations buffer */
+            if (RET_OK == status) status = cal_gn2_observations_from_database_update();
 
-        /* Compute current elbow angles */
-        if (RET_OK == status) status = arm_elbow_angles_from_rotation_vectors_get(
-            q1, q12, rotationV1, rotationV2, anglesFE_B_PS);
+            /* Update calibration error */
+            if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &current_error);
 
-        /* Retrieve current timestamp from database */
-        if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
-        if (RET_OK == status) currentTime = buffTime - startTime;
+            /* Correct calibration if the error is 10% worse or 5 senconds have passed */
+            if (RET_OK == status && ((current_error > calibration_error*1.1) || (5 < calibration_timer))) {
+                status = cal_gn2_two_rot_axes_calib_correct(rotationV1,rotationV2);
+                if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &calibration_error);
+                if (RET_OK == status) {
+                    log_str("Online calibration correction performed: \n"
+                        "\tTime since last calibration: %fs\n"
+                        "\tError went from %f to %f",calibration_timer,current_error,calibration_error);
+                    calibration_timer = 0.0;
+                }
+                else if (RET_NO_EXEC == status) {
+                    status = RET_OK;
+                }
+                else {
+                    err_str("Failed to perform online calibration");
+                }
+            }
 
-        dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
+            /* Compute the calibrated segment orientations */
+            if (RET_OK == status) status = cal_gn2_calibrated_orientations_from_database_get(&q1,&q2);
 
-        if (RET_OK == status) status = db_field_print(DB_ARM_ELBOW_ANGLES,0);
+            /* Compute arm positions */
+            if (RET_OK == status) pose = arm_orientations_set(q1,q2,q2);
 
-        /* Wait for next iteration */
-        if (RET_OK == status) sleep_ms(100);
+            /* Compute current shoulder angles */
+            if (RET_OK == status && computeShoulderAngles) arm_shoulder_angles_compute(NULL);
 
-    } while (RET_OK == status && time > currentTime);
-    if (RET_OK != status) err_str("Failed to apply calibration");
+            /* Compute current elbow angles */
+            // if (RET_OK == status && computeElbowAngles) status = arm_elbow_angles_from_rotation_vectors_get(
+            //     q1, q2, rotationV1, rotationV2, anglesPS_B_FE);
+            if (RET_OK == status) cal_gn2_calibrated_relative_orientation_get(NULL, anglesPS_B_FE);
+
+
+            /* Retrieve current timestamp from database */
+            if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
+            if (RET_OK == status) {
+                double previous_time = currentTime;
+                currentTime = buffTime - startTime;
+                calibration_timer += currentTime - previous_time;
+            }
+            
+            /* Log data through terminal and log file */
+            dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
+            if (RET_OK == status && computeShoulderAngles) status = db_field_print(DB_ARM_SHOULDER_ANGLES,0);
+            if (RET_OK == status && computeElbowAngles)    status = db_field_print(DB_ARM_ELBOW_ANGLES,0);
+            if (RET_OK == status) arm_pose_print(pose);
+
+            /* Wait for next iteration */
+            if (RET_OK == status) sleep_ms(100);
+
+        } while (RET_OK == status && time > currentTime);
+        if (RET_OK != status) err_str("Failed to apply calibration");
+    }
 
     /* Remove used resources */
     for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
@@ -277,18 +317,20 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time) {
     return status;
 }
 
-ERROR_CODE hak_static_calib_kinematics(double time)
+ERROR_CODE hak_static_calib_kinematics(double time, bool computeShoulderAngles)
 {
     ERROR_CODE status = RET_OK;
-    int imus_num = IMUS_NUM;
+    int imus_num = 2;
+    ImuData data[2];
     double startTime   = -1.0;
     double currentTime = -1.0;
     double buffTime    = -1.0;
-    Quaternion known_quats[IMUS_NUM] = { /* Quats for T-pose */
+    Quaternion known_quats[2] = { /* Quats for T-pose */
         {.w = 1.0, .v={0.0, 0.0, 0.0}},
         {.w = 1.0, .v={0.0, 0.0, 0.0}},
     };
-    Quaternion read_quats[IMUS_NUM];
+    Quaternion read_quats[2];
+    ARM_POSE pose;
 
     /* Set the csv logging from the database */
     log_str("Set the database fields to track into the csv");
@@ -299,27 +341,45 @@ ERROR_CODE hak_static_calib_kinematics(double time)
     if (RET_OK == status) status = db_csv_field_add(DB_ARM_WRIST_POSITION,0);
     if (RET_OK == status) status = db_csv_field_add(DB_ARM_SHOULDER_ORIENTATION,0);
     if (RET_OK == status) status = db_csv_field_add(DB_ARM_ELBOW_ORIENTATION,0);
+    if (RET_OK == status && computeShoulderAngles) status = db_csv_field_add(DB_ARM_SHOULDER_ANGLES,0);
     if (RET_OK != status) err_str("Failed to setup database CSV logging");
 
     /* Look for IMU sensors and initialize the required of them */
-    if (imus_num > imu_number_get()) {
+    if (RET_OK == status && imus_num > imu_number_get()) {
         if (RET_OK == status) status = imu_batch_search_and_initialize(imus_num);
+        if (RET_RESOURCE_UNAVAILABLE == status) {
+            imus_num = 1;
+            wrn_str("Only found one IMU sensor");
+            status = imu_batch_search_and_initialize(imus_num);
+        }
         if (RET_OK != status) err_str("Failed to setup IMU sensors");
     }
 
-    /* Retrieve current IMU data */
-    ImuData data[IMUS_NUM];
-    log_str("Calibrate IMU sensors");
-    log_str("USER -> STAND IN T-POSE TO CALIBRATE");
-    log_str(" -> [USER]: Stand in T-pose to calibrate IMU orientations");
-    if (RET_OK == status) sleep_s(2);
-    if (RET_OK == status) status = imu_batch_read(imus_num, data);
-
-    /* Set calibration data */    
-    for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
-        quaternion_from_float_buffer_build(data[imu].q, &read_quats[imu]);
+    /* Reset IMUs offset */
+    if (RET_OK == status) {
+        status = imu_orientation_offset_reset();
+        if (RET_OK != status) err_str("Failed to reset IMU sensors orientation");
     }
-    if (RET_OK == status) cal_static_imu_quat_calibration_set(known_quats, read_quats);
+
+    /* Retrieve current IMU data */
+    if (RET_OK == status) {
+        log_str("Calibrate IMU sensors");
+        log_str("USER -> STAND IN T-POSE TO CALIBRATE");
+        log_str(" -> [USER]: Stand in T-pose to calibrate IMU orientations");
+        if (RET_OK == status) sleep_s(4);
+        if (RET_OK == status) status = imu_batch_read(imus_num, data);
+        if (RET_OK != status) err_str("Failed to read IMUs data");
+    }
+
+    /* Set calibration data */
+    if (RET_OK == status) {
+        for (int imu = 0; imu < imus_num; imu++) {
+            quaternion_from_float_buffer_build(data[imu].q, &read_quats[imu]);
+        }
+        if (1 == imus_num) 
+            Quaternion_copy(&read_quats[0],&read_quats[1]);
+        cal_static_imu_quat_calibration_set(known_quats, read_quats);
+    }
 
     /* Start IMU reading callbacks */
     for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
@@ -329,37 +389,44 @@ ERROR_CODE hak_static_calib_kinematics(double time)
     }
 
     /* Apply calibration functions to imu readings */
-    log_str("Starting loop printing arm wrist position and recording kinematic data");
-    log_str(" -> [USER]: Starting recording for %f seconds",time);
-    if (RET_OK == status) sleep_s(2);
+    if (RET_OK == status) {
+        log_str("Starting loop printing arm wrist position and recording kinematic data");
+        log_str(" -> [USER]: Starting recording for %f seconds",time);
+        sleep_s(2);
 
-    /* Set starting time */
-    if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP,0,&startTime);
+        /* Set starting time */
+        if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP,0,&startTime);
 
-    do {
-        /* Get the current quaternions */
-        if (RET_OK == status) status = cal_static_imu_quat_calibrated_data_get(read_quats);
+        do {
+            /* Get the current quaternions */
+            if (RET_OK == status) status = cal_static_imu_quat_calibrated_data_get(read_quats);
 
-        /* Compute joint values */
-        Quaternion joints[ARM_NUMBER_OF_JOINTS];
-        if (RET_OK == status) status = arm_inverse_kinematics_compute(read_quats[0], read_quats[1], joints); 
+            /* Mock the second quaternion if only one IMU is used */
+            if (RET_OK == status && 1 == imus_num) 
+                Quaternion_copy(&read_quats[0],&read_quats[1]);
+            
+            /* Set calibrated orientations */
+            if (RET_OK == status) pose = arm_orientations_set(read_quats[0],read_quats[1],read_quats[1]);
 
-        /* Compute arm positions */
-        if (RET_OK == status) status = arm_direct_kinematics_compute(joints, NULL);
+            /* Get the shoudler angles */
+            if (RET_OK == status && computeShoulderAngles) arm_shoulder_angles_compute(NULL);
 
-        /* Retrieve current timestamp from database */
-        if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
-        if (RET_OK == status) currentTime = buffTime - startTime;
+            /* Retrieve current timestamp from database */
+            if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
+            if (RET_OK == status) currentTime = buffTime - startTime;
 
-        dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
+            /* Log relevant data */
+            dbg_str("Current time %f seconds out of %f seconds",currentTime, time);
+            if (RET_OK == status && computeShoulderAngles) status = db_field_print(DB_ARM_SHOULDER_ANGLES,0);
+            // if (RET_OK == status) status = db_field_print(DB_IMU_QUATERNION,0);
+            if (RET_OK == status) arm_pose_print(pose);
 
-        if (RET_OK == status) status = db_field_print(DB_ARM_WRIST_POSITION,0);
+            /* Wait for next iteration */
+            if (RET_OK == status) sleep_ms(100);
 
-        /* Wait for next iteration */
-        if (RET_OK == status) sleep_ms(100);
-
-    } while (RET_OK == status && time > currentTime);
-    if (RET_OK != status) err_str("Failed to apply calibration");
+        } while (RET_OK == status && time > currentTime);
+        if (RET_OK != status) err_str("Failed to apply calibration");
+    }
 
     /* Remove used resources */
     for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {

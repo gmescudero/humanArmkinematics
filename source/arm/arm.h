@@ -42,8 +42,15 @@ enum ARM_ELBOW_ANGLES_ENUM {
     ALPHA_FE = 0,
     BETA_CARRYING,
     GAMMA_PS,
-    ARM_ELBOW_NUMBER_OF_ANGLES
+    ARM_ELBOW_ANGLES_NUMBER
 } ARM_ELBOW_ANGLES;
+
+enum ARM_SHOULDER_ANGLES_ENUM {
+    SH_ROTATION = 0,
+    SH_FLEXION,
+    SH_ABDUCTION,
+    ARM_SHOULDER_ANGLES_NUMBER
+} ARM_SHOULDER_ANGLES;
 
 /******************************************************************************/
 /* Function Declarations                                                      */
@@ -58,8 +65,23 @@ enum ARM_ELBOW_ANGLES_ENUM {
  */
 ERROR_CODE arm_segments_length_set(double upper_arm, double forearm);
 
+/**
+ * @brief Set an specific arm pose
+ * 
+ * @param initial_arm_pose (input) Arm pose of each joint and link 
+ */
 void arm_pose_set(
     ARM_POSE initial_arm_pose);
+
+/**
+ * @brief Set the orientation of the arm and forearm body segments
+ * 
+ * @param q_arm (input) Quaternion orientation of the arm segment w.r.t. the global frame
+ * @param q_forearm (input) Quaternion orientation of the forearm segment w.r.t. the global frame
+ * @param q_wrist(input) Quaternion orientation of the wrist w.r.t. the global frame
+ * @return ERROR_CODE 
+ */
+ARM_POSE arm_orientations_set(Quaternion q_arm, Quaternion q_forearm, Quaternion q_wrist);
 
 /**
  * @brief Convert arm pose to a string
@@ -181,6 +203,13 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     Quaternion q_sensor2, 
     double rotationV1[3], 
     double rotationV2[3],
-    double anglesFE_B_PS[ARM_ELBOW_NUMBER_OF_ANGLES]);
+    double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER]);
+
+/**
+ * @brief Retrive shoulder angles from its quaternions representation
+ * 
+ * @param shoulderAngles (output) shoulder angles as [ROTATION, FLEXION/EXTENSION, ABDUCTION/ADDUCTION]
+ */
+void arm_shoulder_angles_compute(double shoulderAngles[ARM_SHOULDER_ANGLES_NUMBER]);
 
 #endif

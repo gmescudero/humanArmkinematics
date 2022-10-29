@@ -2,6 +2,7 @@
 #ifndef __database_h__
 #define __database_h__
 
+#include <stdbool.h>
 #include "errors.h"
 
 #define DB_FIELD_NAME_MAX_LENGTH  (128)
@@ -24,6 +25,7 @@ typedef enum DB_FIELD_IDENTIFIER_ENUM {
     DB_CALIB_SPHERICAL_COORDS,
     DB_CALIB_COST_DERIVATIVE,
     DB_CALIB_TWO_AXES_OBSERVATIONS,
+    DB_CALIB_ITERATIONS,
     DB_ARM_SHOULDER_POSITION,
     DB_ARM_SHOULDER_ORIENTATION,
     DB_ARM_ELBOW_POSITION,
@@ -32,6 +34,7 @@ typedef enum DB_FIELD_IDENTIFIER_ENUM {
     DB_ARM_WRIST_ORIENTATION,
     DB_ARM_ELBOW_ANGLES,
     DB_ARM_ELBOW_QUATERNION,
+    DB_ARM_SHOULDER_ANGLES,
     DB_NUMBER_OF_ENTRIES
 } DB_FIELD_IDENTIFIER;
 
@@ -112,6 +115,15 @@ ERROR_CODE db_index_read(DB_FIELD_IDENTIFIER field, int instance, int index, voi
  * @return ERROR_CODE 
  */
 ERROR_CODE db_csv_field_add(DB_FIELD_IDENTIFIER field, int instance);
+/**
+ * @brief Check if a specific field is being logged into the CSV file
+ * 
+ * @param field (input) Field identifier.
+ * @param instance (input) Field instance.
+ * @return true if the field is being logged to the CSV file.
+ * @return false otherwise.
+ */
+bool db_csv_field_logging_check(DB_FIELD_IDENTIFIER field, int instance);
 /**
  * @brief Dump configured data to the csv
  * 

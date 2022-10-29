@@ -33,6 +33,10 @@ typedef enum ERROR_CODE_ENUM {
      * @brief Nothing has been done 
      */
     RET_NO_EXEC,
+    /**
+     * @brief A requested resource is unavailable
+     */
+    RET_RESOURCE_UNAVAILABLE
 }ERROR_CODE;
 
 

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <signal.h>
 #include "tst_lib.h"
 #include "arm.h"
 #include "vector3.h"
@@ -237,10 +238,20 @@ bool preconditions_initTraces(const char *test_name) {
     return ok;
 }
 
+static void int_handler(int sig) {
+    // tst_str("Testing interrupted by CTRL-C (signal %d)",sig);
+    testCleanUp();
+    exit(0);
+}
+
 bool preconditions_init(const char *test_name)
 {
     bool ok = true;
     ERROR_CODE ret;
+
+    struct sigaction act;
+    act.sa_handler = int_handler;
+    sigaction(SIGINT, &act, NULL);
 
     ok = preconditions_initTraces(test_name);
 
@@ -282,6 +293,8 @@ bool preconditions_init_databaseCalib(const char *test_name, int imu_data_window
     /* Set CSV logging */
     ret = db_csv_field_add(DB_IMU_TIMESTAMP,0);
     ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_IMU_TIMESTAMP_0");
+    ret = db_csv_field_add(DB_CALIB_ITERATIONS,0);
+    ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_ITERATION_0");
     ret = db_csv_field_add(DB_CALIB_OMEGA,0);
     ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_OMEGA_0");
     ret = db_csv_field_add(DB_CALIB_OMEGA_NORM,0);
@@ -301,8 +314,8 @@ bool preconditions_init_databaseCalib(const char *test_name, int imu_data_window
     ret = db_csv_field_add(DB_CALIB_COST_DERIVATIVE,1);
     ok &= assert_OK(ret, "(preconditions_init_databaseCalib) db_csv_field_add DB_CALIB_COST_DERIVATIVE_1");
     /* Initialize calibration package */
-    ret = cal_two_rot_axes_calib_initialize(imu_data_window, observations_window);
-    ok &= assert_OK(ret, "cal_two_rot_axes_calib_initialize");
+    ret = cal_gn2_initialize(imu_data_window, observations_window);
+    ok &= assert_OK(ret, "cal_gn2_initialize");
 
     return ok;
 }
@@ -495,17 +508,17 @@ bool assert_frame(ARM_FRAME actual, ARM_FRAME expected, const char *description)
     return ok;
 }
 
-bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected, const char *description)
+bool assert_armEqualThreshold(const ARM_POSE actual, const ARM_POSE expected, double threshold, const char *description)
 {
     bool ok = true;
 
-    ok &= assert_vector3Equal(actual.shoulder.position, expected.shoulder.position, "arm assert -> shoulder pos");
-    ok &= assert_vector3Equal(actual.elbow.position,    expected.elbow.position,    "arm assert -> elbow pos   ");
-    ok &= assert_vector3Equal(actual.wrist.position,    expected.wrist.position,    "arm assert -> wrist pos   ");
+    ok &= assert_vector3EqualThreshold(actual.shoulder.position, expected.shoulder.position, threshold, "arm assert -> shoulder pos");
+    ok &= assert_vector3EqualThreshold(actual.elbow.position,    expected.elbow.position,    threshold, "arm assert -> elbow pos   ");
+    ok &= assert_vector3EqualThreshold(actual.wrist.position,    expected.wrist.position,    threshold, "arm assert -> wrist pos   ");
 
-    ok &= assert_quaternion(actual.shoulder.orientation, expected.shoulder.orientation, "arm assert -> shoulder ori");
-    ok &= assert_quaternion(actual.elbow.orientation,    expected.elbow.orientation,    "arm assert -> elbow ori   ");
-    ok &= assert_quaternion(actual.wrist.orientation,    expected.wrist.orientation,    "arm assert -> wrist ori   ");
+    ok &= assert_quaternionThreshold(actual.shoulder.orientation, expected.shoulder.orientation, threshold, "arm assert -> shoulder ori");
+    ok &= assert_quaternionThreshold(actual.elbow.orientation,    expected.elbow.orientation,    threshold, "arm assert -> elbow ori   ");
+    ok &= assert_quaternionThreshold(actual.wrist.orientation,    expected.wrist.orientation,    threshold, "arm assert -> wrist ori   ");
 
     if (WILL_PRINT(ok) && (NULL != description)) {
         printf("\t -> RESULT: %s (%s) | ",(true == ok)?"PASSED":"FAILED", description);
@@ -513,6 +526,11 @@ bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected, const char 
     }
 
     return ok;
+}
+
+bool assert_armEqual(const ARM_POSE actual, const ARM_POSE expected, const char *description)
+{
+    return assert_armEqualThreshold(actual, expected, EPSI, description);
 }
 
 bool assert_dbFieldDoubleThreshold(DB_FIELD_IDENTIFIER field, int instance, const double expected[], double threshold, const char *description) {

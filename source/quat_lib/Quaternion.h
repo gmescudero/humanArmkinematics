@@ -211,9 +211,24 @@ void quaternion_from_float_buffer_build(float buffer[4], Quaternion *q);
  */
 void quaternion_print(Quaternion q, const char *name);
 /**
+ * Calculates the euler angles of a quaternion.
+ * @param output
+ *      Euler angles in ZXY, but stored in array as [y'', x', z].
+ */
+void quaternion_fromEulerZXY(double eulerZXY[3], Quaternion* output);
+/**
  * @brief Calculates the euler angles of a quaternion in zxy order.
  * 
  * @param output 
- *      Euler angles in ZYX, but stored in array as [z, x', y''].
+ *      Euler angles in ZXY, but stored in array as [y'', x', z].
  */
 void quaternion_toEulerZXY(Quaternion* q, double output[3]);
+/**
+ * @brief Calculate the quaternion that rotates from v1 to v2 
+ * 
+ * @param v1 (input) Vector where to start rotation from
+ * @param v2 (input) Vector where to end rotation
+ * @param output (output) Quaternion from v1 to v2
+ * @return ERROR_CODE 
+ */
+ERROR_CODE quaternion_between_two_vectors_compute(double v1[3], double v2[3], Quaternion *output);

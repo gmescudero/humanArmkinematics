@@ -137,4 +137,12 @@ void vector3_from_spherical_coordinates_convert(double theta, double rho, int sh
  */
 void vector3_spherical_coordinates_derivatives_compute(double theta, double rho, int shperical_convention, double dtheta[3],double drho[3]);
 
+/**
+ * @brief Print a given 3D vector
+ * 
+ * @param v (input) Vector to print
+ * @param name (input) Vector name (can be NULL)
+ */
+void vector3_print(double v[3], const char *name);
+
 #endif

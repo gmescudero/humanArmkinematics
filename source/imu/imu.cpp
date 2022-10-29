@@ -9,20 +9,8 @@
  * 
  */
 
-#ifdef _WIN32
-#include "LpmsSensorI.h"
-#include "LpmsSensorManagerI.h"
-// #define IMU_CONNECTION_PORT "COM0"
-#endif
-
-#ifdef __GNUC__
-#include "lpsensor/LpmsSensorI.h"
-#include "lpsensor/LpmsSensorManagerI.h"
-// #define IMU_CONNECTION_PORT "/dev/ttyUSB0";
-#endif
-
+#include "imu_config.hpp"
 #include "imu.h"
-#include <unistd.h>
 
 // char imu_conn[15] = IMU_CONNECTION_PORT;
 static unsigned char num_imus = 0;
@@ -36,7 +24,6 @@ static void simu_callback_new_data_update_and_dump(ImuData d, const char *id);
 ERROR_CODE imu_initialize(const char *com_port){
     ERROR_CODE status;
     int   connection_status = SENSOR_CONNECTION_CONNECTED;
-    short timeout_counter   = IMU_CONNECTION_TIMEOUT; 
     unsigned int index      = (unsigned int) num_imus;
 
     dbg_str("%s -> Connect IMU %d through COM port \"%s\" ",__FUNCTION__,index, com_port);
@@ -56,17 +43,24 @@ ERROR_CODE imu_initialize(const char *com_port){
     if (NULL == lpms[index]) return RET_ERROR;
     lpms[index]->setVerbose(false); // Set IMU logging flag
 
-    // Retrieve cthe connection status
+    // Retrieve the connection status
     connection_status = lpms[index]->getConnectionStatus();
     // Wait for the connection status to be CONNECTED
-    while ((connection_status != SENSOR_CONNECTION_CONNECTED) && (timeout_counter > 0)){
-        sleep(1);
-        timeout_counter--;
-        connection_status = lpms[index]->getConnectionStatus();
+    for(short timeout = IMU_CONNECTION_TIMEOUT; 
+        (connection_status != SENSOR_CONNECTION_CONNECTED) && (timeout > 0); 
+        timeout--) 
+    {
+        WAIT(100);
     }
+
     if (connection_status != SENSOR_CONNECTION_CONNECTED) {
         err_str("IMU Sensor %d failed to connect through %s", index, com_port);
         return RET_ERROR;
+    }
+    else {
+        // Configure IMU
+        imu_set_SamplingRate(SELECT_STREAM_FREQ_50HZ,lpms[index]);
+        imu_configuration_apply(lpms[index]);
     }
 
     // Update number of imus and database
@@ -106,13 +100,13 @@ ERROR_CODE imu_batch_search_and_initialize(unsigned int imus_num) {
         log_str("Retrieve available COM ports");
         status = com_ports_list(&discoveredPorts);
         if (RET_OK == status && discoveredPorts.ports_number < imus_num) {
-            err_str("Found only %d when %d IMU sensors required");
-            status = RET_ERROR;
+            wrn_str("Found only %d when %d IMU sensors required",discoveredPorts.ports_number,imus_num);
+            status = RET_RESOURCE_UNAVAILABLE;
         }
     }
 
     /* Initialize required IMU sensors */
-    status  = imu_batch_initialize(discoveredPorts, imus_num);
+    if (RET_OK == status) status  = imu_batch_initialize(discoveredPorts, imus_num);
 
     return status;
 }
@@ -448,7 +442,7 @@ static ERROR_CODE simu_database_update(ImuData d, int index) {
     double mag[3]    = {(double)d.b[0],(double)d.b[1],(double)d.b[2]};
     double linAcc[3] = {(double)d.linAcc[0],(double)d.linAcc[1],(double)d.linAcc[2]};
     double angVel[3] = {(double)d.w[0],(double)d.w[1],(double)d.w[2]};
-    double quat[4]   = {(double)d.q[0],(double)d.q[1],(double)d.q[2],(double)d.q[3]};
+    double quat[4]   = {(double)d.q[0],-(double)d.q[1],-(double)d.q[2],-(double)d.q[3]};
     int newData      = (int)true;
 
     status = db_write(DB_IMU_TIMESTAMP, index, &timestamp);
