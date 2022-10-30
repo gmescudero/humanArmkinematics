@@ -9,6 +9,9 @@
  * 
  */
 
+#ifndef _imu_config_hpp_
+#define _imu_config_hpp_
+
 #include <thread>
 #ifdef _WIN32
 #include "LpmsSensorI.h"
@@ -21,6 +24,7 @@
 #include "lpsensor/LpmsSensorManagerI.h"
 // #define IMU_CONNECTION_PORT "/dev/ttyUSB0";
 #endif
+
 
 #define WAIT(ms) (std::this_thread::sleep_for(std::chrono::milliseconds(ms)))
 
@@ -215,3 +219,4 @@ void imu_set_RotationalAccCompensation(int mode, LpmsSensorI *lpms);
  */
 void imu_set_LpBusMode(int mode, LpmsSensorI *lpms);
 
+#endif /* _imu_config_hpp_ */

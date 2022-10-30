@@ -10,7 +10,9 @@
  */
 
 #include "imu_config.hpp"
+extern "C" {
 #include "general.h"
+}
 
 void imu_configuration_apply(LpmsSensorI *lpms) {
     // Save parameters to sensor
