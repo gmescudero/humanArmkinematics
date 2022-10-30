@@ -12,15 +12,14 @@
 
 
 int main(int argc, char **argv) {
-    ERROR_CODE status = RET_OK;
-
-    if (RET_OK == status) status = hak_initialize();
+    ERROR_CODE status = hak_initialize();
 
     // if (RET_OK == status) status = hak_record_imus_data(2,60,0);
-    if (RET_OK == status) status = hak_two_axes_auto_calib_and_kinematics(60, false, true);
+    // if (RET_OK == status) status = hak_two_axes_auto_calib_and_kinematics(60, false, true);
     // if (RET_OK == status) status = hak_static_calib_kinematics(40, true);
+    if (RET_OK == status) status = hak_two_axes_auto_calib_and_kinematics_forever(false,false);
 
-    if (RET_OK == status) status = hak_terminate();
+    status += hak_terminate();
 
     return (RET_OK == status)? RET_OK:RET_ERROR;
 }

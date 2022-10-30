@@ -83,3 +83,24 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
  * @return ERROR_CODE 
  */
 ERROR_CODE hak_static_calib_kinematics(double time, bool computeShoulderAngles);
+
+/**
+ * @brief A program that calibrates through the use of automatic two axes calib and measures elbow angles until the program is closed
+ * 
+ * @details
+ *      The program performs the following steps:
+ *      - Remove CSV logging
+ *      - Reduce log file logging level
+ *      - Search ans initialize 2 IMU sensors connected to COM ports
+ *      - Attach IMU data retrieve callback 
+ *      - Loop while gathering IMU data of arbitrary motions to be used for calibration
+ *      - Run Two Axes Automatic calibration algorithm to obtain rotation vectors of the elbow
+ *      - Loop forever correcting calibration and computing arm position
+ *      - End
+ * 
+ * @param time (input) Total monitoring time in seconds
+ * @param computeShoulderAngles (input) Compute shoulder angles when true
+ * @param computeElbowAngles (input) Compute elbow angles when true
+ * @return ERROR_CODE 
+ */
+ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool computeShoulderAngles, bool computeElbowAngles); 
