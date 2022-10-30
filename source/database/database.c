@@ -36,7 +36,7 @@ typedef struct DB_FIELD_STRUCT {
 } DB_FIELD;
 
 typedef struct DB_CSV_LOG_STRUCT {
-    int first;                                                      // First csv file line
+    bool first;                                                      // First csv file line
     int fields_num;                                                 // Total number of fields
     int csv_coulmns;                                                // Total number of data columns taking multiplicity into account
     DB_FIELD_IDENTIFIER fields[CSV_FILE_VALUES_NUMBER];             // Field identifiers
@@ -109,7 +109,7 @@ static DB_FIELD database[DB_NUMBER_OF_ENTRIES] = {
 
 
 static DB_CSV_LOG_STRUCT csv_logging_fields = {
-    .first = 1,
+    .first = true,
     .fields_num = 0,
     .csv_coulmns = 0,
     .fields = {DB_FIELD_IDENTIFIER_INVALID},
@@ -179,14 +179,7 @@ ERROR_CODE db_terminate(void) {
     log_str("Removing all database resources");
 
     // Reset csv logging
-    csv_logging_fields.first       = 1;
-    csv_logging_fields.csv_coulmns = 0;
-    csv_logging_fields.fields_num  = 0;
-    for (int ind = 0; ind < CSV_FILE_VALUES_NUMBER; ind++) {
-        csv_logging_fields.fields[ind]    = DB_FIELD_IDENTIFIER_INVALID;
-        csv_logging_fields.instances[ind] = 0;
-        csv_logging_fields.indexes[ind]   = 0;
-    }
+    db_csv_reset();
 
     // Reset data buffers
     for (int buff_id = 0; buff_id < field_buffers_num; buff_id++) {
@@ -365,11 +358,22 @@ ERROR_CODE db_csv_field_add(DB_FIELD_IDENTIFIER field, int instance) {
     }
 
     // Set csv logging structure
-    csv_logging_fields.first = 1;
+    csv_logging_fields.first = true;
     csv_logging_fields.csv_coulmns = csv_index;
     csv_logging_fields.fields_num++;
 
     return RET_OK;
+}
+
+void db_csv_reset() {
+    csv_logging_fields.first       = true;
+    csv_logging_fields.csv_coulmns = 0;
+    csv_logging_fields.fields_num  = 0;
+    for (int ind = 0; ind < CSV_FILE_VALUES_NUMBER; ind++) {
+        csv_logging_fields.fields[ind]    = DB_FIELD_IDENTIFIER_INVALID;
+        csv_logging_fields.instances[ind] = 0;
+        csv_logging_fields.indexes[ind]   = 0;
+    }
 }
 
 bool db_csv_field_logging_check(DB_FIELD_IDENTIFIER field, int instance) {
