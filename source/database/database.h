@@ -116,6 +116,11 @@ ERROR_CODE db_index_read(DB_FIELD_IDENTIFIER field, int instance, int index, voi
  */
 ERROR_CODE db_csv_field_add(DB_FIELD_IDENTIFIER field, int instance);
 /**
+ * @brief Reset csv logging
+ * 
+ */
+void db_csv_reset();
+/**
  * @brief Check if a specific field is being logged into the CSV file
  * 
  * @param field (input) Field identifier.

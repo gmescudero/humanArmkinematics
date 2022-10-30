@@ -91,10 +91,10 @@ matrix.o: $(SOURCE_DIR)/math/matrix.c dirs_create
 svd.o: $(SOURCE_DIR)/math/singular_value_decomposition.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/math/singular_value_decomposition.c -o $(BINARIES_DIR)/$@
 
-imu.o: $(SOURCE_DIR)/imu/imu.cpp dirs_create
+imu.o: $(SOURCE_DIR)/imu/imu.cpp logging.o dirs_create
 	$(LD) -c $(CCFLAGS) $(INC) $(SOURCE_DIR)/imu/imu.cpp -o $(BINARIES_DIR)/$@
 
-imu_config.o: $(SOURCE_DIR)/imu/imu_config.cpp dirs_create
+imu_config.o: $(SOURCE_DIR)/imu/imu_config.cpp logging.o dirs_create
 	$(LD) -c $(CCFLAGS) $(INC) $(SOURCE_DIR)/imu/imu_config.cpp -o $(BINARIES_DIR)/$@ 
 
 database.o: $(SOURCE_DIR)/database/database.c dirs_create
