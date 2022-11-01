@@ -14,17 +14,42 @@
 #include "Quaternion.h"
 #include "errors.h"
 
+/******************************************************************************/
+/* Defines                                                                    */
+/******************************************************************************/
+
 #define ARM_POSE_STRING_MAX_LENGTH (256)
 
 #define ARM_NUMBER_OF_JOINTS (2)
+
+/******************************************************************************/
+/* Enumerates                                                                 */
+/******************************************************************************/
 
 enum ARM_KINEMATIC_NODE_ENUM {
     SHOULDER,
     ELBOW,
     WRIST,
     NUMBER_OF_NODES
-} ARM_KINEMATIC_NODE;
+};
 
+enum ARM_ELBOW_ANGLES_ENUM {
+    ALPHA_FE = 0,
+    BETA_CARRYING,
+    GAMMA_PS,
+    ARM_ELBOW_ANGLES_NUMBER
+};
+
+enum ARM_SHOULDER_ANGLES_ENUM {
+    SH_ROTATION = 0,
+    SH_FLEXION,
+    SH_ABDUCTION,
+    ARM_SHOULDER_ANGLES_NUMBER
+};
+
+/******************************************************************************/
+/* Types Definitions                                                          */
+/******************************************************************************/
 
 typedef struct ARM_FRAME_STRUCT {
     double position[3];
@@ -37,20 +62,6 @@ typedef struct ARM_POSE_STRUCT {
     ARM_FRAME elbow;
     ARM_FRAME wrist;
 } ARM_POSE;
-
-enum ARM_ELBOW_ANGLES_ENUM {
-    ALPHA_FE = 0,
-    BETA_CARRYING,
-    GAMMA_PS,
-    ARM_ELBOW_ANGLES_NUMBER
-} ARM_ELBOW_ANGLES;
-
-enum ARM_SHOULDER_ANGLES_ENUM {
-    SH_ROTATION = 0,
-    SH_FLEXION,
-    SH_ABDUCTION,
-    ARM_SHOULDER_ANGLES_NUMBER
-} ARM_SHOULDER_ANGLES;
 
 /******************************************************************************/
 /* Function Declarations                                                      */

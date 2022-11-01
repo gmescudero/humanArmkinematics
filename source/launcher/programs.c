@@ -260,7 +260,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
                 status = cal_gn2_two_rot_axes_calib_correct(rotationV1,rotationV2);
                 if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &calibration_error);
                 if (RET_OK == status) {
-                    log_str("Online calibration correction performed: \n"
+                    dbg_str("Online calibration correction performed: \n"
                         "\tTime since last calibration: %fs\n"
                         "\tError went from %f to %f",calibration_timer,current_error,calibration_error);
                     calibration_timer = 0.0;
@@ -303,7 +303,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
             if (RET_OK == status) arm_pose_print(pose);
 
             /* Wait for next iteration */
-            if (RET_OK == status) sleep_ms(100);
+            if (RET_OK == status) sleep_ms(500);
 
         } while (RET_OK == status && time > currentTime);
         if (RET_OK != status) err_str("Failed to apply calibration");
@@ -550,7 +550,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool computeShoulderAn
                 status = cal_gn2_two_rot_axes_calib_correct(rotationV1,rotationV2);
                 if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &calibration_error);
                 if (RET_OK == status) {
-                    log_str("Online calibration correction performed: \n"
+                    dbg_str("Online calibration correction performed: \n"
                         "\tTime since last calibration: %fs\n"
                         "\tError went from %f to %f",calibration_timer,current_error,calibration_error);
                     calibration_timer = 0.0;
