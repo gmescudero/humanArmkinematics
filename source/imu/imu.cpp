@@ -31,6 +31,9 @@ ERROR_CODE imu_initialize(const char *com_port){
     // Check given arguments
     if (NULL == com_port) return RET_ARG_ERROR;
     if (IMU_MAX_NUMBER <= index) return RET_ARG_ERROR;
+    // Check special ports
+    if ( 0!=strcmp(com_port,"/dev/ttyAMA0")) return RET_NO_EXEC; // Avoid Raspi AMA port
+    if ( 0!=strcmp(com_port,"/dev/ttyS0"))   return RET_NO_EXEC; // Avoid Raspi serial port
 
     // Initialize LPMS manager if not done already
     if (NULL == manager){
@@ -80,8 +83,17 @@ ERROR_CODE imu_batch_initialize(COM_PORTS com_ports, unsigned int imus_num){
     // Check arguments
     if (imus_num > com_ports.ports_number || imus_num <= 0) return RET_ARG_ERROR;
 
-    for (i = 0; i < imus_num && RET_OK == status; i++) {
+    for (i = 0; i < com_ports.ports_number && num_imus < imus_num && RET_OK == status; i++) {
         status = imu_initialize(com_ports.ports_names[i]);
+        if (RET_NO_EXEC == status) {
+            wrn_str("Can't connect to port %s, ignoring ...",com_ports.ports_names[i]);
+            status = RET_OK;
+        }
+    }
+
+    if (RET_OK == status && num_imus < imus_num) {
+        err_str("Could only initialize %d IMU sensors out of %d required",num_imus,imus_num);
+        return RET_ERROR;
     }
 
     return status;
