@@ -22,7 +22,6 @@ static volatile int keep_running = 1;
  */
 static void scom_interrupt_handler(int sig) {
     keep_running = 0;
-    com_terminate();
 }
 
 /**

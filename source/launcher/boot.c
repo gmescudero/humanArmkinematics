@@ -11,6 +11,7 @@
 #include "launch.h"
 #include "general.h"
 #include "calib.h"
+#include "comms.h"
 #include <signal.h>
 #include <stdlib.h>
 
@@ -25,6 +26,7 @@ static void shak_interrupt_handler(int sig) {
     // log_str("Killed with CTRL-C (signal %d)",sig);
     imu_terminate();
     cal_gn2_terminate();
+    com_terminate();
     db_terminate();
     exit(0);
 }
@@ -52,6 +54,7 @@ ERROR_CODE hak_terminate() {
 
     imu_terminate();
     cal_gn2_terminate();
+    com_terminate();
     status = db_terminate();
     if (RET_OK != status) wrn_str("Failed to clean all resources");
 

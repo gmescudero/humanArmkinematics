@@ -157,5 +157,6 @@ void com_terminate() {
         log_str("Terminating UDP socket connection");
         shutdown(socket_d, SHUT_RDWR);
         close(socket_d);
+        socket_d = COM_SOCK_ERROR;
     }
 }

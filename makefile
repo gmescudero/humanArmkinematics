@@ -24,6 +24,7 @@ INC = \
 	-I$(SOURCE_DIR)/database \
 	-I$(SOURCE_DIR)/calibration \
 	-I$(SOURCE_DIR)/libGA100 \
+	-I$(SOURCE_DIR)/comms \
 	-I$(SOURCE_DIR)/launcher
 	
 # libraries
