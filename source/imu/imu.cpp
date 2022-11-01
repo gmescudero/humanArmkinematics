@@ -51,6 +51,7 @@ ERROR_CODE imu_initialize(const char *com_port){
         timeout--) 
     {
         WAIT(100);
+        connection_status = lpms[index]->getConnectionStatus();
     }
 
     if (connection_status != SENSOR_CONNECTION_CONNECTED) {
