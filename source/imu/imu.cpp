@@ -32,8 +32,8 @@ ERROR_CODE imu_initialize(const char *com_port){
     if (NULL == com_port) return RET_ARG_ERROR;
     if (IMU_MAX_NUMBER <= index) return RET_ARG_ERROR;
     // Check special ports
-    if ( 0!=strcmp(com_port,"/dev/ttyAMA0")) return RET_NO_EXEC; // Avoid Raspi AMA port
-    if ( 0!=strcmp(com_port,"/dev/ttyS0"))   return RET_NO_EXEC; // Avoid Raspi serial port
+    if ( 0 == strcmp(com_port,"/dev/ttyAMA0")) return RET_NO_EXEC; // Avoid Raspi AMA port
+    if ( 0 == strcmp(com_port,"/dev/ttyS0"))   return RET_NO_EXEC; // Avoid Raspi serial port
 
     // Initialize LPMS manager if not done already
     if (NULL == manager){
