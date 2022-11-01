@@ -1,6 +1,7 @@
 # change application name here (executable output name)
 TARGET = app
 CLI_TARGET = client
+SRV_TARGET = server
 # current directory
 current_dir = $(shell pwd)
 $(info $(current_dir))
@@ -57,6 +58,10 @@ test_nl: $(OBJS) all
 client: $(SOURCE_DIR)/comms/simple_client.c comms.o logging.o functions.o
 	$(info building client ...)
 	$(CC) $(CPPFLAGS) $(INC) $(BINARIES_DIR)/comms.o $(BINARIES_DIR)/logging.o $(BINARIES_DIR)/functions.o $< -o $(CLI_TARGET) -lserialport
+
+server: $(SOURCE_DIR)/comms/simple_server.c comms.o logging.o functions.o
+	$(info building server ...)
+	$(CC) $(CPPFLAGS) $(INC) $(BINARIES_DIR)/comms.o $(BINARIES_DIR)/logging.o $(BINARIES_DIR)/functions.o $< -o $(SRV_TARGET) -lserialport
 
 main.o: $(SOURCE_DIR)/main.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/main.c -o $(BINARIES_DIR)/$@

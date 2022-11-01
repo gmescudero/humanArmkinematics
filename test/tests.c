@@ -2710,11 +2710,14 @@ bool tst_com_001()
 {
     bool ok = true;
     ERROR_CODE ret = RET_OK;
+    const char *ip = "127.0.0.1";
+    unsigned short port = 1234;
 
     testDescription(__FUNCTION__, "Create a UDP server");
     ok = preconditions_init(__FUNCTION__);
 
-    ret = com_server_initialize("127.0.0.1",1234,0);
+    tst_str("Intitialize UDP server in ip %s and port %u",ip,port);
+    ret = com_server_initialize(ip,port,0);
     ok &= assert_OK(ret, "com_server_initialize");
 
     for (int i = 0; i < 5; i++) {
@@ -2728,6 +2731,30 @@ bool tst_com_001()
     return ok;
 }
 
+bool tst_com_002()
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    const char *ip = "127.0.0.1";
+    unsigned short port = 1234;
+
+    testDescription(__FUNCTION__, "Create a UDP client");
+    ok = preconditions_init(__FUNCTION__);
+
+    tst_str("Intitialize UDP client for ip %s and port %u",ip,port);
+    ret = com_client_initialize(ip,port,0);
+    ok &= assert_OK(ret, "com_client_initialize");
+
+    for (int i = 0; i < 5; i++) {
+        sleep_s(1);
+        ret = com_send("Hola que tal");
+        ok &= assert_OK(ret, "com_send");
+    }
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
 
 
 #if 1 <= IMUS_CONNECTED
@@ -2989,7 +3016,7 @@ int main(int argc, char **argv)
     // ok &= tst_cal_005();
     // ok &= tst_cal_006();
 
-    tst_com_001();
+    tst_com_002();
 
     return (ok)? RET_OK : RET_ERROR;
 }
