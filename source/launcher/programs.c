@@ -1,4 +1,13 @@
-
+/**
+ * @file programs.c
+ * @author German Moreno Escudero
+ * @brief This file implements some high level programs using the HAK functionality
+ * @version 0.1
+ * @date 2022-11-01
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include "launch.h"
 #include "database.h"
 #include "imu.h"
@@ -535,7 +544,6 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool computeShoulderAn
 
         /* Set inital error value */
         double calibration_error, current_error;
-        double calibration_timer = 0.0;
         if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &calibration_error);
 
         do {
@@ -545,15 +553,13 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool computeShoulderAn
             /* Update calibration error */
             if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &current_error);
 
-            /* Correct calibration if the error is 10% worse or 5 senconds have passed */
-            if (RET_OK == status && ((current_error > calibration_error*1.1) || (5 < calibration_timer))) {
+            /* Correct calibration if the error is 5% worse */
+            if (RET_OK == status && current_error > calibration_error*1.05) {
                 status = cal_gn2_two_rot_axes_calib_correct(rotationV1,rotationV2);
                 if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &calibration_error);
                 if (RET_OK == status) {
                     dbg_str("Online calibration correction performed: \n"
-                        "\tTime since last calibration: %fs\n"
-                        "\tError went from %f to %f",calibration_timer,current_error,calibration_error);
-                    calibration_timer = 0.0;
+                        "\tError went from %f to %f",current_error,calibration_error);
                 }
                 else if (RET_NO_EXEC == status) {
                     status = RET_OK;
@@ -573,18 +579,11 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool computeShoulderAn
             if (RET_OK == status && computeShoulderAngles) arm_shoulder_angles_compute(NULL);
 
             /* Compute current elbow angles */
-            // if (RET_OK == status && computeElbowAngles) status = arm_elbow_angles_from_rotation_vectors_get(
-            //     q1, q2, rotationV1, rotationV2, anglesPS_B_FE);
-            if (RET_OK == status) cal_gn2_calibrated_relative_orientation_get(NULL, anglesPS_B_FE);
-
+            if (RET_OK == status && computeElbowAngles) cal_gn2_calibrated_relative_orientation_get(NULL, anglesPS_B_FE);
 
             /* Retrieve current timestamp from database */
             if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
-            if (RET_OK == status) {
-                double previous_time = currentTime;
-                currentTime = buffTime - startTime;
-                calibration_timer += currentTime - previous_time;
-            }
+            if (RET_OK == status) currentTime = buffTime - startTime;
             
             /* Log data through terminal and log file */
             dbg_str("Current time %f",currentTime);

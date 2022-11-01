@@ -14,7 +14,7 @@
 #include <signal.h>
 #include <stdlib.h>
 
-static void shak_interrupt_handler();
+static void shak_interrupt_handler(int sig);
 
 /**
  * @brief Interrupt handler used to correctly get out of a CTRL-C situation

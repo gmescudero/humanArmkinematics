@@ -16,6 +16,7 @@
 #include "matrix.h"
 #include "database.h"
 #include "calib.h"
+#include "comms.h"
 
 #include "tst_lib.h"
 
@@ -2705,6 +2706,30 @@ bool tst_cal_006()
     return ok;
 }
 
+bool tst_com_001()
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+
+    testDescription(__FUNCTION__, "Create a UDP server");
+    ok = preconditions_init(__FUNCTION__);
+
+    ret = com_server_initialize("127.0.0.1",1234,0);
+    ok &= assert_OK(ret, "com_server_initialize");
+
+    for (int i = 0; i < 5; i++) {
+        sleep_s(1);
+        ret = com_send("Hola que tal");
+        ok &= assert_OK(ret, "com_send");
+    }
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+
+
 #if 1 <= IMUS_CONNECTED
 bool tst_imu_single_001() 
 {
@@ -2952,7 +2977,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    ok &= tst_battery_all();
+    // ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_arm_014();
@@ -2964,6 +2989,7 @@ int main(int argc, char **argv)
     // ok &= tst_cal_005();
     // ok &= tst_cal_006();
 
+    tst_com_001();
 
     return (ok)? RET_OK : RET_ERROR;
 }
