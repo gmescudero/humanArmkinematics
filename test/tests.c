@@ -2721,14 +2721,20 @@ bool tst_com_001()
     ok &= assert_OK(ret, "com_server_initialize");
 
     for (int i = 0; i < 5; i++) {
-        sleep_s(1);
-        ret = com_send("Testing");
+        sleep_ms(100);
+        ret = com_send("Testing com_send");
         ok &= assert_OK(ret, "com_send");
     }
 
     for (int i = 0; i < 5; i++) {
-        sleep_s(1);
+        sleep_ms(100);
         ret = com_string_build_send("Testing com_string_build_send %d",i);
+        ok &= assert_OK(ret, "com_string_build_send");
+    }
+
+    for (int i = 0; i < 5; i++) {
+        sleep_ms(100);
+        ret = com_string_build_send("Short str %d",i);
         ok &= assert_OK(ret, "com_string_build_send");
     }
     
@@ -2752,19 +2758,19 @@ bool tst_com_002()
     ok &= assert_OK(ret, "com_client_initialize");
 
     for (int i = 0; i < 5; i++) {
-        sleep_s(1);
+        sleep_ms(100);
         ret = com_send("Testing com_send");
         ok &= assert_OK(ret, "com_send");
     }
 
     for (int i = 0; i < 5; i++) {
-        sleep_s(1);
+        sleep_ms(100);
         ret = com_string_build_send("Testing com_string_build_send %d",i);
         ok &= assert_OK(ret, "com_string_build_send");
     }
 
     for (int i = 0; i < 5; i++) {
-        sleep_s(1);
+        sleep_ms(100);
         ret = com_string_build_send("Short str %d",i);
         ok &= assert_OK(ret, "com_string_build_send");
     }
