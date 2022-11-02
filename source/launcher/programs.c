@@ -15,8 +15,20 @@
 #include "calib.h"
 #include "arm.h"
 #include "comms.h"
+#include <string.h>
 
 #define NO_DATA_MAX_ITERATIONS (10)
+
+
+static char shak_ip[32]   = COM_DEFAULT_IP;
+static unsigned shak_port = COM_DEFAULT_PORT;
+
+
+void hak_network_setup(char *ip, unsigned port) {
+    strcpy(shak_ip,ip);
+    shak_port = port;
+}
+
 
 ERROR_CODE hak_record_imus_data(int imus_num, double time, int measureNoiseIterations) {
     ERROR_CODE status = RET_OK;
@@ -468,7 +480,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
     status = trace_level_set(INFO,INFO);
 
     /* Start socket client */
-    if (RET_OK == status && true == net) status = com_client_initialize("127.0.0.1",1234,0);
+    if (RET_OK == status && true == net) status = com_client_initialize(shak_ip,shak_port,0);
 
     /* Look for IMU sensors and initialize the required of them */
     if (RET_OK == status && imus_num > imu_number_get()) {
@@ -486,6 +498,8 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
     if (RET_OK == status) {
         log_str("Starting loop gathering IMU sensors data to calibrate rotation axes");
         log_str(" -> [USER]: Perform arbitrary motions of the elbow including flexion/extension and pronation/supination");
+        if (true == net)
+            status = com_string_build_send(" -> [USER]: Perform arbitrary motions of the elbow including flexion/extension and pronation/supination");
 
         /* Start IMU reading callbacks */
         for (int imu = 0; RET_OK == status && imu < imus_num; imu++) {
@@ -502,7 +516,10 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
             if (RET_OK == status) status = cal_gn2_observations_from_database_update();
             log_str("Current observations count: %d/%d",db_field_buffer_current_size_get(DB_CALIB_OMEGA,0),CALIB_TWO_ROT_AXES_WINDOW);
         } while (RET_OK == status && CALIB_TWO_ROT_AXES_WINDOW > db_field_buffer_current_size_get(DB_CALIB_OMEGA,0));
+        
         log_str(" -> [USER]: Finished recording calibration data");
+        if (true == net)
+            status = com_string_build_send(" -> [USER]: Finished recording calibration data");
     }
 
     /* Perform calibration algorithm */
@@ -512,15 +529,28 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
         status = cal_gn2_two_rot_axes_calib(rotationV1,rotationV2);
         if (RET_OK != status) err_str("Failed to initialize reading callback for IMU sensors");
         
-        log_str("Finished two axes calibration: ");
-        log_str("\tRotation vector 1:[%f,%f,%f]", rotationV1[0],rotationV1[1], rotationV1[2]);
-        log_str("\tRotation vector 2:[%f,%f,%f]", rotationV2[0],rotationV2[1], rotationV2[2]);
+        if (true == net)
+            status = com_string_build_send("Finished two axes calibration: \n"
+                "\tRotation vector 1:[%f,%f,%f]\n"
+                "\tRotation vector 2:[%f,%f,%f]", 
+                rotationV1[0],rotationV1[1], rotationV1[2],
+                rotationV2[0],rotationV2[1], rotationV2[2]);
+        else {
+            log_str("Finished two axes calibration: ");
+            log_str("\tRotation vector 1:[%f,%f,%f]", rotationV1[0],rotationV1[1], rotationV1[2]);
+            log_str("\tRotation vector 2:[%f,%f,%f]", rotationV2[0],rotationV2[1], rotationV2[2]);
+        }
     }
 
     /* Set zero value for elbow angles */
     if (RET_OK == status) {
         log_str("Set the zero point");
+        if (true == net) {
+
+        }
         log_str(" -> [USER]: Stand in a pose to be considered as zero in 5");
+        if (true == net)
+            status = com_string_build_send(" -> [USER]: Stand in a pose to be considered as zero in 5");
         for (int i = 4; RET_OK == status && i >= 0; i--) {
             sleep_s(1);
             log_str(" -> [USER]: %d",i);
@@ -532,7 +562,9 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
         if (RET_OK == status) status = cal_gn2_zero_pose_calibrate(
             rotationV1,rotationV2, q1, q2, q_zero, q_zero, NULL, NULL);
         if (RET_OK == status) {
-            log_str(" -> [USER]: Zero position set ");
+            log_str(" -> [USER]: Zero position set ");        
+            if (true == net)
+                status = com_string_build_send(" -> [USER]: Zero position set ");
             status = db_field_print(DB_ARM_WRIST_POSITION,0);
         }
         if (RET_OK != status) err_str("Failed to perform zero procedure");
@@ -589,12 +621,14 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
             if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
             if (RET_OK == status) currentTime = buffTime - startTime;
             
-            /* Log data through terminal and log file */
+            /* Log data through terminal, log file and network*/
             if (RET_OK == status) {
                 if (true == net) {
                     ARM_POSE pose = arm_pose_get();
-                    status = com_string_build_send("Current time %f\n"
-                        "Wrist position: %f, %f, %f \t | Wrist orientation: %f, %f,%f,%f",
+                    status = com_string_build_send(
+                        "Current time:      %f\n"
+                        "Wrist position:    %f,%f,%f\n"
+                        "Wrist orientation: %f, %f,%f,%f",
                         currentTime,
                         pose.wrist.position[0],pose.wrist.position[1],pose.wrist.position[2],
                         pose.wrist.orientation.w,pose.wrist.orientation.v[0],pose.wrist.orientation.v[1],pose.wrist.orientation.v[2]);
@@ -605,9 +639,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
                     if (RET_OK == status && elbow)    status = db_field_print(DB_ARM_ELBOW_ANGLES,0);
                     if (RET_OK == status) arm_pose_print(pose);
                 }
-            } 
-
-            
+            }             
 
             /* Wait for next iteration */
             if (RET_OK == status) sleep_ms(100);

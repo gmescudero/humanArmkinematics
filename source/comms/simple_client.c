@@ -12,6 +12,8 @@
 #include "general.h"
 #include "comms.h"
 #include <signal.h>
+#include <string.h>
+#include <stdlib.h>
 
 static volatile int keep_running = 1;
 
@@ -60,8 +62,17 @@ ERROR_CODE scom_simple_client(const char *ip, unsigned short port) {
 
 int main(int argc, char **argv) {
     ERROR_CODE status;
+    char ip[32]   = COM_DEFAULT_IP;
+    unsigned port = COM_DEFAULT_PORT;
 
-    status = scom_simple_client("127.0.0.1",1234);
+    if (1 < argc && 32 > strlen(argv[1])) {
+        strcpy(ip,argv[1]);
+    }
+    if (2 < argc && 8 > strlen(argv[2])) {
+        port = (unsigned)atoi(argv[2]);
+    }
+
+    status = scom_simple_client(ip,port);
 
     return (RET_OK == status)? RET_OK:RET_ERROR;
 }
