@@ -515,14 +515,9 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
         do {
             if (RET_OK == status) sleep_s(1);
             if (RET_OK == status) status = cal_gn2_observations_from_database_update();
-            prev_obs = observations;
             observations = db_field_buffer_current_size_get(DB_CALIB_OMEGA,0);
             log_str("Current observations count: %d/%d",observations,CALIB_TWO_ROT_AXES_WINDOW);
-        } while (RET_OK == status && CALIB_TWO_ROT_AXES_WINDOW > observations && observations > prev_obs);
-        if (CALIB_TWO_ROT_AXES_WINDOW > observations) {
-            err_str("Could not retrieve data from the IMUs");
-            status = RET_ERROR;
-        }
+        } while (RET_OK == status && CALIB_TWO_ROT_AXES_WINDOW > observations);
         
         log_str(" -> [USER]: Finished recording calibration data");
         if (true == net)
