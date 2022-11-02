@@ -478,7 +478,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
     db_csv_reset();
 
     /* Reduce log file tracing for long-term operations */
-    status = trace_level_set(INFO,INFO);
+    // status = trace_level_set(INFO,INFO);
 
     /* Start socket client */
     if (RET_OK == status && true == net) status = com_client_initialize(shak_ip,shak_port,0);
