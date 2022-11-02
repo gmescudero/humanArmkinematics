@@ -23,7 +23,13 @@ ERROR_CODE hak_initialize();
  * @return ERROR_CODE 
  */
 ERROR_CODE hak_terminate();
-
+/**
+ * @brief Set network configuration
+ * 
+ * @param ip (input) Ip of the target server
+ * @param port (input) Port of the target server
+ */
+void hak_network_setup(char *ip, unsigned port);
 
 
 /**

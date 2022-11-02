@@ -13,6 +13,8 @@
 
 
 #define COM_BUFF_SIZE (1024)
+#define COM_DEFAULT_IP "127.0.0.1"
+#define COM_DEFAULT_PORT (1234)
 
 /**
  * @brief Initialize UDP server

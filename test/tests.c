@@ -2710,8 +2710,8 @@ bool tst_com_001()
 {
     bool ok = true;
     ERROR_CODE ret = RET_OK;
-    const char *ip = "127.0.0.1";
-    unsigned short port = 1234;
+    const char *ip      = COM_DEFAULT_IP;
+    unsigned short port = COM_DEFAULT_PORT;
 
     testDescription(__FUNCTION__, "Create a UDP server");
     ok = preconditions_init(__FUNCTION__);
@@ -2741,8 +2741,8 @@ bool tst_com_002()
 {
     bool ok = true;
     ERROR_CODE ret = RET_OK;
-    const char *ip = "127.0.0.1";
-    unsigned short port = 1234;
+    const char *ip      = COM_DEFAULT_IP;
+    unsigned short port = COM_DEFAULT_PORT;
 
     testDescription(__FUNCTION__, "Create a UDP client");
     ok = preconditions_init(__FUNCTION__);
@@ -2760,6 +2760,12 @@ bool tst_com_002()
     for (int i = 0; i < 5; i++) {
         sleep_s(1);
         ret = com_string_build_send("Testing com_string_build_send %d",i);
+        ok &= assert_OK(ret, "com_string_build_send");
+    }
+
+    for (int i = 0; i < 5; i++) {
+        sleep_s(1);
+        ret = com_string_build_send("Short str %d",i);
         ok &= assert_OK(ret, "com_string_build_send");
     }
 
