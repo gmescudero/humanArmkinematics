@@ -580,7 +580,7 @@ ERROR_CODE cal_gn2_two_rot_axes_calib_correct(double rotationV1[3], double rotat
     // Get current error value
     if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &scal_data.error);
 
-    for (int iteration = 0; RET_OK == status && CALIB_TWO_ROT_AXES_MAX_ITERATIONS/10 > iteration; iteration++){
+    for (int iteration = 0; RET_OK == status && CALIB_TWO_ROT_AXES_CORRECTION_ITERATIONS > iteration; iteration++){
         // Execute one iteration of the gauss newton algorithm
         status = scal_gn2_gauss_newton_iteration(tempV1,tempV2, &error);
         // Use only the best set of rotation axes

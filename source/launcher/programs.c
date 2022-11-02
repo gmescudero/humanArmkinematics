@@ -462,7 +462,7 @@ ERROR_CODE hak_static_calib_kinematics(double time, bool computeShoulderAngles)
 ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool elbow, bool net) {
     ERROR_CODE status = RET_OK;
     int imus_num = 2;
-    int observations = 0, prev_obs = 0;
+    int observations = 0;
     double rotationV1[3] = {0,0,1};
     double rotationV2[3] = {1,0,0};
     double startTime   = -1.0;
@@ -581,8 +581,9 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
         status = db_read(DB_IMU_TIMESTAMP,0,&startTime);
 
         /* Set inital error value */
-        double calibration_error, current_error;
+        double best_error, calibration_error, current_error;
         if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &calibration_error);
+        best_error = calibration_error;
 
         do {
             /* Update observations buffer */
@@ -592,12 +593,13 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
             if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &current_error);
 
             /* Correct calibration if the error is 5% worse */
-            if (RET_OK == status && current_error > calibration_error*1.05) {
+            if (RET_OK == status && (current_error > calibration_error*1.05 || current_error > best_error*1.20)) {
                 status = cal_gn2_two_rot_axes_calib_correct(rotationV1,rotationV2);
                 if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &calibration_error);
                 if (RET_OK == status) {
                     dbg_str("Online calibration correction performed: \n"
                         "\tError went from %f to %f",current_error,calibration_error);
+                        current_error = calibration_error;
                 }
                 else if (RET_NO_EXEC == status) {
                     status = RET_OK;
@@ -606,6 +608,9 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
                     err_str("Failed to perform online calibration");
                 }
             }
+
+            /* Update the best error */
+            if (RET_OK == status && current_error < best_error) best_error = current_error;
 
             /* Compute the calibrated segment orientations */
             if (RET_OK == status) status = cal_gn2_calibrated_orientations_from_database_get(&q1,&q2);

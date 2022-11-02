@@ -14,6 +14,7 @@
 #define CALIB_TWO_ROT_AXES_WINDOW (1000) // if sample time for IMUs is 50Hz this makes 10s window
 #define CALIB_TWO_ROT_AXES_IMU_DATA_BUFF_SIZE (40)
 #define CALIB_TWO_ROT_AXES_MAX_ITERATIONS (100)
+#define CALIB_TWO_ROT_AXES_CORRECTION_ITERATIONS (5)
 
 /**
  * @brief Adjust minimum velocity values to consider movement
