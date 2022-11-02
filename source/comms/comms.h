@@ -12,8 +12,7 @@
 #include "errors.h"
 
 
-#define COM_PORT (8888)
-#define COM_BUFF_SIZE (512)
+#define COM_BUFF_SIZE (1024)
 
 /**
  * @brief Initialize UDP server

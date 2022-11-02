@@ -2996,6 +2996,9 @@ bool tst_battery_all()
     ok &= tst_cal_005();
     ok &= tst_cal_006();
 
+    ok &= tst_com_001();
+    ok &= tst_com_002();
+
 #if 1 <= IMUS_CONNECTED
     ok &= tst_battery_imu_single();
 #endif
@@ -3016,10 +3019,10 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    // ok &= tst_battery_all();
+    ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
-    // ok &= tst_arm_014();
+    // ok &= tst_com_002();
     // ok &= tst_cal_xxx();
     // ok &= tst_arm_018();
     // ok &= tst_arm_016();
@@ -3027,8 +3030,6 @@ int main(int argc, char **argv)
     // ok &= tst_math_022();
     // ok &= tst_cal_005();
     // ok &= tst_cal_006();
-
-    tst_com_002();
 
     return (ok)? RET_OK : RET_ERROR;
 }

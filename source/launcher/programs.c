@@ -14,6 +14,7 @@
 #include "constants.h"
 #include "calib.h"
 #include "arm.h"
+#include "comms.h"
 
 #define NO_DATA_MAX_ITERATIONS (10)
 
@@ -446,7 +447,7 @@ ERROR_CODE hak_static_calib_kinematics(double time, bool computeShoulderAngles)
 }
 
 
-ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool computeShoulderAngles, bool computeElbowAngles) {
+ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool elbow, bool net) {
     ERROR_CODE status = RET_OK;
     int imus_num = 2;
     double rotationV1[3] = {0,0,1};
@@ -465,6 +466,9 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool computeShoulderAn
 
     /* Reduce log file tracing for long-term operations */
     status = trace_level_set(INFO,INFO);
+
+    /* Start socket client */
+    if (RET_OK == status && true == net) status = com_client_initialize("127.0.0.1",1234,0);
 
     /* Look for IMU sensors and initialize the required of them */
     if (RET_OK == status && imus_num > imu_number_get()) {
@@ -576,20 +580,34 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool computeShoulderAn
             if (RET_OK == status) pose = arm_orientations_set(q1,q2,q2);
 
             /* Compute current shoulder angles */
-            if (RET_OK == status && computeShoulderAngles) arm_shoulder_angles_compute(NULL);
+            if (RET_OK == status && shoulder) arm_shoulder_angles_compute(NULL);
 
             /* Compute current elbow angles */
-            if (RET_OK == status && computeElbowAngles) cal_gn2_calibrated_relative_orientation_get(NULL, anglesPS_B_FE);
+            if (RET_OK == status && elbow) cal_gn2_calibrated_relative_orientation_get(NULL, anglesPS_B_FE);
 
             /* Retrieve current timestamp from database */
             if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
             if (RET_OK == status) currentTime = buffTime - startTime;
             
             /* Log data through terminal and log file */
-            dbg_str("Current time %f",currentTime);
-            if (RET_OK == status && computeShoulderAngles) status = db_field_print(DB_ARM_SHOULDER_ANGLES,0);
-            if (RET_OK == status && computeElbowAngles)    status = db_field_print(DB_ARM_ELBOW_ANGLES,0);
-            if (RET_OK == status) arm_pose_print(pose);
+            if (RET_OK == status) {
+                if (true == net) {
+                    ARM_POSE pose = arm_pose_get();
+                    status = com_string_build_send("Current time %f\n"
+                        "Wrist position: %f, %f, %f \t | Wrist orientation: %f, %f,%f,%f",
+                        currentTime,
+                        pose.wrist.position[0],pose.wrist.position[1],pose.wrist.position[2],
+                        pose.wrist.orientation.w,pose.wrist.orientation.v[0],pose.wrist.orientation.v[1],pose.wrist.orientation.v[2]);
+                }
+                else {
+                    dbg_str("Current time %f",currentTime);
+                    if (RET_OK == status && shoulder) status = db_field_print(DB_ARM_SHOULDER_ANGLES,0);
+                    if (RET_OK == status && elbow)    status = db_field_print(DB_ARM_ELBOW_ANGLES,0);
+                    if (RET_OK == status) arm_pose_print(pose);
+                }
+            } 
+
+            
 
             /* Wait for next iteration */
             if (RET_OK == status) sleep_ms(100);
