@@ -10,6 +10,8 @@
  */
 
 #include <string.h> //memset
+#include <stdarg.h> //va
+#include <stdio.h> //vsprintf
 #include <unistd.h> //close;
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -102,6 +104,17 @@ ERROR_CODE com_client_initialize(const char *srv_ip, unsigned short port, int ti
     log_str("Created UDP client connected to ip %s and port %d",srv_ip,port);
 
     return RET_OK;
+}
+
+ERROR_CODE com_string_build_send(char *text, ...) {
+    va_list args;
+    char buffer[COM_BUFF_SIZE] = {'\0'};
+
+    va_start(args, text);
+    vsprintf(buffer,text,args);
+    va_end(args);
+
+    return com_send(buffer);
 }
 
 ERROR_CODE com_send(char payload[COM_BUFF_SIZE]) {

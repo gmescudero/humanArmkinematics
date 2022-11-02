@@ -124,5 +124,5 @@ dirs_create:
 
 clean:
 	$(info cleaning up workspace ...)
-	rm -rf $(BINARIES_DIR) $(LOGGING_DIR) $(DATA_DIR) $(TARGET)
+	rm -rf $(BINARIES_DIR) $(LOGGING_DIR) $(DATA_DIR) $(TARGET) $(CLI_TARGET) $(SRV_TARGET)
 	cd test && make clean && cd -

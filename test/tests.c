@@ -2722,10 +2722,16 @@ bool tst_com_001()
 
     for (int i = 0; i < 5; i++) {
         sleep_s(1);
-        ret = com_send("Hola que tal");
+        ret = com_send("Testing");
         ok &= assert_OK(ret, "com_send");
     }
 
+    for (int i = 0; i < 5; i++) {
+        sleep_s(1);
+        ret = com_string_build_send("Testing com_string_build_send %d",i);
+        ok &= assert_OK(ret, "com_string_build_send");
+    }
+    
     testCleanUp();
     testReport(ok);
     return ok;
@@ -2747,8 +2753,14 @@ bool tst_com_002()
 
     for (int i = 0; i < 5; i++) {
         sleep_s(1);
-        ret = com_send("Hola que tal");
+        ret = com_send("Testing com_send");
         ok &= assert_OK(ret, "com_send");
+    }
+
+    for (int i = 0; i < 5; i++) {
+        sleep_s(1);
+        ret = com_string_build_send("Testing com_string_build_send %d",i);
+        ok &= assert_OK(ret, "com_string_build_send");
     }
 
     testCleanUp();

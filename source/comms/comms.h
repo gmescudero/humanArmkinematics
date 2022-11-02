@@ -41,6 +41,14 @@ ERROR_CODE com_client_initialize(const char *svr_ip, unsigned short port, int ti
  */
 ERROR_CODE com_send(char payload[COM_BUFF_SIZE]);
 /**
+ * @brief String data build and send
+ * 
+ * @param text (input) Format string
+ * @param ... (input) Variable args
+ * @return ERROR_CODE 
+ */
+ERROR_CODE com_string_build_send(char *text, ...);
+/**
  * @brief Data receive NON-BLOCKING
  * 
  * @param payload (output) Received data
