@@ -1,3 +1,13 @@
+/**
+ * @file calib_two_axes_gn.c
+ * @author German Moreno Escudero
+ * @brief This file implements the requiered functions for two rotation axes calibration with Gauss-Newton method
+ * @version 0.1
+ * @date 2022-11-01
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include "calib.h"
 #include "arm.h"
 #include "vector3.h"

@@ -16,6 +16,7 @@
 #include "matrix.h"
 #include "database.h"
 #include "calib.h"
+#include "comms.h"
 
 #include "tst_lib.h"
 
@@ -2705,6 +2706,69 @@ bool tst_cal_006()
     return ok;
 }
 
+bool tst_com_001()
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    const char *ip = "127.0.0.1";
+    unsigned short port = 1234;
+
+    testDescription(__FUNCTION__, "Create a UDP server");
+    ok = preconditions_init(__FUNCTION__);
+
+    tst_str("Intitialize UDP server in ip %s and port %u",ip,port);
+    ret = com_server_initialize(ip,port,0);
+    ok &= assert_OK(ret, "com_server_initialize");
+
+    for (int i = 0; i < 5; i++) {
+        sleep_s(1);
+        ret = com_send("Testing");
+        ok &= assert_OK(ret, "com_send");
+    }
+
+    for (int i = 0; i < 5; i++) {
+        sleep_s(1);
+        ret = com_string_build_send("Testing com_string_build_send %d",i);
+        ok &= assert_OK(ret, "com_string_build_send");
+    }
+    
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_com_002()
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    const char *ip = "127.0.0.1";
+    unsigned short port = 1234;
+
+    testDescription(__FUNCTION__, "Create a UDP client");
+    ok = preconditions_init(__FUNCTION__);
+
+    tst_str("Intitialize UDP client for ip %s and port %u",ip,port);
+    ret = com_client_initialize(ip,port,0);
+    ok &= assert_OK(ret, "com_client_initialize");
+
+    for (int i = 0; i < 5; i++) {
+        sleep_s(1);
+        ret = com_send("Testing com_send");
+        ok &= assert_OK(ret, "com_send");
+    }
+
+    for (int i = 0; i < 5; i++) {
+        sleep_s(1);
+        ret = com_string_build_send("Testing com_string_build_send %d",i);
+        ok &= assert_OK(ret, "com_string_build_send");
+    }
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+
 #if 1 <= IMUS_CONNECTED
 bool tst_imu_single_001() 
 {
@@ -2932,6 +2996,9 @@ bool tst_battery_all()
     ok &= tst_cal_005();
     ok &= tst_cal_006();
 
+    ok &= tst_com_001();
+    ok &= tst_com_002();
+
 #if 1 <= IMUS_CONNECTED
     ok &= tst_battery_imu_single();
 #endif
@@ -2955,7 +3022,7 @@ int main(int argc, char **argv)
     ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
-    // ok &= tst_arm_014();
+    // ok &= tst_com_002();
     // ok &= tst_cal_xxx();
     // ok &= tst_arm_018();
     // ok &= tst_arm_016();
@@ -2963,7 +3030,6 @@ int main(int argc, char **argv)
     // ok &= tst_math_022();
     // ok &= tst_cal_005();
     // ok &= tst_cal_006();
-
 
     return (ok)? RET_OK : RET_ERROR;
 }

@@ -1,5 +1,7 @@
 # change application name here (executable output name)
 TARGET = app
+CLI_TARGET = client
+SRV_TARGET = server
 # current directory
 current_dir = $(shell pwd)
 $(info $(current_dir))
@@ -23,6 +25,7 @@ INC = \
 	-I$(SOURCE_DIR)/database \
 	-I$(SOURCE_DIR)/calibration \
 	-I$(SOURCE_DIR)/libGA100 \
+	-I$(SOURCE_DIR)/comms \
 	-I$(SOURCE_DIR)/launcher
 	
 # libraries
@@ -39,7 +42,7 @@ WARN = -Wall
 CCFLAGS = $(DEBUG) $(OPT) $(WARN)
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
-OBJS =  quaternion.o arm.o vector3.o matrix.o imu.o imu_config.o functions.o logging.o database.o calib.o calib_two_axes_ga.o calib_two_axes_gn.o libGA.o svd.o boot.o launch.o
+OBJS =  quaternion.o arm.o vector3.o matrix.o imu.o imu_config.o functions.o logging.o database.o calib.o calib_two_axes_ga.o calib_two_axes_gn.o libGA.o svd.o boot.o launch.o comms.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
@@ -51,6 +54,14 @@ test: $(OBJS) all
 
 test_nl: $(OBJS) all
 	cd test && make && cd -
+
+client: $(SOURCE_DIR)/comms/simple_client.c comms.o logging.o functions.o
+	$(info building client ...)
+	$(CC) $(CPPFLAGS) $(INC) $(BINARIES_DIR)/comms.o $(BINARIES_DIR)/logging.o $(BINARIES_DIR)/functions.o $< -o $(CLI_TARGET) -lserialport
+
+server: $(SOURCE_DIR)/comms/simple_server.c comms.o logging.o functions.o
+	$(info building server ...)
+	$(CC) $(CPPFLAGS) $(INC) $(BINARIES_DIR)/comms.o $(BINARIES_DIR)/logging.o $(BINARIES_DIR)/functions.o $< -o $(SRV_TARGET) -lserialport
 
 main.o: $(SOURCE_DIR)/main.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/main.c -o $(BINARIES_DIR)/$@
@@ -103,6 +114,8 @@ database.o: $(SOURCE_DIR)/database/database.c dirs_create
 libGA.o: $(SOURCE_DIR)/libGA100/libgaALL.c dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/libGA100/libgaALL.c -o $(BINARIES_DIR)/$@ 
 
+comms.o: $(SOURCE_DIR)/comms/comms.c
+	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/comms/comms.c -o $(BINARIES_DIR)/$@ 
 
 dirs_create:
 	mkdir -p $(BINARIES_DIR)
@@ -111,5 +124,5 @@ dirs_create:
 
 clean:
 	$(info cleaning up workspace ...)
-	rm -rf $(BINARIES_DIR) $(LOGGING_DIR) $(DATA_DIR) $(TARGET)
+	rm -rf $(BINARIES_DIR) $(LOGGING_DIR) $(DATA_DIR) $(TARGET) $(CLI_TARGET) $(SRV_TARGET)
 	cd test && make clean && cd -

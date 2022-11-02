@@ -9,6 +9,7 @@
 #include "errors.h"
 #include "imu.h"
 #include "calib.h"
+#include "comms.h"
 
 LOG_LEVEL testTraceLevel = SILENT;
 
@@ -36,6 +37,7 @@ void testBatteryReport(const char *name, const char *description, bool result) {
 void testCleanUp() {
     if (0 != imu_number_get()) imu_all_sensors_remove();
     db_terminate();
+    com_terminate();
     preconditions_initArm();
 }
 
