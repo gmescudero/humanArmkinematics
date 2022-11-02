@@ -116,8 +116,6 @@ ERROR_CODE com_string_build_send(char *text, ...) {
     vsprintf(buffer,text,args);
     va_end(args);
 
-    log_str("buffer: %s",buffer);
-
     return com_send(buffer);
 }
 
