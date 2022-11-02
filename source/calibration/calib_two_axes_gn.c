@@ -602,6 +602,23 @@ ERROR_CODE cal_gn2_two_rot_axes_calib_correct(double rotationV1[3], double rotat
             if (RET_OK == status) status = db_csv_dump();
         }
     }
+    // Swap axes if necessary
+    double x_axis[] = {1,0,0};
+    double z_axis[] = {0,0,1};
+    double angle1, angle2;
+    if (RET_OK == status) status = vector3_angleBetweenTwoVectorsCalculate(z_axis,rotationV1,&angle1);
+    if (RET_OK == status) status = vector3_angleBetweenTwoVectorsCalculate(x_axis,rotationV2,&angle2);
+    if (M_PI_4 < angle1 && M_PI_2+M_PI_4 > angle1 && 
+        M_PI_4 < angle2 && M_PI_2+M_PI_4 > angle2    ) 
+    {
+        double aux[3];
+        if (RET_OK == status) status = vector3_copy(rotationV1,aux);
+        if (RET_OK == status) status = vector3_copy(rotationV2,rotationV1);
+        if (RET_OK == status) status = vector3_copy(aux,rotationV2);
+        dbg_str("%s -> Swapped axes. r1: %f,%f,%f r2: %f,%f,%f",__FUNCTION__,
+                rotationV1[0],rotationV1[1], rotationV1[2],
+                rotationV2[0],rotationV2[1], rotationV2[2]);
+    }
     // Zero calibration data correct
     if (true == improved) {
         // Arm zeroing
