@@ -602,6 +602,7 @@ ERROR_CODE cal_gn2_two_rot_axes_calib_correct(double rotationV1[3], double rotat
             if (RET_OK == status) status = db_csv_dump();
         }
     }
+    #if 0
     // Swap axes if necessary
     double x_axis[] = {1,0,0};
     double z_axis[] = {0,0,1};
@@ -619,6 +620,7 @@ ERROR_CODE cal_gn2_two_rot_axes_calib_correct(double rotationV1[3], double rotat
                 rotationV1[0],rotationV1[1], rotationV1[2],
                 rotationV2[0],rotationV2[1], rotationV2[2]);
     }
+    #endif
     // Zero calibration data correct
     if (true == improved) {
         // Arm zeroing
