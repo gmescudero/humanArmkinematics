@@ -496,17 +496,17 @@ ERROR_CODE cal_gn2_two_rot_axes_calib(double rotationV1[3], double rotationV2[3]
 
     double initVector1[CAL_TRYS_NUM][3] = {
         {rotationV1[0],rotationV1[1],rotationV1[2]},
-        {scal_rnd(),scal_rnd(),scal_rnd()},
-        {scal_rnd(),scal_rnd(),scal_rnd()},
-        {0,0,1},
-        {0,0,1}
+        {0,0, 1},
+        {0,0, 1},
+        {0,0,-1},
+        {0,0,-1}
     };
     double initVector2[CAL_TRYS_NUM][3] = {
         {rotationV2[0],rotationV2[1],rotationV2[2]},
-        {scal_rnd(),scal_rnd(),scal_rnd()},
-        {scal_rnd(),scal_rnd(),scal_rnd()},
-        {1,0,0},
-        {0,1,0}
+        { 1,0,0},
+        {-1,0,0},
+        { 1,0,0},
+        {-1,0,0}
     };
     double tempV1[3],tempV2[3];
 

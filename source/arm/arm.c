@@ -354,8 +354,8 @@ ERROR_CODE arm_elbow_angles_zero(
 {
     ERROR_CODE status = RET_OK;
     double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER];
-    double x_vector[] = {-1.0,0.0,0.0};
-    // double y_vector[] = {0.0,1.0,0.0};
+    // double x_vector[] = {-1.0,0.0,0.0};
+    double y_vector[] = {0.0,1.0,0.0};
     double z_vector[] = {0.0,0.0,1.0};
 
     // Check arguments
@@ -371,7 +371,7 @@ ERROR_CODE arm_elbow_angles_zero(
     if (RET_OK == status) {
         // Compute zeroing quaternions
         Quaternion_fromAxisAngle(z_vector,anglesFE_B_PS[ALPHA_FE]-alphaR,&zeroAlpha);
-        Quaternion_fromAxisAngle(x_vector,gammaR-anglesFE_B_PS[GAMMA_PS],&zeroGamma);
+        Quaternion_fromAxisAngle(y_vector,gammaR-anglesFE_B_PS[GAMMA_PS],&zeroGamma);
 
         dbg_str("%s -> Raw angles at zero position: <%f,%f,%f>; zeroAlpha: <%f,%f,%f,%f>; zeroGamma: <%f,%f,%f,%f>",__FUNCTION__,
             anglesFE_B_PS[ALPHA_FE],anglesFE_B_PS[BETA_CARRYING],anglesFE_B_PS[GAMMA_PS],
@@ -389,27 +389,27 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     Quaternion q_sensor2, 
     double rotationV1[3], 
     double rotationV2[3],
-    double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER]) 
+    double anglesPS_B_FE[ARM_ELBOW_ANGLES_NUMBER]) 
 {
     ERROR_CODE status = RET_OK;
+    double angles[ARM_ELBOW_ANGLES_NUMBER];
 
     // Check arguments
     if (NULL == rotationV1)    return RET_ARG_ERROR;
     if (NULL == rotationV2)    return RET_ARG_ERROR;
-    if (NULL == anglesFE_B_PS) return RET_ARG_ERROR;
 
     Quaternion q1bs, q2bs;
     Quaternion q1bs_zeroed, q2bs_zeroed;
     Quaternion q_relative;
-    double x_vector[] = {-1.0,0.0,0.0};
-    // double y_vector[] = {0.0,1.0,0.0};
+    // double x_vector[] = {-1.0,0.0,0.0};
+    double y_vector[] = {0.0,1.0,0.0};
     double z_vector[] = {0.0,0.0,1.0};
     
     // Segment to sensor 1 compute  
     if (RET_OK == status) status = quaternion_between_two_vectors_compute(z_vector,rotationV1,&q1bs);
 
     // Segment to sensor 2 compute 
-    if (RET_OK == status) status = quaternion_between_two_vectors_compute(x_vector,rotationV2,&q2bs);
+    if (RET_OK == status) status = quaternion_between_two_vectors_compute(y_vector,rotationV2,&q2bs);
 
     if (RET_OK == status) {
         // Caluclate zeroed sensor to segment 
@@ -419,25 +419,29 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
         Quaternion q_aux1, q_aux2, q_aux3;
         Quaternion_multiply(&q_sensor1, &q1bs_zeroed, &q_aux1);
         Quaternion_conjugate(&q_aux1, &q_aux2);
-        Quaternion_multiply(&q_aux2, &q_sensor2, &q_aux3);
-        Quaternion_multiply(&q_aux3, &q2bs_zeroed, &q_relative);
+        Quaternion_multiply(&q_sensor2, &q2bs_zeroed, &q_aux3);
+        Quaternion_multiply(&q_aux2, &q_aux3, &q_relative);
     }
 
     // Compute Euler angles ZXY to get non zero FE and PS angles
     if (RET_OK == status) {
-        Quaternion_toEulerZYX(&q_relative, anglesFE_B_PS);
+        quaternion_fromEulerZXY(&q_relative, angles);
         dbg_str("%s -> quat <%f,%f,%f,%f>, eulerZXY <%f,%f,%f>",__FUNCTION__,
             q_relative.w,q_relative.v[0],q_relative.v[1],q_relative.v[2],
-            anglesFE_B_PS[ALPHA_FE],anglesFE_B_PS[BETA_CARRYING],anglesFE_B_PS[GAMMA_PS]);
+            angles[ALPHA_FE],angles[BETA_CARRYING],angles[GAMMA_PS]);
     }
 
     // Update database
     if (RET_OK == status) {
-        double q_buff[4] = {q_relative.w,q_relative.v[0],q_relative.v[1],q_relative.v[2]};
+        double q_buff[4];
+        quaternion_buffer_build(q_relative,q_buff);
         status = db_write(DB_ARM_ELBOW_QUATERNION,0,q_buff);
     }
-    if (RET_OK == status) status = db_write(DB_ARM_ELBOW_ANGLES,0,anglesFE_B_PS);
+    if (RET_OK == status) status = db_write(DB_ARM_ELBOW_ANGLES,0,angles);
     
+    // Set output
+    if (RET_OK == status) status = vector3_copy(angles,anglesPS_B_FE);
+
     return status;
 }
 
