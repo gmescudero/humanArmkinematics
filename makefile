@@ -116,8 +116,8 @@ dirs_create:
 	mkdir -p $(DATA_DIR)
 	mkdir -p $(INCLUDES_DIR)
 	$(info copying header files to includes dir ...)
-	ln -s $(SOURCE_DIR)/*/*.h $(INCLUDES_DIR)
-	ln -s $(SOURCE_DIR)/*/*.hpp $(INCLUDES_DIR)
+	ln -fs $(SOURCE_DIR)/*/*.h $(INCLUDES_DIR)
+	ln -fs $(SOURCE_DIR)/*/*.hpp $(INCLUDES_DIR)
 
 clean:
 	$(info cleaning up workspace ...)

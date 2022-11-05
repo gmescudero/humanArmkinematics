@@ -478,6 +478,14 @@ static ERROR_CODE scal_gn2_gauss_newton_iteration(double rotationV1[3], double r
     return status;
 }
 
+/**
+ * @brief Generate a random number in a uniform distribution [-PI,PI]
+ * 
+ * @return double: The random value
+ */
+static double scal_rnd(){
+    return 2*M_PI*((double)rand()/(double)RAND_MAX - 0.5);
+}
 
 static int totalIterations = 0;
 
