@@ -9,6 +9,8 @@ $(info $(current_dir))
 SOURCE_DIR = $(current_dir)/source
 # binaries directory
 BINARIES_DIR = $(current_dir)/bin
+# includes directory
+INCLUDES_DIR = $(current_dir)/include
 # log directories
 LOGGING_DIR = $(current_dir)/log
 DATA_DIR    = $(current_dir)/data
@@ -16,17 +18,7 @@ DATA_DIR    = $(current_dir)/data
 CC = gcc
 LD = g++
 # includes
-INC = \
-	-I$(SOURCE_DIR)/general \
-	-I$(SOURCE_DIR)/arm \
-	-I$(SOURCE_DIR)/quat_lib \
-	-I$(SOURCE_DIR)/math \
-	-I$(SOURCE_DIR)/imu \
-	-I$(SOURCE_DIR)/database \
-	-I$(SOURCE_DIR)/calibration \
-	-I$(SOURCE_DIR)/libGA100 \
-	-I$(SOURCE_DIR)/comms \
-	-I$(SOURCE_DIR)/launcher
+INC = -I$(INCLUDES_DIR)
 	
 # libraries
 IMULIB= -L$(current_dir)/lib -lLpSensor -lstdc++ -lX11
@@ -64,65 +56,70 @@ server: $(SOURCE_DIR)/comms/simple_server.c comms.o logging.o functions.o
 	$(CC) $(CPPFLAGS) $(INC) $(BINARIES_DIR)/comms.o $(BINARIES_DIR)/logging.o $(BINARIES_DIR)/functions.o $< -o $(SRV_TARGET) -lserialport
 
 main.o: $(SOURCE_DIR)/main.c dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/main.c -o $(BINARIES_DIR)/$@
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@
 
 boot.o: $(SOURCE_DIR)/launcher/boot.c dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/launcher/boot.c -o $(BINARIES_DIR)/$@
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@
 
 launch.o: $(SOURCE_DIR)/launcher/programs.c dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/launcher/programs.c -o $(BINARIES_DIR)/$@
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@
 
 functions.o: $(SOURCE_DIR)/general/functions.c dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/general/functions.c -o $(BINARIES_DIR)/$@ 
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@ 
 
 logging.o: $(SOURCE_DIR)/general/logging.c dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/general/logging.c -o $(BINARIES_DIR)/$@ 
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@ 
 
 quaternion.o: $(SOURCE_DIR)/quat_lib/Quaternion.c dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/quat_lib/Quaternion.c -o $(BINARIES_DIR)/$@
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@
 
 arm.o: $(SOURCE_DIR)/arm/arm.c vector3.o dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/arm/arm.c -o $(BINARIES_DIR)/$@ 
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@ 
 
 calib.o: $(SOURCE_DIR)/calibration/calib.c vector3.o libGA.o dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/calibration/calib.c -o $(BINARIES_DIR)/$@ 
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@ 
 
 calib_two_axes_gn.o: $(SOURCE_DIR)/calibration/calib_two_axes_gn.c vector3.o dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/calibration/calib_two_axes_gn.c -o $(BINARIES_DIR)/$@ 
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@ 
 
 calib_two_axes_ga.o: $(SOURCE_DIR)/calibration/calib_two_axes_ga.c libGA.o vector3.o dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/calibration/calib_two_axes_ga.c -o $(BINARIES_DIR)/$@ 
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@ 
 
 vector3.o: $(SOURCE_DIR)/math/vector3.c dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/math/vector3.c -o $(BINARIES_DIR)/$@ 
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@ 
 
 matrix.o: $(SOURCE_DIR)/math/matrix.c dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/math/matrix.c -o $(BINARIES_DIR)/$@ 
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@ 
 
 svd.o: $(SOURCE_DIR)/math/singular_value_decomposition.c dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/math/singular_value_decomposition.c -o $(BINARIES_DIR)/$@
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@
 
 imu.o: $(SOURCE_DIR)/imu/imu.cpp logging.o dirs_create
-	$(LD) -c $(CCFLAGS) $(INC) $(SOURCE_DIR)/imu/imu.cpp -o $(BINARIES_DIR)/$@
+	$(LD) -c  $(CCFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@
 
 imu_config.o: $(SOURCE_DIR)/imu/imu_config.cpp logging.o dirs_create
-	$(LD) -c $(CCFLAGS) $(INC) $(SOURCE_DIR)/imu/imu_config.cpp -o $(BINARIES_DIR)/$@ 
+	$(LD) -c  $(CCFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@ 
 
 database.o: $(SOURCE_DIR)/database/database.c dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/database/database.c -o $(BINARIES_DIR)/$@ 
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@ 
 
 libGA.o: $(SOURCE_DIR)/libGA100/libgaALL.c dirs_create
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/libGA100/libgaALL.c -o $(BINARIES_DIR)/$@ 
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@ 
 
 comms.o: $(SOURCE_DIR)/comms/comms.c
-	$(CC) -c  $(CPPFLAGS) $(INC) $(SOURCE_DIR)/comms/comms.c -o $(BINARIES_DIR)/$@ 
+	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@ 
 
 dirs_create:
+	$(info creating required directories ...)
 	mkdir -p $(BINARIES_DIR)
 	mkdir -p $(LOGGING_DIR)
 	mkdir -p $(DATA_DIR)
+	mkdir -p $(INCLUDES_DIR)
+	$(info copying header files to includes dir ...)
+	ln -s $(SOURCE_DIR)/*/*.h $(INCLUDES_DIR)
+	ln -s $(SOURCE_DIR)/*/*.hpp $(INCLUDES_DIR)
 
 clean:
 	$(info cleaning up workspace ...)
-	rm -rf $(BINARIES_DIR) $(LOGGING_DIR) $(DATA_DIR) $(TARGET) $(CLI_TARGET) $(SRV_TARGET)
+	rm -rf $(BINARIES_DIR) $(INCLUDES_DIR) $(LOGGING_DIR) $(DATA_DIR) $(TARGET) $(CLI_TARGET) $(SRV_TARGET)
 	cd test && make clean && cd -

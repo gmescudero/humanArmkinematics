@@ -1,4 +1,13 @@
-
+/**
+ * @file calib.c
+ * @author German Moreno Escudero
+ * @brief This module implements all the necessary functionality for calibrating IMUs in different ways
+ * @version 0.1
+ * @date 2022-11-05
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include "calib.h"
 #include "database.h"
 #include "vector3.h"

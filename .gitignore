@@ -1,6 +1,7 @@
 *.o
 *.sh
 bin
+include
 .vscode
 app
 test/tests

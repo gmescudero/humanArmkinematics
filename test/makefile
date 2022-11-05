@@ -8,18 +8,10 @@ CC = gcc
 SOURCE_DIR = ../source
 # binaries directory
 BINARIES_DIR = ../bin
+# includes directory
+INCLUDES_DIR = ../include
 # includes
-INC = \
-	-I$(SOURCE_DIR)/general \
-	-I$(SOURCE_DIR)/quat_lib \
-	-I$(SOURCE_DIR)/arm \
-	-I$(SOURCE_DIR)/math \
-	-I$(SOURCE_DIR)/imu \
-	-I$(SOURCE_DIR)/database \
-	-I$(SOURCE_DIR)/calibration \
-	-I$(SOURCE_DIR)/libGA100 \
-	-I$(SOURCE_DIR)/comms \
-	-Itst_lib
+INC = -I$(INCLUDES_DIR) -Itst_lib
 # libraries
 IMULIB= -L../lib -lLpSensor -lstdc++ -lX11
 PTHREAD = -pthread

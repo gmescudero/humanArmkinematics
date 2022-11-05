@@ -1,4 +1,13 @@
-
+/**
+ * @file database.h
+ * @author German Moreno Escudero
+ * @brief This module implements a dynamically allocated reentrant table-like database
+ * @version 0.1
+ * @date 2022-11-05
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #ifndef __database_h__
 #define __database_h__
 

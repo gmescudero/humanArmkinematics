@@ -1,3 +1,13 @@
+/**
+ * @file general.h
+ * @author German Moreno Escudero
+ * @brief This module includes generic functions and constants
+ * @version 0.1
+ * @date 2022-11-05
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #ifndef __functions_h__
 #define __functions_h__
 
