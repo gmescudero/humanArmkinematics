@@ -40,9 +40,19 @@ ERROR_CODE hak_initialize(bool log, bool csv) {
     act.sa_handler = shak_interrupt_handler;
     sigaction(SIGINT, &act, NULL);
 
-    if (RET_OK == status) status = log_file_initalize(true,true); 
-    if (RET_OK == status) status = db_initialize();
-    if (RET_OK == status) status = cal_gn2_initialize(CALIB_TWO_ROT_AXES_IMU_DATA_BUFF_SIZE, CALIB_TWO_ROT_AXES_WINDOW);
+    if (RET_OK == status) {
+        status = log_file_initalize(log,csv); 
+        if (RET_OK != status) err_str(" -> Failed to set up logging and/or csv files");
+    }
+    if (RET_OK == status) {
+        status = db_initialize();
+        if (RET_OK != status) err_str(" -> Failed initialize database");
+    }
+    if (RET_OK == status) {
+        status = cal_gn2_initialize(CALIB_TWO_ROT_AXES_IMU_DATA_BUFF_SIZE, CALIB_TWO_ROT_AXES_WINDOW);
+        if (RET_OK != status) err_str(" -> Failed to initialize two rotation axes calibration package");
+    }
+    if (RET_OK != status) err_str("Failed to initialize Human Arm Kinematics package");
 
     return status;
 }

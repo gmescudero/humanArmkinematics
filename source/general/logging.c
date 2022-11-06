@@ -38,7 +38,7 @@ char log_file_name_forced[LOG_FILE_NAME_LENGTH] = {'\0'};
 int log_init = 0;
 
 ERROR_CODE log_file_initalize(bool log, bool csv) {
-    ERROR_CODE status;
+    ERROR_CODE status = RET_OK;
 
     if (true == log) {
         if ('\0' == log_file_name_forced[0]) {
