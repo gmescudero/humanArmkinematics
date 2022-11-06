@@ -34,9 +34,9 @@ enum ARM_KINEMATIC_NODE_ENUM {
 };
 
 enum ARM_ELBOW_ANGLES_ENUM {
-    ALPHA_FE = 0,
+    GAMMA_PS = 0,
     BETA_CARRYING,
-    GAMMA_PS,
+    ALPHA_FE,
     ARM_ELBOW_ANGLES_NUMBER
 };
 
@@ -219,8 +219,10 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
 /**
  * @brief Retrive shoulder angles from its quaternions representation
  * 
+ * @param q_sensor1 (input) Orientation of the first imu
  * @param shoulderAngles (output) shoulder angles as [ROTATION, FLEXION/EXTENSION, ABDUCTION/ADDUCTION]
  */
-void arm_shoulder_angles_compute(double shoulderAngles[ARM_SHOULDER_ANGLES_NUMBER]);
+ERROR_CODE arm_shoulder_angles_compute(
+    Quaternion q_sensor1, double shoulderAngles[ARM_SHOULDER_ANGLES_NUMBER]);
 
 #endif

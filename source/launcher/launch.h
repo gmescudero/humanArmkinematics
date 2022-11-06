@@ -23,7 +23,13 @@ ERROR_CODE hak_initialize();
  * @return ERROR_CODE 
  */
 ERROR_CODE hak_terminate();
-
+/**
+ * @brief Set network configuration
+ * 
+ * @param ip (input) Ip of the target server
+ * @param port (input) Port of the target server
+ */
+void hak_network_setup(char *ip, unsigned port);
 
 
 /**
@@ -105,3 +111,8 @@ ERROR_CODE hak_static_calib_kinematics(double time, bool shoulder);
  * @return ERROR_CODE 
  */
 ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool elbow, bool net); 
+
+
+
+/*TODO*/
+ERROR_CODE hak_laidig2017();

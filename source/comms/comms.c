@@ -28,7 +28,10 @@ struct timeval read_timeout = {
     .tv_usec = 0
 };
 
-ERROR_CODE com_server_initialize(const char *cli_ip, unsigned short port, int timeout) {    
+ERROR_CODE com_server_initialize(const char *cli_ip, unsigned short port, int timeout) {
+    // Check arguments
+    if (NULL == cli_ip) return RET_ARG_ERROR;
+
     // Check status
     if (COM_SOCK_ERROR != socket_d) {
         err_str("Socket already initialized");
@@ -74,6 +77,9 @@ ERROR_CODE com_server_initialize(const char *cli_ip, unsigned short port, int ti
 }
 
 ERROR_CODE com_client_initialize(const char *srv_ip, unsigned short port, int timeout) {
+    // Check arguments
+    if (NULL == srv_ip) return RET_ARG_ERROR;
+
     // Check status
     if (COM_SOCK_ERROR != socket_d) {
         err_str("Socket already initialized");
@@ -110,6 +116,11 @@ ERROR_CODE com_string_build_send(char *text, ...) {
     va_list args;
     char buffer[COM_BUFF_SIZE] = {'\0'};
 
+    // Check arguments
+    if (NULL == text) return RET_ARG_ERROR;
+
+    memset(buffer,0,COM_BUFF_SIZE);
+
     va_start(args, text);
     vsprintf(buffer,text,args);
     va_end(args);
@@ -119,6 +130,10 @@ ERROR_CODE com_string_build_send(char *text, ...) {
 
 ERROR_CODE com_send(char payload[COM_BUFF_SIZE]) {
     int slen = sizeof(socket_other);
+    int payload_size = strlen(payload)+1;
+
+    // Check arguments
+    if (NULL == payload) return RET_ARG_ERROR;
 
     // Check status
     if (COM_SOCK_ERROR == socket_d) {
@@ -127,32 +142,35 @@ ERROR_CODE com_send(char payload[COM_BUFF_SIZE]) {
     }
 
     // Send the message
-    if (COM_SOCK_ERROR == sendto(socket_d, (void*)payload, strlen(payload) , 0 , (struct sockaddr *) &socket_other, slen)) {
+    if (COM_SOCK_ERROR == sendto(socket_d, (void*)payload, payload_size , 0 , (struct sockaddr *) &socket_other, slen)) {
         err_str("Failed to send data");
         return RET_ERROR;
     }
 
-    dbg_str("%s -> Sent %d bytes through socket",__FUNCTION__,slen);
+    dbg_str("%s -> Sent %d bytes through socket",__FUNCTION__,payload_size);
 
     return RET_OK;
 }
 
 ERROR_CODE com_receive(char payload[COM_BUFF_SIZE], unsigned int *slen) {
+    // Check arguments
+    if (NULL == payload) return RET_ARG_ERROR;
+    if (NULL == slen) return RET_ARG_ERROR;
 
     if (COM_SOCK_ERROR == recvfrom(socket_d, payload, COM_BUFF_SIZE, MSG_DONTWAIT, (struct sockaddr *) &socket_other, slen)) {
         dbg_str("%s -> Received no data",__FUNCTION__);
         return RET_NO_EXEC;
     }
 
-    dbg_str("%s -> Received %d bytes through socket",__FUNCTION__,slen);
+    dbg_str("%s -> Received %d bytes through socket",__FUNCTION__,strlen(payload));
 
     return RET_OK;
 }
 
 ERROR_CODE com_receive_blocking(char payload[COM_BUFF_SIZE], unsigned int *slen) {
-
-    // Clean buffer
-    memset(payload, '\0', COM_BUFF_SIZE);
+    // Check arguments
+    if (NULL == payload) return RET_ARG_ERROR;
+    if (NULL == slen) return RET_ARG_ERROR;
 
     if (COM_SOCK_ERROR == recvfrom(socket_d, payload, COM_BUFF_SIZE, 0, (struct sockaddr *) &socket_other, slen)) {
         err_str("Failed to receive data or timeout expired (%f seconds)", 
@@ -160,7 +178,7 @@ ERROR_CODE com_receive_blocking(char payload[COM_BUFF_SIZE], unsigned int *slen)
         return RET_ERROR;
     }
 
-    dbg_str("%s -> Received %d bytes through socket",__FUNCTION__,slen);
+    dbg_str("%s -> Received %d bytes through socket",__FUNCTION__,strlen(payload));
 
     return RET_OK;
 }
