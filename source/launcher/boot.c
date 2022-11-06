@@ -31,7 +31,7 @@ static void shak_interrupt_handler(int sig) {
     exit(0);
 }
 
-ERROR_CODE hak_initialize() {
+ERROR_CODE hak_initialize(bool log, bool csv) {
     ERROR_CODE status = RET_OK;
     
     log_str("Initializing all required packages for Human Arm Kinematics");
@@ -40,7 +40,7 @@ ERROR_CODE hak_initialize() {
     act.sa_handler = shak_interrupt_handler;
     sigaction(SIGINT, &act, NULL);
 
-    if (RET_OK == status) status = log_file_initalize(); 
+    if (RET_OK == status) status = log_file_initalize(true,true); 
     if (RET_OK == status) status = db_initialize();
     if (RET_OK == status) status = cal_gn2_initialize(CALIB_TWO_ROT_AXES_IMU_DATA_BUFF_SIZE, CALIB_TWO_ROT_AXES_WINDOW);
 

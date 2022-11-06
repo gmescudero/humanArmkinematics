@@ -15,7 +15,7 @@
 
 
 int main(int argc, char **argv) {
-    ERROR_CODE status = hak_initialize();
+    ERROR_CODE status = hak_initialize(true,true);
     char ip[32]   = COM_DEFAULT_IP;
     unsigned port = COM_DEFAULT_PORT;
 

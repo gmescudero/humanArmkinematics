@@ -234,7 +234,7 @@ bool preconditions_initTraces(const char *test_name) {
     ret = csv_file_name_set(csv_file_name);
     ok &= assert_OK(ret,"csv_file_name_set");
 
-    ret = log_file_initalize();
+    ret = log_file_initalize(true,true);
     ok &= assert_OK(ret,"log_file_initalize");
 
     return ok;

@@ -37,18 +37,20 @@ char log_file_name_forced[LOG_FILE_NAME_LENGTH] = {'\0'};
 
 int log_init = 0;
 
-ERROR_CODE log_file_initalize(){
+ERROR_CODE log_file_initalize(bool log, bool csv) {
     ERROR_CODE status;
 
-    if ('\0' == log_file_name_forced[0]) {
-        slog_file_name_build(LOG_FILE_DIRECTORY,LOG_FILE_NAME,LOG_FILE_EXTENSION, log_file_name);
+    if (true == log) {
+        if ('\0' == log_file_name_forced[0]) {
+            slog_file_name_build(LOG_FILE_DIRECTORY,LOG_FILE_NAME,LOG_FILE_EXTENSION, log_file_name);
+        }
+        else {
+            strcpy(log_file_name, log_file_name_forced);
+        }
+        status = sfile_create(log_file_name);
+        if (RET_OK == status) log_init = 1;
     }
-    else {
-        strcpy(log_file_name, log_file_name_forced);
-    }
-    status = sfile_create(log_file_name);
-
-    if (RET_OK == status) {
+    if (RET_OK == status && true == csv) {
         if ('\0' == csv_file_name_forced[0]) {
             slog_file_name_build(CSV_FILE_DIRECTORY,CSV_FILE_NAME,CSV_FILE_EXTENSION, csv_file_name);
         }
@@ -59,9 +61,6 @@ ERROR_CODE log_file_initalize(){
         if (RET_OK == status) {
             scsv_default_headers_set();
         }
-    }
-    if (RET_OK == status) {
-        log_init = 1;
     }
     return status;
 }

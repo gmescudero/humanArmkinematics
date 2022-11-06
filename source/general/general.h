@@ -11,6 +11,7 @@
 #ifndef __functions_h__
 #define __functions_h__
 
+#include <stdbool.h>
 #include "errors.h"
 
 /**
@@ -105,9 +106,11 @@ double sys_timestamp_get();
 /**
  * @brief Set up log file 
  * 
- * @return ERROR_CODE: RET_OK on success
+ * @param log (input) Initialize log file flag
+ * @param csv (input) Initialize csv file flag
+ * @return ERROR_CODE 
  */
-ERROR_CODE log_file_initalize();
+ERROR_CODE log_file_initalize(bool log, bool csv);
 /**
  * @brief Set a non default log file name
  * 

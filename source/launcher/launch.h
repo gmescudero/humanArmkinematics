@@ -14,9 +14,11 @@
 /**
  * @brief Initialize all required resources for Human Arm Kinematics package
  * 
+ * @param log (input) Initialize log file flag
+ * @param csv (input) Initialize csv file flag
  * @return ERROR_CODE 
  */
-ERROR_CODE hak_initialize();
+ERROR_CODE hak_initialize(bool log, bool csv);
 /**
  * @brief Remove all used resources for Human Arm Kinematics package
  * 
