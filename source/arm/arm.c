@@ -425,7 +425,7 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
 
     // Compute Euler angles ZXY to get non zero FE and PS angles
     if (RET_OK == status) {
-        quaternion_fromEulerZXY(&q_relative, angles);
+        quaternion_toEulerZXY(&q_relative, angles);
         dbg_str("%s -> quat <%f,%f,%f,%f>, eulerZXY <%f,%f,%f>",__FUNCTION__,
             q_relative.w,q_relative.v[0],q_relative.v[1],q_relative.v[2],
             angles[ALPHA_FE],angles[BETA_CARRYING],angles[GAMMA_PS]);
@@ -440,15 +440,18 @@ ERROR_CODE arm_elbow_angles_from_rotation_vectors_get(
     if (RET_OK == status) status = db_write(DB_ARM_ELBOW_ANGLES,0,angles);
     
     // Set output
-    if (RET_OK == status) status = vector3_copy(angles,anglesPS_B_FE);
+    if (RET_OK == status && NULL != anglesPS_B_FE) status = vector3_copy(angles,anglesPS_B_FE);
 
     return status;
 }
 
-void arm_shoulder_angles_compute(double shoulderAngles[ARM_SHOULDER_ANGLES_NUMBER])
+ERROR_CODE arm_shoulder_angles_compute(
+    Quaternion q_sensor1, double shoulderAngles[ARM_SHOULDER_ANGLES_NUMBER])
 {
+    ERROR_CODE status = RET_OK;
+
     double angles[ARM_SHOULDER_ANGLES_NUMBER];
-    Quaternion_toEulerZYX(&arm_current_pose.shoulder.orientation, angles);
+    Quaternion_toEulerZYX(&q_sensor1, angles);
     if (M_PI/3 < fabs(angles[SH_FLEXION])) {
         // Avoid Euler angles singularity at 90º in Y axis
         double angle = -copysign(M_PI_2,angles[SH_FLEXION]);
@@ -458,13 +461,14 @@ void arm_shoulder_angles_compute(double shoulderAngles[ARM_SHOULDER_ANGLES_NUMBE
         Quaternion_toEulerZYX(&q_aux, angles);
         angles[SH_FLEXION] += angle;
     }
-
-    if (RET_OK != db_write(DB_ARM_SHOULDER_ANGLES,0,angles)) {
-        wrn_str("Failed to update database shoulder angles");
-    }
-    if (NULL != shoulderAngles) {
+    // Update database
+    if (RET_OK == status) status = db_write(DB_ARM_SHOULDER_ANGLES,0,angles);
+    // Set output
+    if (RET_OK == status && NULL != shoulderAngles) {
         shoulderAngles[SH_ROTATION]  = angles[SH_ROTATION];
         shoulderAngles[SH_FLEXION]   = angles[SH_FLEXION];
         shoulderAngles[SH_ABDUCTION] = angles[SH_ABDUCTION];
     }
+
+    return status;
 }

@@ -2,6 +2,7 @@
 TARGET = app
 CLI_TARGET = client
 SRV_TARGET = server
+LIB_TARGET = libhumanak.so
 # current directory
 current_dir = $(shell pwd)
 $(info $(current_dir))
@@ -31,14 +32,18 @@ OPT = -O0
 # warnings
 WARN = -Wall
 # flags
-CCFLAGS = $(DEBUG) $(OPT) $(WARN)
-CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
+CCFLAGS = $(DEBUG) $(OPT) $(WARN) -fPIC
+CPPFLAGS = $(DEBUG) $(OPT) $(WARN) -fPIC
 
 OBJS =  quaternion.o arm.o vector3.o matrix.o imu.o imu_config.o functions.o logging.o database.o calib.o calib_two_axes_ga.o calib_two_axes_gn.o libGA.o svd.o boot.o launch.o comms.o
 
 all: $(OBJS) main.o
 	$(info building target ...)
 	$(LD) $(INC) $(BINARIES_DIR)/*.o $(IMULIB) $(PTHREADSERIAL) -o $(TARGET) -lm -ldl
+
+lib: $(OBJS)
+	$(info building library ...)
+	$(LD) $(INC) $(BINARIES_DIR)/*.o $(IMULIB) $(PTHREADSERIAL) --shared -o $(LIB_TARGET) -lm -ldl
 
 test: $(OBJS) all
 	cd test && make && cd -
@@ -121,5 +126,5 @@ dirs_create:
 
 clean:
 	$(info cleaning up workspace ...)
-	rm -rf $(BINARIES_DIR) $(INCLUDES_DIR) $(LOGGING_DIR) $(DATA_DIR) $(TARGET) $(CLI_TARGET) $(SRV_TARGET)
+	rm -rf $(BINARIES_DIR) $(INCLUDES_DIR) $(LOGGING_DIR) $(DATA_DIR) $(TARGET) $(CLI_TARGET) $(SRV_TARGET) $(LIB_TARGET)
 	cd test && make clean && cd -

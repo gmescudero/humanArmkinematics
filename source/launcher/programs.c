@@ -302,7 +302,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
             if (RET_OK == status) pose = arm_orientations_set(q1,q2,q2);
 
             /* Compute current shoulder angles */
-            if (RET_OK == status && computeShoulderAngles) arm_shoulder_angles_compute(NULL);
+            if (RET_OK == status && computeShoulderAngles) status = arm_shoulder_angles_compute(q1,NULL);
 
             /* Compute current elbow angles */
             // if (RET_OK == status && computeElbowAngles) status = arm_elbow_angles_from_rotation_vectors_get(
@@ -431,7 +431,7 @@ ERROR_CODE hak_static_calib_kinematics(double time, bool computeShoulderAngles)
             if (RET_OK == status) pose = arm_orientations_set(read_quats[0],read_quats[1],read_quats[1]);
 
             /* Get the shoudler angles */
-            if (RET_OK == status && computeShoulderAngles) arm_shoulder_angles_compute(NULL);
+            if (RET_OK == status && computeShoulderAngles) status = arm_shoulder_angles_compute(read_quats[0],NULL);
 
             /* Retrieve current timestamp from database */
             if (RET_OK == status) status = db_read(DB_IMU_TIMESTAMP, 0, &buffTime);
@@ -616,7 +616,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
             if (RET_OK == status) pose = arm_orientations_set(q1,q2,q2);
 
             /* Compute current shoulder angles */
-            if (RET_OK == status && shoulder) arm_shoulder_angles_compute(NULL);
+            if (RET_OK == status && shoulder) status = arm_shoulder_angles_compute(q1,NULL);
 
             /* Compute current elbow angles */
             if (RET_OK == status && elbow) cal_gn2_calibrated_relative_orientation_get(NULL, anglesPS_B_FE);
@@ -727,8 +727,16 @@ ERROR_CODE hak_laidig2017() {
         for (int i = 4; RET_OK == status && i >= 0; i--) {
             sleep_s(1);
             log_str(" -> [USER]: %d",i);
+            if (1 == i) status = imu_orientation_offset_set(1);
         }
-        if (RET_OK == status) status = cal_gn2_calibrated_orientations_from_database_get(&q1,&q2);
+        if (RET_OK == status) {
+            // Get the current quaternions 
+            double q_buff[4];
+            if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,0,q_buff);
+            if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q1);
+            if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,1,q_buff);
+            if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q2);   
+        }
         if (RET_OK == status) status = arm_elbow_angles_zero(0.0,0.0,q1,q2,rotationV1,rotationV2);
         if (RET_OK == status) {
             log_str(" -> [USER]: Zero position set ");
@@ -746,18 +754,37 @@ ERROR_CODE hak_laidig2017() {
     while (RET_OK == status) {
 
         /* Get current sensor data from database */
-        if (RET_OK == status) status = cal_gn2_calibrated_orientations_from_database_get(&q1,&q2);
+        if (RET_OK == status) {
+            // Get the current quaternions 
+            double q_buff[4];
+            if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,0,q_buff);
+            if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q1);
+            if (RET_OK == status) status = db_read(DB_IMU_QUATERNION,1,q_buff);
+            if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q2);   
+            if (RET_OK != status) err_str("Failed to retrieve current sensor quaternions");
+        }
 
         /* Compute current shoulder angles */
-        if (RET_OK == status) arm_shoulder_angles_compute(NULL);
+        if (RET_OK == status) {
+            status = arm_shoulder_angles_compute(q1,NULL);
+            if (RET_OK != status) err_str("Failed to compute shoulder angles");
+        }
 
         /* Compute current elbow angles */
-        if (RET_OK == status) status = arm_elbow_angles_from_rotation_vectors_get(q1,q2,rotationV1,rotationV2,NULL);
+        if (RET_OK == status) {
+            status = arm_elbow_angles_from_rotation_vectors_get(q1,q2,rotationV1,rotationV2,NULL);
+            if (RET_OK != status) err_str("Failed to compute elbow angles");
+        }
 
         /* Log data through console */
         if (RET_OK == status) log_str("Current time %.3f",1e-3*(currentTime-startTime));
         if (RET_OK == status) status = db_field_print(DB_ARM_SHOULDER_ANGLES,0);
         if (RET_OK == status) status = db_field_print(DB_ARM_ELBOW_ANGLES,0);
+        if (RET_OK == status) status = db_field_print(DB_IMU_QUATERNION,0);
+        if (RET_OK == status) status = db_field_print(DB_IMU_QUATERNION,1);
+
+        /* If iteration not executed reset error code */
+        if (RET_NO_EXEC == status) status = RET_OK;
 
         /* Wait for next iteration */
         if (RET_OK == status) {
