@@ -452,15 +452,15 @@ ERROR_CODE arm_shoulder_angles_compute(
 
     double angles[ARM_SHOULDER_ANGLES_NUMBER];
     Quaternion_toEulerZYX(&q_sensor1, angles);
-    if (M_PI/3 < fabs(angles[SH_FLEXION])) {
-        // Avoid Euler angles singularity at 90º in Y axis
-        double angle = -copysign(M_PI_2,angles[SH_FLEXION]);
-        Quaternion q_45y = {.w = cos(angle/2), .v = {0.0, sin(angle/2), 0.0}};
-        Quaternion q_aux;
-        Quaternion_multiply(&q_45y,&arm_current_pose.shoulder.orientation,&q_aux);
-        Quaternion_toEulerZYX(&q_aux, angles);
-        angles[SH_FLEXION] += angle;
-    }
+    // if (M_PI/3 < fabs(angles[SH_FLEXION])) {
+    //     // Avoid Euler angles singularity at 90º in Y axis
+    //     double angle = -copysign(M_PI_2,angles[SH_FLEXION]);
+    //     Quaternion q_45y = {.w = cos(angle/2), .v = {0.0, sin(angle/2), 0.0}};
+    //     Quaternion q_aux;
+    //     Quaternion_multiply(&q_45y,&arm_current_pose.shoulder.orientation,&q_aux);
+    //     Quaternion_toEulerZYX(&q_aux, angles);
+    //     angles[SH_FLEXION] += angle;
+    // }
     // Update database
     if (RET_OK == status) status = db_write(DB_ARM_SHOULDER_ANGLES,0,angles);
     // Set output
