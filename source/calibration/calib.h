@@ -44,12 +44,36 @@ void cal_static_imu_quat_calibration_set(
     Quaternion imus_quat[IMU_MAX_NUMBER]);
 
 /**
+ * @brief Apply calibration to raw quaternion data from IMUs
+ * 
+ * @param imus_quat (input) IMU raw quaternion data
+ * @param index (input) IMU index
+ * @param calibrated_data (output) Calibrated quaternion
+ * @return ERROR_CODE 
+ */
+ERROR_CODE cal_static_imu_quat_calibration_apply(
+    Quaternion imus_quat, int index, Quaternion *calibrated_data);
+/**
  * @brief Retrieve the IMUs quaternion calibrated with the static value
  * 
  * @param calib_quat (output) resulting quaternion data
  * @return ERROR_CODE 
  */
 ERROR_CODE cal_static_imu_quat_calibrated_data_get(Quaternion calib_quat[IMU_MAX_NUMBER]);
+/**
+ * @brief Get the calibrated flag
+ * 
+ * @param index (input) The imu index
+ * @return true if calibrated
+ * @return false if not calibrated
+ */
+bool cal_static_imu_quat_calibrated_flag_get(int index);
+/**
+ * @brief Set the current number of IMUs
+ * 
+ * @param imus_num (input) Number of imus
+ */
+void cal_static_imu_quat_number_of_imus_set(int imus_num);
 
 /**
  * @brief Calibrate a rotation axis for a 1 DOF joint knowing its angular velocity

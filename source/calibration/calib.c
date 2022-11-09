@@ -53,13 +53,15 @@ void cal_min_velocity_set(double min_vel) {
     scal_min_velocity_norm = min_vel;
 }
 
+int number_of_imus = 0;
+
 void cal_static_imu_quat_calibration_set(
     Quaternion known_quat[IMU_MAX_NUMBER],
     Quaternion imus_quat[IMU_MAX_NUMBER])
 {
     Quaternion imu_quat_conj;
-    int number_of_imus = imu_number_get();
-    
+
+    if (0 >= number_of_imus) number_of_imus = imu_number_get();
     if (number_of_imus > 0) log_str("Calibrating quaternion data of %d IMU sensors", number_of_imus);
 
     for (int i = 0; i < number_of_imus; i++) {
@@ -73,21 +75,18 @@ void cal_static_imu_quat_calibration_set(
 }
 
 ERROR_CODE cal_static_imu_quat_calibration_apply(
-    Quaternion imus_quat[IMU_MAX_NUMBER],
-    Quaternion calibrated_data[IMU_MAX_NUMBER])
+    Quaternion imus_quat, int index, Quaternion *calibrated_data)
 {
     ERROR_CODE status = RET_OK;
-    int number_of_imus = imu_number_get();
+    if (index > number_of_imus) return RET_ARG_ERROR;
 
-    for (int i = 0; RET_OK == status && i < number_of_imus; i++) {
-        if (false == cal_imus_calibration_data[i].calibration_done) {
-            err_str("Imu %d not calibrated!", i);
-            status = RET_ERROR;
-        }
-        else {
-            // Apply the calibration
-            Quaternion_multiply(&(cal_imus_calibration_data[i].raw_to_calib), &imus_quat[i], &(calibrated_data[i]));
-        }
+    if (false == cal_imus_calibration_data[index].calibration_done) {
+        wrn_str("Imu %d not calibrated!", index);
+        status = RET_NO_EXEC;
+    }
+    else {
+        // Apply the calibration
+        Quaternion_multiply(&(cal_imus_calibration_data[index].raw_to_calib), &imus_quat, calibrated_data);
     }
 
     return status;
@@ -95,27 +94,25 @@ ERROR_CODE cal_static_imu_quat_calibration_apply(
 
 ERROR_CODE cal_static_imu_quat_calibrated_data_get(Quaternion calib_quat[IMU_MAX_NUMBER]) {
     ERROR_CODE status = RET_OK;
-    int number_of_imus = imu_number_get();
     double q_buff[4];
     Quaternion q_tmp;
 
     for (int i = 0; RET_OK == status && i < number_of_imus; i++) {
-        if (false == cal_imus_calibration_data[i].calibration_done) {
-            err_str("Imu %d not calibrated!", i);
-            status = RET_ERROR;
-        }
-        else {
-            // Retrieve Imu quaternion data
-            status = db_read(DB_IMU_QUATERNION, i, q_buff);
-            if (RET_OK == status) {
-                quaternion_from_buffer_build(q_buff, &q_tmp);
-                // Apply the calibration
-                Quaternion_multiply(&(cal_imus_calibration_data[i].raw_to_calib), &q_tmp, &calib_quat[i]);
-            }
-        }
+        // Retrieve Imu quaternion data
+        status = db_read(DB_IMU_QUATERNION, i, q_buff);
+        if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q_tmp);
+        if (RET_OK == status) status = cal_static_imu_quat_calibration_apply(q_tmp,i, &calib_quat[i]);
     }
 
     return status;
+}
+
+void cal_static_imu_quat_number_of_imus_set(int imus_num) {
+    number_of_imus = imus_num;
+}
+
+bool cal_static_imu_quat_calibrated_flag_get(int index){
+    return cal_imus_calibration_data[index].calibration_done;
 }
 
 ERROR_CODE cal_automatic_rotation_axis_calibrate(

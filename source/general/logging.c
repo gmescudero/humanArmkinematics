@@ -13,10 +13,10 @@
 #define LOG_FILE_DIRECTORY "log"
 #define LOG_FILE_EXTENSION "log"
 
-#define LOG_FILE_TRACE_ERROR   "[ERROR  ] "
-#define LOG_FILE_TRACE_WARNING "[WARNING] "
-#define LOG_FILE_TRACE_INFO    "[INFO   ] "
-#define LOG_FILE_TRACE_DEBUG   "[DEBUG  ] "
+#define LOG_FILE_TRACE_ERROR   "[HAK_ERROR] "
+#define LOG_FILE_TRACE_WARNING "[HAK_WARN ] "
+#define LOG_FILE_TRACE_INFO    "[HAK_INFO ] "
+#define LOG_FILE_TRACE_DEBUG   "[HAK_DEBUG] "
 
 static void slog_file_name_build(char *directory, char* name_prefix, char *extension, char *file_name);
 static ERROR_CODE sfile_create(char *file_name);
