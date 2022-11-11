@@ -380,13 +380,6 @@ ERROR_CODE arm_elbow_angles_zero(
     }
     /* Compute the new angles after the zero */
     if (RET_OK == status) status = arm_elbow_angles_from_rotation_vectors_get(q_sensor1,q_sensor2,rotationV1,rotationV2,anglesFE_B_PS);
-    if (RET_OK == status) {
-        if (EPSI < fabs(anglesFE_B_PS[ALPHA_FE]) || EPSI < fabs(anglesFE_B_PS[GAMMA_PS])) {
-            status = RET_ERROR;
-            err_str("Failed to perform zero procedure: FE:%f, PS:%f, Beta:%f>",
-                anglesFE_B_PS[ALPHA_FE],anglesFE_B_PS[GAMMA_PS],anglesFE_B_PS[BETA_CARRYING]);
-        }
-    }
 
     return status;
 }

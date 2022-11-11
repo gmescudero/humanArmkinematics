@@ -19,7 +19,7 @@
 
 
 #define CAL_PARAMETERS_NUM (4)
-#define CAL_TRYS_NUM (5)
+#define CAL_TRYS_NUM (6)
 #define CAL_ERROR_MIN_DIFF (1e-6)
 #define CAL_ERROR_STALLED_COUTDOWN (15)
 
@@ -497,18 +497,21 @@ ERROR_CODE cal_gn2_two_rot_axes_calib(double rotationV1[3], double rotationV2[3]
     double initVector1[CAL_TRYS_NUM][3] = {
         {rotationV1[0],rotationV1[1],rotationV1[2]},
         {scal_rnd(),scal_rnd(),scal_rnd()},
-        {scal_rnd(),scal_rnd(),scal_rnd()},
         {0,0,1},
-        {0,0,1}
+        {0,1,1},
+        {1,0,1},
+        {1,1,1}
     };
     double initVector2[CAL_TRYS_NUM][3] = {
         {rotationV2[0],rotationV2[1],rotationV2[2]},
         {scal_rnd(),scal_rnd(),scal_rnd()},
-        {scal_rnd(),scal_rnd(),scal_rnd()},
+        {1,1,0},
         {1,0,0},
-        {0,1,0}
+        {0,1,0},
+        {1,0,0},
     };
     double tempV1[3],tempV2[3];
+    int winning_try = 0;
 
     // Get current error value
     status = cal_gn2_root_mean_square(rotationV1,rotationV2, &scal_data.error);
@@ -522,6 +525,7 @@ ERROR_CODE cal_gn2_two_rot_axes_calib(double rotationV1[3], double rotationV2[3]
             // Use only the best set of rotation axes
             if (RET_OK == status && scal_data.error + EPSI > error) {
                 scal_data.error = error;
+                winning_try = try;
                 if (RET_OK == status) status = vector3_copy(tempV1,rotationV1);
                 if (RET_OK == status) status = vector3_copy(tempV2,rotationV2);
             }
@@ -540,6 +544,13 @@ ERROR_CODE cal_gn2_two_rot_axes_calib(double rotationV1[3], double rotationV2[3]
         }
         if (RET_NO_EXEC == status) status = RET_OK;
     }
+
+    log_str("Calibration of two rotation axes performed (try %d vectors: <%f,%f,%f> <%f,%f,%f>)", 
+        winning_try,
+        initVector1[winning_try][0],initVector1[winning_try][1],initVector1[winning_try][2],
+        initVector2[winning_try][0],initVector2[winning_try][1],initVector2[winning_try][2]);
+    log_str("\tRotation vector 1:[%f,%f,%f]", rotationV1[0],rotationV1[1], rotationV1[2]);
+    log_str("\tRotation vector 2:[%f,%f,%f]", rotationV2[0],rotationV2[1], rotationV2[2]);
     
     // Update database
     if (RET_OK == status) {
