@@ -45,7 +45,7 @@ lib: $(OBJS)
 	$(info building library ...)
 	$(LD) $(INC) $(BINARIES_DIR)/*.o $(IMULIB) $(PTHREADSERIAL) --shared -o $(LIB_TARGET) -lm -ldl
 
-test: $(OBJS) all other_dirs_create
+test: $(OBJS) lib other_dirs_create
 	cd test && make && cd -
 	./test/tests
 
