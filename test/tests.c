@@ -2122,6 +2122,23 @@ bool tst_arm_016()
             ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get zero");
             ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get zeroed alpha");
             ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get zeroed gamma");
+
+            /* Test with random quats */
+            q1 = tstRandomQuaternionGenerate();
+            q2 = tstRandomQuaternionGenerate();
+            q1_2 = arm_quaternion_between_two_get(q1,q2);
+
+            ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+            ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get pre zero random");
+            // tst_str("[%f,%f] Angles: fe <%f>, ps <%f>, beta <%f>",ang1,ang2,fe,ps,carryingAngle);
+
+            ret = arm_elbow_angles_zero(0.0,0.0,q1,q2,rotVector1,rotVector2);
+            ok &= assert_OK(ret, "arm_elbow_angles_zero random");
+
+            ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+            ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get zero random");
+            ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get zeroed alpha");
+            ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get zeroed gamma");
         }
     }
     
