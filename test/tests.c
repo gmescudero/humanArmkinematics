@@ -2211,7 +2211,7 @@ bool tst_arm_017()
 bool tst_arm_018() 
 {
     bool ok = true;
-    Quaternion q_dflt  = {.w=cos(M_PI_2/2),.v={0,sin(M_PI_2/2),0}};
+    Quaternion q_dflt  = {.w=cos(M_PI_2/2),.v={0,-sin(M_PI_2/2),0}};
     Quaternion q_zero  = {.w=1,.v={0,0,0}};
     Quaternion q_90x   = {.w=cos(M_PI_2/2),.v={sin(M_PI_2/2),0,0}};
     Quaternion q_90xy  = {.w=0.5,.v={0.5,-0.5, 0.5}};
@@ -2231,7 +2231,7 @@ bool tst_arm_018()
     ok &= assert_vector3Equal(sh_angles,sh_expected,"arm_shoulder_angles_compute result 0");
 
     sh_expected[SH_ROTATION] = M_PI_2;
-    sh_expected[SH_FLEXION]  = M_PI_2; // Singular
+    sh_expected[SH_FLEXION]  = -M_PI_2; // Singular
     sh_expected[SH_ABDUCTION]= 0.0;
     arm_shoulder_angles_compute(q_90xy,sh_angles);
     ok &= assert_vector3Equal(sh_angles,sh_expected,"arm_shoulder_angles_compute result 1");

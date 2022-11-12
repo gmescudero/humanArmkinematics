@@ -139,22 +139,32 @@ void Quaternion_toEulerZYX(Quaternion* q, double output[3])
 {
     assert(output != NULL);
 
-    // Roll (x-axis rotation)
-    double sinr_cosp = +2.0 * (q->w * q->v[0] + q->v[1] * q->v[2]);
-    double cosr_cosp = +1.0 - 2.0 * (q->v[0] * q->v[0] + q->v[1] * q->v[1]);
-    output[0] = atan2(sinr_cosp, cosr_cosp);
+    double sqw = q->w * q->w;
+    double sqx = q->v[0] * q->v[0];
+    double sqy = q->v[1] * q->v[1];
+    double sqz = q->v[2] * q->v[2];
+    double unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
+    double test = q->v[0] * q->w - q->v[1] * q->v[2];
 
-    // Pitch (y-axis rotation)
-    double sinp = +2.0 * (q->w * q->v[1] - q->v[2] * q->v[0]);
-    if (fabs(sinp) >= 1)
-        output[1] = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
-    else
-        output[1] = asin(sinp);
-
-    // Yaw (z-axis rotation)
-    double siny_cosp = +2.0 * (q->w * q->v[2] + q->v[0] * q->v[1]);
-    double cosy_cosp = +1.0 - 2.0 * (q->v[1] * q->v[1] + q->v[2] * q->v[2]);
-    output[2] = atan2(siny_cosp, cosy_cosp);
+    if (test > 0.4995f * unit) { // singularity at north pole
+        output[1] = 2.0 * atan2(q->v[1], q->v[0]);
+        output[0] = M_PI_2;
+        output[2] = 0;
+    }
+    else if (test < -0.4995f * unit) { // singularity at south pole
+        output[1] = -2.0 * atan2(q->v[1], q->v[0]);
+        output[0] = -M_PI_2;
+        output[2] = 0;
+    }
+    else {
+        // Yaw (z-axis rotation)
+        output[2] = atan2(2.0 * (q->w * q->v[2] + q->v[0] * q->v[1]), 1.0 - 2.0 * (q->v[1] * q->v[1] + q->v[2] * q->v[2]));
+        // Pitch (y-axis rotation)
+        output[1] = asin(2.0 * (q->w * q->v[1] - q->v[2] * q->v[0]));
+        // Roll (x-axis rotation)
+        output[0] = atan2(2.0 * (q->w * q->v[0] + q->v[1] * q->v[2]), 1.0 - 2.0 * (q->v[0] * q->v[0] + q->v[1] * q->v[1]));
+    }
+    return;
 }
 
 void Quaternion_conjugate(Quaternion* q, Quaternion* output)
