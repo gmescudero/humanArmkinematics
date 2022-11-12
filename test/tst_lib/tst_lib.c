@@ -110,7 +110,7 @@ bool tstCsvLoad(const char* csvPath) {
 
     ok &= tstCsvRawLineGet(0, line_str);
     
-    for (int i = 0; ok & i < TST_MAX_CSV_LINE_LENGTH; i++) {
+    for (int i = 0; ok && i < TST_MAX_CSV_LINE_LENGTH; i++) {
         singleChar = line_str[i];
         if ('\n' == singleChar || '\0' == singleChar || ',' == singleChar) {
             singleHeader[i] = '\0';
@@ -175,7 +175,7 @@ bool tstCsvDataLineGet(int line, double data[TST_MAX_CSV_DATA_VALUES]) {
     }
     ok &= tstCsvRawLineGet(line, line_str);
 
-    for (int i = 0; ok & i < TST_MAX_CSV_LINE_LENGTH; i++) {
+    for (int i = 0; ok && i < TST_MAX_CSV_LINE_LENGTH; i++) {
         singleChar = line_str[i];
         if ('\n' == singleChar || '\0' == singleChar || ',' == singleChar) {
             singleDataStr[i] = '\0';
@@ -289,7 +289,6 @@ bool preconditions_init_imus(const char *test_name)
 bool preconditions_init_databaseCalib(const char *test_name, int imu_data_window, int observations_window) {
     bool ok = true;
     ERROR_CODE ret;
-    double j1[3], j2[3];
 
     ok &= preconditions_init(test_name);
     /* Set CSV logging */
@@ -445,7 +444,6 @@ bool assert_vector3Equal(const double actual[3], const double expected[3], const
 
 bool assert_vector3EqualNoSignThreshold(const double actual[3], const double expected[3], const double threshold, const char *description) {
     bool ok = true;
-    ERROR_CODE ret;
     double dotVal = actual[0]*expected[0] + actual[1]*expected[1] + actual[2]*expected[2];
 
     ok &= assert_double(fabs(dotVal), 1.0, threshold, NULL);
@@ -457,7 +455,7 @@ bool assert_vector3EqualNoSignThreshold(const double actual[3], const double exp
 }
 
 bool assert_vector3EqualNoSign(const double actual[3], const double expected[3], const char *description) {
-    return assert_vector3EqualThreshold(actual,expected,EPSI,description);
+    return assert_vector3EqualNoSignThreshold(actual,expected,EPSI,description);
 }
 
 bool assert_vector3Norm(double actual[3], double expected, const double threshold, const char *description) {

@@ -38,7 +38,7 @@ all: tst_lib.o tests.c $(OBJS)
 	$(CC) $(INC) $(OBJS) $(PTHREADSERIAL) $(CCFLAGS) $(IMULIB) tests.c tst_lib/*.o -o $(TARGET) -lm -ldl
 
 tst_lib.o: tst_lib/tst_lib.c
-	$(CC) $(INC) -c tst_lib/tst_lib.c -o tst_lib/$@ 
+	$(CC) $(INC) $(CCFLAGS) -c tst_lib/tst_lib.c -o tst_lib/$@ 
 
 clean:
 	rm -rf $(TARGET) $(LOGGING_DIR) $(DATA_DIR)
