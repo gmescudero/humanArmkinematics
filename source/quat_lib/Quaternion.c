@@ -139,19 +139,14 @@ void Quaternion_toEulerZYX(Quaternion* q, double output[3])
 {
     assert(output != NULL);
 
-    double sqw = q->w * q->w;
-    double sqx = q->v[0] * q->v[0];
-    double sqy = q->v[1] * q->v[1];
-    double sqz = q->v[2] * q->v[2];
-    double unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
     double test = q->v[0] * q->w - q->v[1] * q->v[2];
 
-    if (test > 0.4995f * unit) { // singularity at north pole
+    if (test > 0.4995f) { // singularity at north pole
         output[1] = 2.0 * atan2(q->v[1], q->v[0]);
         output[0] = M_PI_2;
         output[2] = 0;
     }
-    else if (test < -0.4995f * unit) { // singularity at south pole
+    else if (test < -0.4995f) { // singularity at south pole
         output[1] = -2.0 * atan2(q->v[1], q->v[0]);
         output[0] = -M_PI_2;
         output[2] = 0;
