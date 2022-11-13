@@ -1027,6 +1027,52 @@ bool tst_math_024()
     return ok;
 }
 
+bool tst_math_025()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    double v1[3] = {1.0, 0.0, 0.0};
+    double v2[3] = {0.0, 1.0, 0.0};
+    double v_aux[3];
+    Quaternion result;
+    Quaternion expected;
+
+    testDescription(__FUNCTION__, "Check the quaternion between two vectors computation");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test steps
+    ret = quaternion_between_two_vectors_compute(v1,v2,&result);
+    ok &= assert_OK(ret,"quaternion_between_two_vectors_compute 1");
+    Quaternion_fromZRotation(M_PI_2,&expected);
+    ok &= assert_quaternion(result,expected,"quaternion_between_two_vectors_compute result 1");
+
+    ret = quaternion_between_two_vectors_compute(v2,v1,&result);
+    ok &= assert_OK(ret,"quaternion_between_two_vectors_compute 2");
+    Quaternion_fromZRotation(-M_PI_2,&expected);
+    ok &= assert_quaternion(result,expected,"quaternion_between_two_vectors_compute result 2");
+
+    v2[0] = cos(M_PI_2+M_PI_4); v2[1] = sin(M_PI_2+M_PI_4); v2[2] = 0;
+    ret = quaternion_between_two_vectors_compute(v1,v2,&result);
+    ok &= assert_OK(ret,"quaternion_between_two_vectors_compute 3");
+    Quaternion_fromZRotation(M_PI_2+M_PI_4,&expected);
+    ok &= assert_quaternion(result,expected,"quaternion_between_two_vectors_compute result 3");
+
+    for (int i = 0; ok && i < 10; i++) {
+        tstRandomUnitVector3Generate(v1);
+        for (int j = 0; ok && j < 10; j++) {
+            tstRandomUnitVector3Generate(v2);
+            ret = quaternion_between_two_vectors_compute(v1,v2,&result);
+            ok &= assert_OK(ret,"quaternion_between_two_vectors_compute 4");
+            Quaternion_rotate(&result,v1,v_aux);
+            ok &= assert_vector3Equal(v_aux,v2,"quaternion_between_two_vectors_compute result 4");
+        }
+    }
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
 bool tst_db_001()
 {
     bool ok = true;
@@ -2945,6 +2991,8 @@ bool tst_battery_all()
     ok &= tst_math_021();
     ok &= tst_math_022();
     ok &= tst_math_023();
+    ok &= tst_math_024();
+    ok &= tst_math_025();
 
     ok &= tst_db_001();
     ok &= tst_db_002();
@@ -3019,6 +3067,7 @@ int main(int argc, char **argv)
     // ok &= tst_math_022();
     // ok &= tst_cal_005();
     // ok &= tst_cal_006();
+    
 
     return (ok)? RET_OK : RET_ERROR;
 }
