@@ -86,6 +86,8 @@ bool assert_dbFieldDoubleThreshold(DB_FIELD_IDENTIFIER field, int instance, cons
 bool assert_dbFieldDouble(DB_FIELD_IDENTIFIER field, int instance, const double expected[], const char *description);
 bool assert_dbFieldInt(DB_FIELD_IDENTIFIER field, int instance, const int expected[], const char *description);
 bool assert_dbFieldIntGreaterEqual(DB_FIELD_IDENTIFIER field, int instance, const int expected[], const char *description);
+bool assert_dbFieldQuaternionThreshold(DB_FIELD_IDENTIFIER field, int instance, const Quaternion expected, double threshold, const char *description);
+bool assert_dbFieldQuaternion(DB_FIELD_IDENTIFIER field, int instance, const Quaternion expected, const char *description);
 bool assert_matrix(MATRIX actual, MATRIX expected, const char *description);
 bool assert_matrixThreshold(MATRIX actual, MATRIX expected, const double threshold, const char *description);
 bool assert_matrixIdentity(MATRIX actual, const char *description);

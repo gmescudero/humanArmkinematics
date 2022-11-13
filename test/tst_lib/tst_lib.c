@@ -478,7 +478,13 @@ bool assert_quaternionThreshold(Quaternion actual, Quaternion expected, double t
     bool ok = true;
 
     ok &= assert_double(actual.w, expected.w, threshold, NULL);
-    ok &= assert_vector3EqualThreshold(actual.v, expected.v, threshold, NULL);
+    if (ok) {
+        ok &= assert_vector3EqualThreshold(actual.v, expected.v, threshold, NULL);
+    }
+    else {
+        ok = assert_double(-actual.w, expected.w, threshold, NULL);
+        ok &= assert_vector3EqualNoSignThreshold(actual.v, expected.v, threshold, NULL);
+    }
 
     if (WILL_PRINT(ok) && (NULL != description)) {
         printf("\t -> RESULT: %s (%s) | EXPECTED: [%f,%f,%f,%f], ACTUAL: [%f,%f,%f,%f] \n",
@@ -646,6 +652,38 @@ bool assert_dbFieldIntGreaterEqual(DB_FIELD_IDENTIFIER field, int instance, cons
     }
 
     return ok;
+}
+
+bool assert_dbFieldQuaternionThreshold(DB_FIELD_IDENTIFIER field, int instance, const Quaternion expected, double threshold, const char *description){
+    bool ok = true;
+    ERROR_CODE ret;
+    int size;
+    DB_FIELD_TYPE type;
+    double buff[4];
+    Quaternion actual;
+
+    ret = db_field_parameters_get(field, &size, &type, NULL);
+    ok &= assert_OK(ret, "db_field_parameters_get");
+    if (DB_REAL != type) {
+        printf("\t -> RESULT: FAILED (%s) | The requested field does not match type, should be double", description);
+        return false;
+    }
+    if (4 != size) {
+        printf("\t -> RESULT: FAILED (%s) | The requested field does is not a quaternion", description);
+        return false;
+    }
+
+    ret = db_read(field, instance, buff);
+    ok &= assert_OK(ret, "db_read");
+
+    quaternion_from_buffer_build(buff,&actual);
+    ok &= assert_quaternionThreshold(actual,expected,threshold,description);
+
+    return ok;
+}
+
+bool assert_dbFieldQuaternion(DB_FIELD_IDENTIFIER field, int instance, const Quaternion expected, const char *description){
+    return assert_dbFieldQuaternionThreshold(field,instance,expected,EPSI,description);
 }
 
 bool assert_matrix(MATRIX actual, MATRIX expected, const char *description) {
