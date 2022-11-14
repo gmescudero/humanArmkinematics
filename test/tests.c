@@ -2141,7 +2141,7 @@ bool tst_arm_016()
     double rotVector2[3] = {1.0,0.0,0.0};
     double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER];
 
-    testDescription(__FUNCTION__, "Compute elbow angles from rotation vectors and quaternion");
+    testDescription(__FUNCTION__, "Check zeroing of elbow angles from rotation vectors and quaternion");
     ok = preconditions_init(__FUNCTION__); 
 
     // Test Steps
@@ -2159,7 +2159,8 @@ bool tst_arm_016()
 
             ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
             ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get pre zero");
-            // tst_str("[%f,%f] Angles: fe <%f>, ps <%f>, beta <%f>",ang1,ang2,fe,ps,carryingAngle);
+            // tst_str("[%f,%f] Angles: fe <%f>, ps <%f>, beta <%f>",ang1,ang2,
+            //     anglesFE_B_PS[ALPHA_FE],anglesFE_B_PS[GAMMA_PS],anglesFE_B_PS[BETA_CARRYING]);
 
             ret = arm_elbow_angles_zero(0.0,0.0,q1,q2,rotVector1,rotVector2);
             ok &= assert_OK(ret, "arm_elbow_angles_zero");
@@ -2194,6 +2195,84 @@ bool tst_arm_016()
 } 
 
 bool tst_arm_017() 
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    double rotVector1[3] = {0.0,0.0,1.0};
+    double rotVector2[3] = {1.0,0.0,0.0};
+    double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER];
+    Quaternion q1 = {1.0,{0.0,0.0,0.0}}, q2 = {1.0,{0.0,0.0,0.0}};
+
+    testDescription(__FUNCTION__, "Compute elbow angles from rotation vectors and quaternion after beeing zeroed");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret = arm_elbow_angles_zero(0.0,0.0,q1,q2,rotVector1,rotVector2);
+    ok &= assert_OK(ret, "arm_elbow_angles_zero");
+    
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 1");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 1");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 1");
+
+    Quaternion_fromXRotation(M_PI_4,&q1);
+    Quaternion_fromXRotation(M_PI_4,&q2);
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 2");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 2");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 2");
+
+    Quaternion_fromYRotation(M_PI_4,&q1);
+    Quaternion_fromYRotation(M_PI_4,&q2);
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 3");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 3");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 3");
+
+    Quaternion_fromZRotation(M_PI_4,&q1);
+    Quaternion_fromZRotation(M_PI_4,&q2);
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 4");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 4");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 4");
+
+    Quaternion_set(1,0,0,0,&q1);
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 5");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],M_PI_4,EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 5");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,   EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 5");
+
+    Quaternion_fromXRotation(M_PI_4,&q2);
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 6");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,   EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 6");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],M_PI_4,EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 6");
+
+    Quaternion_fromYRotation(M_PI_4,&q2);
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 7");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 7");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 7");
+
+    for (int i = 0; ok && i < 10; i++) {
+        q2 = tstRandomQuaternionGenerate();
+        ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+        ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 8");
+        Quaternion q_aux1, q_aux2, q_aux21;
+        Quaternion_fromZRotation(-M_PI_2,&q_aux1);
+        Quaternion_multiply(&q1,&q_aux1,&q_aux1);
+        Quaternion_fromZRotation(-M_PI_2,&q_aux2);
+        Quaternion_multiply(&q2,&q_aux2,&q_aux2);
+        q_aux21 = arm_quaternion_between_two_get(q_aux1,q_aux2);
+        ok &= assert_dbFieldQuaternion(DB_ARM_ELBOW_QUATERNION,0,q_aux21,"arm_elbow_angles_from_rotation_vectors_get db result 8");
+    }
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+} 
+
+bool tst_arm_018() 
 {
     bool ok = true;
     Quaternion q_zero = {.w=1,.v={0,0,0}};
@@ -2254,7 +2333,7 @@ bool tst_arm_017()
     return ok;
 } 
 
-bool tst_arm_018() 
+bool tst_arm_019() 
 {
     bool ok = true;
     Quaternion q_dflt  = {.w=cos(M_PI_2/2),.v={0,-sin(M_PI_2/2),0}};
@@ -3025,6 +3104,7 @@ bool tst_battery_all()
     ok &= tst_arm_016();
     ok &= tst_arm_017();
     ok &= tst_arm_018();
+    ok &= tst_arm_019();
 
     ok &= tst_cal_001();
     ok &= tst_cal_002();
@@ -3067,7 +3147,8 @@ int main(int argc, char **argv)
     // ok &= tst_math_022();
     // ok &= tst_cal_005();
     // ok &= tst_cal_006();
-    
+    // ok &= tst_arm_017();
+
 
     return (ok)? RET_OK : RET_ERROR;
 }
