@@ -417,6 +417,44 @@ void quaternion_toEulerZXY(Quaternion* q, double output[3]) {
     output[2] = -atan2(sz_cx,cz_cx);
 }
 
+void quaternion_fromEulerYXZ(double eulerYXZ[3], Quaternion* output)
+{
+    assert(output != NULL);
+
+    double cz = cos(eulerYXZ[0] * 0.5);
+    double sz = sin(eulerYXZ[0] * 0.5);
+    double cx = cos(eulerYXZ[1] * 0.5);
+    double sx = sin(eulerYXZ[1] * 0.5);
+    double cy = cos(eulerYXZ[2] * 0.5);
+    double sy = sin(eulerYXZ[2] * 0.5);
+
+    output->w    = cy*cx*cz + sy*sx*sz;
+    output->v[0] = cy*sx*cz + sy*cx*sz;
+    output->v[1] = sy*cx*cz - cy*sx*sz;
+    output->v[2] = cy*cx*sz - sy*sx*cz;
+}
+
+void quaternion_toEulerYXZ(Quaternion* q, double output[3]) {
+    assert(output != NULL);
+
+    // z-axis rotation
+    double sz_cx = -2.0*(q->w*q->v[2] + q->v[0]*q->v[1]);
+    double cz_cx = 1.0 - 2.0*(q->v[0]*q->v[0] + q->v[2]*q->v[2]);
+    output[0] = -atan2(sz_cx,cz_cx);
+
+    // x-axis rotation
+    double sx = 2.0*(q->v[1]*q->v[2] - q->w*q->v[0]);
+    if (fabs(sx) > 1.0-QUATERNION_EPS)
+        output[1] = -copysign(M_PI / 2, sx); // use 90 degrees if out of range
+    else
+        output[1] = -asin(sx);
+    
+    // y-axis rotation
+    double sy_cx = -2.0*(q->w*q->v[1] + q->v[0]*q->v[2]);
+    double cy_cx = 1.0 - 2.0*(q->v[0]*q->v[0] + q->v[1]*q->v[1]);
+    output[2] = -atan2(sy_cx,cy_cx);
+}
+
 ERROR_CODE quaternion_between_two_vectors_compute(double v1[3], double v2[3], Quaternion *output) {
     ERROR_CODE status = RET_OK;
     double dotVal;

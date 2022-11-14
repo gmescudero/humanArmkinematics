@@ -211,18 +211,33 @@ void quaternion_from_float_buffer_build(float buffer[4], Quaternion *q);
  */
 void quaternion_print(Quaternion q, const char *name);
 /**
- * Calculates the euler angles of a quaternion.
- * @param output
- *      Euler angles in ZXY, but stored in array as [y'', x', z].
+ * @brief Calculates the quaternion corresponding to the given ZXY rotation.
+ * 
+ * @param eulerZXY (input) Euler angles in ZXY, but stored in array as [y'', x', z].
+ * @param output (output) Quaternion resulting
  */
 void quaternion_fromEulerZXY(double eulerZXY[3], Quaternion* output);
 /**
- * @brief Calculates the euler angles of a quaternion in zxy order.
+ * @brief Calculates the ZXY euler angles of a quaternion.
  * 
- * @param output 
- *      Euler angles in ZXY, but stored in array as [y'', x', z].
+ * @param q (input) Quaternion to convert
+ * @param output (output) Euler angles in ZXY, but stored in array as [y'', x', z].
  */
 void quaternion_toEulerZXY(Quaternion* q, double output[3]);
+/**
+ * @brief Calculates the quaternion corresponding to the given YXZ rotation.
+ * 
+ * @param eulerYXZ (input) Euler angles in YXZ, but stored in array as [z'', x', y].
+ * @param output (output) Quaternion resulting
+ */
+void quaternion_fromEulerYXZ(double eulerYXZ[3], Quaternion* output);
+/**
+ * @brief Calculates the YXZ euler angles of a quaternion.
+ * 
+ * @param q (input) Quaternion to convert
+ * @param output (output) Euler angles in YXZ, but stored in array as [z'', x', y].
+ */
+void quaternion_toEulerYXZ(Quaternion* q, double output[3]);
 /**
  * @brief Calculate the quaternion that rotates from v1 to v2 
  * 

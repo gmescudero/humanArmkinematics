@@ -839,13 +839,13 @@ bool tst_math_021()
     ok = preconditions_init(__FUNCTION__); 
 
     // Test steps
-    eulerAngles[0] = PI/4; eulerAngles[1] = PI/4; eulerAngles[2] = 0.0; 
+    eulerAngles[0] = M_PI_4; eulerAngles[1] = M_PI_4; eulerAngles[2] = 0.0; 
     Quaternion_fromEulerZYX(eulerAngles,&q_result);
     ok &= assert_quaternion(q_result,expected1,"Quaternion_fromEulerZYX result 1");
     Quaternion_toEulerZYX(&q_result,zyx_result);
     ok &= assert_vector3Equal(zyx_result,eulerAngles,"Quaternion_toEulerZYX result 1");
 
-    eulerAngles[0] = PI/2; eulerAngles[1] = 0.0; eulerAngles[2] = PI/2; 
+    eulerAngles[0] = M_PI_2; eulerAngles[1] = 0.0; eulerAngles[2] = M_PI_2; 
     Quaternion_fromEulerZYX(eulerAngles,&q_result);
     ok &= assert_quaternion(q_result,expected2,"Quaternion_fromEulerZYX result 2");
     Quaternion_toEulerZYX(&q_result,zyx_result);
@@ -855,7 +855,6 @@ bool tst_math_021()
     testReport(ok);
     return ok;
 }
-
 
 bool tst_math_022()
 {
@@ -880,13 +879,13 @@ bool tst_math_022()
     quaternion_toEulerZXY(&q_result,zxy_result);
     ok &= assert_vector3Equal(zxy_result,eulerAngles,"quaternion_toEulerZXY result 0");
 
-    eulerAngles[0] = PI/4; eulerAngles[1] = PI/4; eulerAngles[2] = 0.0; 
+    eulerAngles[0] = M_PI_4; eulerAngles[1] = M_PI_4; eulerAngles[2] = 0.0; 
     quaternion_fromEulerZXY(eulerAngles,&q_result);
     ok &= assert_quaternion(q_result,expected1,"quaternion_fromEulerZXY result 1");
     quaternion_toEulerZXY(&q_result,zxy_result);
     ok &= assert_vector3Equal(zxy_result,eulerAngles,"quaternion_toEulerZXY result 1");
 
-    eulerAngles[0] = PI/2; eulerAngles[1] = 0.0; eulerAngles[2] = PI/2; 
+    eulerAngles[0] = M_PI_2; eulerAngles[1] = 0.0; eulerAngles[2] = M_PI_2; 
     quaternion_fromEulerZXY(eulerAngles,&q_result);
     ok &= assert_quaternion(q_result,expected2,"quaternion_fromEulerZXY result 2");
     quaternion_toEulerZXY(&q_result,zxy_result);
@@ -916,6 +915,71 @@ bool tst_math_022()
 }
 
 bool tst_math_023()
+{
+    bool ok = true;
+    double eulerAngles[3];
+    double yxz_result[3];
+    Quaternion q_result;
+    Quaternion expected0 = {.w = 1.0, .v = {0.0, 0.0, 0.0}};
+    Quaternion expected1 = {.w = 0.8535534, .v = {0.3535534, -0.1464466, 0.3535534}};
+    Quaternion expected2 = {.w = 0.5, .v = {0.5, 0.5, 0.5}};
+    Quaternion expected3 = {.w = M_SQRT1_2, .v = {0.0,0.0,M_SQRT1_2}};
+    Quaternion expected4 = {.w = M_SQRT1_2, .v = {M_SQRT1_2,0.0,0.0}};
+    Quaternion expected5 = {.w = M_SQRT1_2, .v = {0.0,M_SQRT1_2,0.0}};
+    Quaternion expected6 = {.w = 0.89239910083252272, .v = {0.099045760541287622,0.23911761839433451,0.36964381061438617}};
+
+    testDescription(__FUNCTION__, "Check conversions between euler YXZ and quaternion");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test steps
+    eulerAngles[0] = 0.0; eulerAngles[1] = 0.0; eulerAngles[2] = 0.0; 
+    quaternion_fromEulerYXZ(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected0,"quaternion_fromEulerYXZ result 0");
+    quaternion_toEulerYXZ(&q_result,yxz_result);
+    ok &= assert_vector3Equal(yxz_result,eulerAngles,"quaternion_toEulerYXZ result 0");
+
+    eulerAngles[0] = M_PI_4; eulerAngles[1] = M_PI_4; eulerAngles[2] = 0.0; 
+    quaternion_fromEulerYXZ(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected1,"quaternion_fromEulerYXZ result 1");
+    quaternion_toEulerYXZ(&q_result,yxz_result);
+    ok &= assert_vector3Equal(yxz_result,eulerAngles,"quaternion_toEulerYXZ result 1");
+
+    eulerAngles[0] = M_PI_2; eulerAngles[1] = 0.0; eulerAngles[2] = M_PI_2; 
+    quaternion_fromEulerYXZ(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected2,"quaternion_fromEulerYXZ result 2");
+    quaternion_toEulerYXZ(&q_result,yxz_result);
+    ok &= assert_vector3Equal(yxz_result,eulerAngles,"quaternion_toEulerYXZ result 2");
+
+    eulerAngles[0] = M_PI_2; eulerAngles[1] = 0.0; eulerAngles[2] = 0.0; 
+    quaternion_fromEulerYXZ(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected3,"quaternion_fromEulerYXZ result 3");
+    quaternion_toEulerYXZ(&q_result,yxz_result);
+    ok &= assert_vector3Equal(yxz_result,eulerAngles,"quaternion_toEulerYXZ result 3");
+
+    eulerAngles[0] = 0.0; eulerAngles[1] = M_PI_2; eulerAngles[2] = 0.0; 
+    quaternion_fromEulerYXZ(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected4,"quaternion_fromEulerYXZ result 4");
+    quaternion_toEulerYXZ(&q_result,yxz_result);
+    ok &= assert_vector3Equal(yxz_result,eulerAngles,"quaternion_toEulerYXZ result 4");
+
+    eulerAngles[0] = 0.0; eulerAngles[1] = 0.0; eulerAngles[2] = M_PI_2; 
+    quaternion_fromEulerYXZ(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected5,"quaternion_fromEulerYXZ result 5");
+    quaternion_toEulerYXZ(&q_result,yxz_result);
+    ok &= assert_vector3Equal(yxz_result,eulerAngles,"quaternion_toEulerYXZ result 5");
+
+    eulerAngles[0] = M_PI_4; eulerAngles[1] = 0.0; eulerAngles[2] = PI/6; 
+    quaternion_fromEulerYXZ(eulerAngles,&q_result);
+    ok &= assert_quaternion(q_result,expected6,"quaternion_fromEulerYXZ result 6");
+    quaternion_toEulerYXZ(&q_result,yxz_result);
+    ok &= assert_vector3Equal(yxz_result,eulerAngles,"quaternion_toEulerYXZ result 6");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+bool tst_math_024()
 {
     bool ok = true;
     ERROR_CODE ret;
@@ -971,7 +1035,7 @@ bool tst_math_023()
     return ok;
 }
 
-bool tst_math_024()
+bool tst_math_025()
 {
     bool ok = true;
     ERROR_CODE ret;
@@ -1027,7 +1091,7 @@ bool tst_math_024()
     return ok;
 }
 
-bool tst_math_025()
+bool tst_math_026()
 {
     bool ok = true;
     ERROR_CODE ret;
@@ -1580,7 +1644,7 @@ bool tst_arm_003()
 
     // Test Steps
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
-    Quaternion_fromXRotation(PI/2, &q2);
+    Quaternion_fromXRotation(M_PI_2, &q2);
     arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected, "arm position after rot");
 
@@ -1618,7 +1682,7 @@ bool tst_arm_004()
     arm = arm_pose_get();
     ok &= assert_armEqual(arm, expected1, "arm position before rot");
 
-    Quaternion_fromXRotation(PI/2, &q1);
+    Quaternion_fromXRotation(M_PI_2, &q1);
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q2);
     arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected2, "arm position after rot");
@@ -1665,13 +1729,13 @@ bool tst_arm_005()
     arm = arm_pose_get();
     ok &= assert_armEqual(arm, expected1, "arm position before first rot");
 
-    Quaternion_fromZRotation(PI/2, &q1);
+    Quaternion_fromZRotation(M_PI_2, &q1);
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q2);
     arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected2, "arm position after first rot");
 
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
-    Quaternion_fromZRotation(PI/2, &q2);
+    Quaternion_fromZRotation(M_PI_2, &q2);
     arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected3, "arm position after second rot");
 
@@ -1707,11 +1771,11 @@ bool tst_arm_006()
 
     // Test Steps
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q1);
-    Quaternion_fromXRotation(PI/2, &q2);
+    Quaternion_fromXRotation(M_PI_2, &q2);
     arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected1, "arm position after first rot");
 
-    Quaternion_fromZRotation(PI/2, &q1);
+    Quaternion_fromZRotation(M_PI_2, &q1);
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q2);
     arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected2, "arm position after second rot");
@@ -1739,7 +1803,7 @@ bool tst_arm_007()
     ok = preconditions_init(__FUNCTION__);
 
     // Test Steps
-    Quaternion_fromYRotation(PI/2, &q1);
+    Quaternion_fromYRotation(M_PI_2, &q1);
     Quaternion_set(1.0, 0.0, 0.0, 0.0, &q2);
     arm = arm_rotate(q1,q2);
     ok &= assert_armEqual(arm, expected, "arm position after rot");
@@ -1754,7 +1818,7 @@ bool tst_arm_008()
     bool ok = true;
     ARM_POSE arm;
     Quaternion q1, q2;
-    double eulerAngles[3] = { PI/4, PI/2, 0.0};
+    double eulerAngles[3] = { M_PI_4, M_PI_2, 0.0};
     const ARM_POSE expected = {
         .shoulder.position    = {0.0, 0.0, 0.0},
         .shoulder.orientation = {.w = 0.0, .v = {0.382683, 0.923880, 0.0}},
@@ -2140,6 +2204,7 @@ bool tst_arm_016()
     double rotVector1[3] = {0.0,0.0,1.0};
     double rotVector2[3] = {1.0,0.0,0.0};
     double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER];
+    Quaternion q1 = {1,{0,0,0}}, q2 = {1,{0,0,0}};
 
     testDescription(__FUNCTION__, "Check zeroing of elbow angles from rotation vectors and quaternion");
     ok = preconditions_init(__FUNCTION__); 
@@ -2147,18 +2212,15 @@ bool tst_arm_016()
     // Test Steps
     for (double ang1 = 0; ok && (ang1 < 2.0*M_PI); ang1 += M_PI/6) {
         for (double ang2 = 0; ok && (ang2 < 2.0*M_PI); ang2 += M_PI/6) {
-            Quaternion q1, q2;
-            Quaternion_fromZRotation(ang1, &q1);
-            Quaternion_fromXRotation(ang2, &q2);
-            Quaternion q1_2 = arm_quaternion_between_two_get(q1,q2);
-            Quaternion q1_into2;
-            Quaternion_multiply(&q1_2, &q1, &q1_into2);
-            Quaternion_multiply(&q2,&q1_into2,&q2);
+            Quaternion_fromAxisAngle(rotVector1, ang1, &q1);
+            Quaternion_fromAxisAngle(rotVector2, ang2, &q2);
+            Quaternion_multiply(&q2,&q1,&q2);
 
             // tst_str("Angles: %f, %f",ang1,ang2);
 
             ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
             ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get pre zero");
+
             // tst_str("[%f,%f] Angles: fe <%f>, ps <%f>, beta <%f>",ang1,ang2,
             //     anglesFE_B_PS[ALPHA_FE],anglesFE_B_PS[GAMMA_PS],anglesFE_B_PS[BETA_CARRYING]);
 
@@ -2171,21 +2233,23 @@ bool tst_arm_016()
             ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get zeroed gamma");
 
             /* Test with random quats */
-            q1 = tstRandomQuaternionGenerate();
-            q2 = tstRandomQuaternionGenerate();
-            q1_2 = arm_quaternion_between_two_get(q1,q2);
+            // q1 = tstRandomQuaternionGenerate();
+            // q2 = tstRandomQuaternionGenerate();
+            // Quaternion_multiply(&q2,&q1,&q2);
 
-            ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
-            ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get pre zero random");
-            // tst_str("[%f,%f] Angles: fe <%f>, ps <%f>, beta <%f>",ang1,ang2,fe,ps,carryingAngle);
+            // ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+            // ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get pre zero random");
 
-            ret = arm_elbow_angles_zero(0.0,0.0,q1,q2,rotVector1,rotVector2);
-            ok &= assert_OK(ret, "arm_elbow_angles_zero random");
+            // tst_str("[%f,%f] Angles: fe <%f>, ps <%f>, beta <%f>",ang1,ang2,
+            //     anglesFE_B_PS[ALPHA_FE],anglesFE_B_PS[GAMMA_PS],anglesFE_B_PS[BETA_CARRYING]);
 
-            ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
-            ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get zero random");
-            ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get zeroed alpha");
-            ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get zeroed gamma");
+            // ret = arm_elbow_angles_zero(0.0,0.0,q1,q2,rotVector1,rotVector2);
+            // ok &= assert_OK(ret, "arm_elbow_angles_zero random");
+
+            // ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+            // ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get zero random");
+            // ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get zeroed alpha");
+            // ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get zeroed gamma");
         }
     }
     
@@ -2272,7 +2336,95 @@ bool tst_arm_017()
     return ok;
 } 
 
+
 bool tst_arm_018() 
+{
+    bool ok = true;
+    ERROR_CODE ret = RET_OK;
+    double angle = M_PI/6;
+    double rotVector1[3] = {0.0,sin(angle),cos(angle)};
+    double rotVector2[3] = {1.0,0.0,0.0};
+    double anglesFE_B_PS[ARM_ELBOW_ANGLES_NUMBER];
+    Quaternion q_align;
+    Quaternion q1 = {1.0,{0.0,0.0,0.0}}, q2 = {1.0,{0.0,0.0,0.0}};
+
+    testDescription(__FUNCTION__, "Compute elbow angles from rotation vectors and quaternion after beeing zeroed");
+    ok = preconditions_init(__FUNCTION__); 
+
+    Quaternion_fromXRotation(-angle,&q_align);
+
+    // Test Steps
+    ret = arm_elbow_angles_zero(0.0,0.0,q1,q2,rotVector1,rotVector2);
+    ok &= assert_OK(ret, "arm_elbow_angles_zero");
+    
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 1");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 1");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 1");
+
+    Quaternion_fromXRotation(M_PI_4,&q1);
+    Quaternion_fromXRotation(M_PI_4,&q2);
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 2");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 2");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 2");
+
+    Quaternion_fromYRotation(M_PI_4,&q1);
+    Quaternion_fromYRotation(M_PI_4,&q2);
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 3");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 3");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 3");
+
+    Quaternion_fromZRotation(M_PI_4,&q1);
+    Quaternion_fromZRotation(M_PI_4,&q2);
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 4");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 4");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 4");
+
+    Quaternion_set(1,0,0,0,&q1);
+    Quaternion_fromAxisAngle(rotVector1,M_PI_4,&q2);
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 5");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],M_PI_4,EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 5");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],0.0,   EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 5");
+
+    Quaternion_fromAxisAngle(rotVector2,M_PI_4,&q2);
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 6");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],0.0,   EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 6");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],M_PI_4,EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 6");
+
+    Quaternion q_aux1, q_aux2;
+    Quaternion_fromAxisAngle(rotVector1,M_PI_4,&q_aux1);
+    Quaternion_fromAxisAngle(rotVector2,M_PI/6,&q_aux2);
+    Quaternion_multiply(&q_aux2,&q_aux1,&q2);
+    ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+    ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 7");
+    ok &= assert_double(anglesFE_B_PS[ALPHA_FE],M_PI_4,EPSI,"arm_elbow_angles_from_rotation_vectors_get alpha 7");
+    ok &= assert_double(anglesFE_B_PS[GAMMA_PS],M_PI_4,EPSI,"arm_elbow_angles_from_rotation_vectors_get gamma 7");
+    ok &= assert_double(anglesFE_B_PS[BETA_CARRYING],0.0,EPSI,"arm_elbow_angles_from_rotation_vectors_get beta 7");
+
+    for (int i = 0; ok && i < 10; i++) {
+        q2 = tstRandomQuaternionGenerate();
+        ret = arm_elbow_angles_from_rotation_vectors_get(q1, q2, rotVector1, rotVector2, anglesFE_B_PS);
+        ok &= assert_OK(ret, "arm_elbow_angles_from_rotation_vectors_get 8");
+        Quaternion q_aux1, q_aux2, q_aux21;
+        Quaternion_fromZRotation(-M_PI_2,&q_aux1);
+        Quaternion_multiply(&q1,&q_aux1,&q_aux1);
+        Quaternion_fromZRotation(-M_PI_2,&q_aux2);
+        Quaternion_multiply(&q2,&q_aux2,&q_aux2);
+        q_aux21 = arm_quaternion_between_two_get(q_aux1,q_aux2);
+        ok &= assert_dbFieldQuaternion(DB_ARM_ELBOW_QUATERNION,0,q_aux21,"arm_elbow_angles_from_rotation_vectors_get db result 8");
+    }
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+} 
+
+bool tst_arm_019() 
 {
     bool ok = true;
     Quaternion q_zero = {.w=1,.v={0,0,0}};
@@ -2333,7 +2485,7 @@ bool tst_arm_018()
     return ok;
 } 
 
-bool tst_arm_019() 
+bool tst_arm_020() 
 {
     bool ok = true;
     Quaternion q_dflt  = {.w=cos(M_PI_2/2),.v={0,-sin(M_PI_2/2),0}};
@@ -2680,13 +2832,13 @@ bool tst_cal_005()
     ok = preconditions_init(__FUNCTION__);
 
     // Set simulated IMU readings
-    Quaternion_fromAxisAngle(x, -M_PI/4,  &q_sensor1);
+    Quaternion_fromAxisAngle(x, -M_PI_4,  &q_sensor1);
     Quaternion_fromAxisAngle(z, -M_PI/12, &q_sensor2);
     // Set expected body positions at zero 
     Quaternion_fromAxisAngle(x, 0,       &q_body1);
-    Quaternion_fromAxisAngle(z, -M_PI/2, &q_body2);
+    Quaternion_fromAxisAngle(z, -M_PI_2, &q_body2);
     // Set zero to body conversion to be expected
-    Quaternion_fromAxisAngle(x, M_PI/4,     &q_zab1_expected);
+    Quaternion_fromAxisAngle(x, M_PI_4,     &q_zab1_expected);
     Quaternion_fromAxisAngle(z, -5*M_PI/12, &q_zab2_expected);
 
     // Test Steps
@@ -2704,7 +2856,7 @@ bool tst_cal_005()
     ret = db_write(DB_IMU_QUATERNION,1,q_buff);
     ok &= assert_OK(ret, "db_write");
 
-    Quaternion_fromAxisAngle(x,M_PI/4,    &q_expected1);
+    Quaternion_fromAxisAngle(x,M_PI_4,    &q_expected1);
     Quaternion_fromAxisAngle(z,-5*M_PI/12,&q_expected2);
 
     ret = cal_gn2_calibrated_orientations_from_database_get(&q_arm, &q_forearm);
@@ -2713,7 +2865,7 @@ bool tst_cal_005()
     ok &= assert_quaternion(q_forearm,q_expected2,"cal_gn2_calibrated_orientations_from_database_get 1 result 2");
 
     Quaternion_fromAxisAngle(x, M_PI/6, &q_sensor1);
-    Quaternion_fromAxisAngle(z, M_PI/4, &q_sensor2);
+    Quaternion_fromAxisAngle(z, M_PI_4, &q_sensor2);
 
     quaternion_buffer_build(q_sensor1,q_buff);
     ret = db_write(DB_IMU_QUATERNION,0,q_buff);
@@ -2774,13 +2926,13 @@ bool tst_cal_006()
     ok = preconditions_init(__FUNCTION__);
 
     // Set simulated IMU readings
-    Quaternion_fromAxisAngle(x, -M_PI/4,  &q_sensor1);
+    Quaternion_fromAxisAngle(x, -M_PI_4,  &q_sensor1);
     Quaternion_fromAxisAngle(z, -M_PI/12, &q_sensor2);
     // Set expected body positions at zero 
     Quaternion_fromAxisAngle(x, 0,       &q_body1);
-    Quaternion_fromAxisAngle(z, -M_PI/2, &q_body2);
+    Quaternion_fromAxisAngle(z, -M_PI_2, &q_body2);
     // Set zero to body conversion to be expected
-    Quaternion_fromAxisAngle(x, M_PI/4,     &q_zab1_expected);
+    Quaternion_fromAxisAngle(x, M_PI_4,     &q_zab1_expected);
     Quaternion_fromAxisAngle(z, -5*M_PI/12, &q_zab2_expected);
 
     // Test Steps
@@ -3072,6 +3224,7 @@ bool tst_battery_all()
     ok &= tst_math_023();
     ok &= tst_math_024();
     ok &= tst_math_025();
+    ok &= tst_math_026();
 
     ok &= tst_db_001();
     ok &= tst_db_002();
@@ -3103,8 +3256,10 @@ bool tst_battery_all()
     // ok &= tst_arm_015();
     ok &= tst_arm_016();
     ok &= tst_arm_017();
-    ok &= tst_arm_018();
+    // ok &= tst_arm_018();
     ok &= tst_arm_019();
+    ok &= tst_arm_020();
+
 
     ok &= tst_cal_001();
     ok &= tst_cal_002();
@@ -3136,7 +3291,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    ok &= tst_battery_all();
+    // ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_com_002();
@@ -3144,10 +3299,11 @@ int main(int argc, char **argv)
     // ok &= tst_arm_018();
     // ok &= tst_arm_016();
     // ok &= tst_math_021();
-    // ok &= tst_math_022();
     // ok &= tst_cal_005();
     // ok &= tst_cal_006();
-    // ok &= tst_arm_017();
+    ok &= tst_arm_018();
+    // ok &= tst_math_023();
+    ok &= tst_arm_016();
 
 
     return (ok)? RET_OK : RET_ERROR;
