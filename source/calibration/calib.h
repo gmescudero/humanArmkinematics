@@ -96,26 +96,6 @@ ERROR_CODE cal_automatic_rotation_axis_calibrate(
 
 
 
-
-
-/**
- * @brief Calibrate two rotation axis for a 2 DOF joint knowing its angular velocities by using genetic algorithms
- * 
- * @param q_sensor1 (input) Quaternion orientation of the first sensor
- * @param q_sensor2 (input) Quaternion orientation of the second sensor
- * @param rotationV1 (input/output) First rotation vector
- * @param rotationV2 (input/output) Second rotation vector
- * @return ERROR_CODE 
- */
-ERROR_CODE cal_automatic_two_rotation_axes_ga_calibrate(
-    Quaternion q_sensor1,
-    Quaternion q_sensor2,
-    double rotationV1[3],
-    double rotationV2[3]);
-
-
-
-
 /**
  * @brief Initialize two rotation axes calibration resources. It requires to set up buffers for database field 
  *  including gyroscope and quaternion measures as well as relative angular velocity.
