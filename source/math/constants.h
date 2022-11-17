@@ -30,7 +30,7 @@
 /**
  * @brief Minimum precission value
  */
-#define EPSI (1e-9)
+#define EPSI (1e-7)
 
 /**
  * @brief Conversion from Degrees to Radians

@@ -399,22 +399,19 @@ void quaternion_fromEulerZXY(double eulerZXY[3], Quaternion* output)
 void quaternion_toEulerZXY(Quaternion* q, double output[3]) {
     assert(output != NULL);
 
-    // y-axis rotation
-    double sy_cx = 2.0*(-q->w*q->v[1] + q->v[0]*q->v[2]);
-    double cy_cx = 1.0 - 2.0*(q->v[0]*q->v[0] + q->v[1]*q->v[1]);
-    output[0] = -atan2(sy_cx,cy_cx);
-
-    // x-axis rotation
-    double sx = -2.0*(q->v[1]*q->v[2] + q->w*q->v[0]);
-    if (fabs(sx) > 1.0-QUATERNION_EPS)
-        output[1] = -copysign(M_PI / 2, sx); // use 90 degrees if out of range
-    else
-        output[1] = -asin(sx);
+    double q0 = q->w;
+    double q1 = q->v[0];
+    double q2 = q->v[1];
+    double q3 = q->v[2];
 
     // z-axis rotation
-    double sz_cx = 2.0*(-q->w*q->v[2] + q->v[0]*q->v[1]);
-    double cz_cx = 1.0 - 2.0*(q->v[0]*q->v[0] + q->v[2]*q->v[2]);
-    output[2] = -atan2(sz_cx,cz_cx);
+    output[2] = atan2(2.0*(q0*q3 - q1*q2), q0*q0 - q1*q1 + q2*q2 - q3*q3);
+    // x-axis rotation
+    output[1] = asin(2.0*(q0*q1 + q2*q3));
+    // y-axis rotation
+    output[0] = atan2(2.0*(q0*q2 - q1*q3), q0*q0 - q1*q1 - q2*q2 + q3*q3);
+
+    return;
 }
 
 void quaternion_fromEulerYXZ(double eulerYXZ[3], Quaternion* output)
