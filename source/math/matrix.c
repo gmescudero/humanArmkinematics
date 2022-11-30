@@ -525,6 +525,7 @@ ERROR_CODE matrix_linear_system_solve(MATRIX A, MATRIX b, double tolerance, MATR
     }
 
     matrix_free(aux_M);
+    matrix_free(guess_new);
 
     return status;
 }
