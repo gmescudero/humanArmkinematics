@@ -475,18 +475,18 @@ ERROR_CODE matrix_linear_system_solve(MATRIX A, MATRIX b, double tolerance, MATR
     ERROR_CODE status = RET_OK;
     int size = A.cols;
     // Check arguments
-    if (false == A.allocated)           return RET_ARG_ERROR;
-    if (false == b.allocated)           return RET_ARG_ERROR;
-    if (false == guess->allocated)      return RET_ARG_ERROR;
-    if (A.rows != A.cols)               return RET_ARG_ERROR;
-    if (b.rows != size)                 return RET_ARG_ERROR;
-    if (b.cols != 1)                    return RET_ARG_ERROR;
-    if (guess->rows != size)            return RET_ARG_ERROR;
-    if (guess->cols != 1)               return RET_ARG_ERROR;
+    if (false == A.allocated)      return RET_ARG_ERROR;
+    if (false == b.allocated)      return RET_ARG_ERROR;
+    if (false == guess->allocated) return RET_ARG_ERROR;
+    if (A.rows != A.cols)          return RET_ARG_ERROR;
+    if (b.rows != size)            return RET_ARG_ERROR;
+    if (b.cols != 1)               return RET_ARG_ERROR;
+    if (guess->rows != size)       return RET_ARG_ERROR;
+    if (guess->cols != 1)          return RET_ARG_ERROR;
+    if (0 >= tolerance)            return RET_ARG_ERROR;
 
     double convergence = 1e300;
     double sigma;
-    MATRIX aux_M = matrix_allocate(size,1);
     MATRIX guess_new = matrix_from_matrix_allocate(*guess);
     
     // Solve A*guess = b
@@ -506,16 +506,17 @@ ERROR_CODE matrix_linear_system_solve(MATRIX A, MATRIX b, double tolerance, MATR
                 status = RET_ERROR;
             }
         }
-        // Evaluate convergence 
-        if (RET_OK == status) status = matrix_substract(guess_new,*guess,&aux_M);
-        if (RET_OK == status) convergence = 0.0;
-        for (int element = 0; RET_OK == status && element < size; element++) {
-            convergence += fabs(aux_M.data[element][0]);
-        }
-        // Set new gess
-        if (RET_OK == status) status = matrix_copy(guess_new, guess);
+        if (RET_OK == status) {
+            // Evaluate convergence 
+            convergence = 0.0;
+            for (int element = 0; RET_OK == status && element < size; element++) {
+                convergence += fabs(guess_new.data[element][0] - guess->data[element][0]);
+            }
+            // Set new guess
+            status = matrix_copy(guess_new, guess);
 
-        dbg_str("%s -> Iteration %d with convergence value %f",__FUNCTION__,iteration,convergence);
+            dbg_str("%s -> Iteration %d with convergence value %f",__FUNCTION__,iteration,convergence);
+        }
     }
 
     // Check result
@@ -524,7 +525,6 @@ ERROR_CODE matrix_linear_system_solve(MATRIX A, MATRIX b, double tolerance, MATR
         status = RET_ERROR;
     }
 
-    matrix_free(aux_M);
     matrix_free(guess_new);
 
     return status;
