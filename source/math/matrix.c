@@ -470,3 +470,61 @@ void matrix_print(MATRIX a, const char *name) {
     }
     log_str("%dx%d Matrix (%s): %s",a.rows, a.cols, (NULL!=name)?name:"-", string);
 }
+
+ERROR_CODE matrix_linear_system_solve(MATRIX A, MATRIX b, double tolerance, MATRIX *guess) {
+    ERROR_CODE status = RET_OK;
+    int size = A.cols;
+    // Check arguments
+    if (false == A.allocated)           return RET_ARG_ERROR;
+    if (false == b.allocated)           return RET_ARG_ERROR;
+    if (false == guess->allocated)      return RET_ARG_ERROR;
+    if (A.rows != A.cols)               return RET_ARG_ERROR;
+    if (b.rows != size)                 return RET_ARG_ERROR;
+    if (b.cols != 1)                    return RET_ARG_ERROR;
+    if (guess->rows != size)            return RET_ARG_ERROR;
+    if (guess->cols != 1)               return RET_ARG_ERROR;
+
+    double convergence = 1e300;
+    double sigma;
+    MATRIX aux_M = matrix_allocate(size,1);
+    MATRIX guess_new = matrix_from_matrix_allocate(*guess);
+    
+    // Solve A*guess = b
+    for (int iteration = 0; RET_OK == status && convergence > tolerance &&  iteration < 1000; iteration++) {
+        for (int i = 0; RET_OK == status && i < size; i++) {
+            sigma = 0.0;
+            for (int j = 0; j < size; j++) {
+                if (i!=j) {
+                    sigma += A.data[i][j] * guess->data[j][0];
+                }
+            }
+            if (fabs(A.data[i][i]) > EPSI) {
+                guess_new.data[i][0] = (b.data[i][0] - sigma) / A.data[i][i];
+            }
+            else {
+                err_str("Element %d,%d of the matrix is zero",i,i);
+                status = RET_ERROR;
+            }
+        }
+        // Evaluate convergence 
+        if (RET_OK == status) status = matrix_substract(guess_new,*guess,&aux_M);
+        if (RET_OK == status) convergence = 0.0;
+        for (int element = 0; RET_OK == status && element < size; element++) {
+            convergence += fabs(aux_M.data[element][0]);
+        }
+        // Set new gess
+        if (RET_OK == status) status = matrix_copy(guess_new, guess);
+
+        dbg_str("%s -> Iteration %d with convergence value %f",__FUNCTION__,iteration,convergence);
+    }
+
+    // Check result
+    if (convergence > tolerance) {
+        err_str("Did not find solution to system Ax = b");
+        status = RET_ERROR;
+    }
+
+    matrix_free(aux_M);
+
+    return status;
+}

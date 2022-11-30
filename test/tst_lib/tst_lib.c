@@ -686,38 +686,6 @@ bool assert_dbFieldQuaternion(DB_FIELD_IDENTIFIER field, int instance, const Qua
     return assert_dbFieldQuaternionThreshold(field,instance,expected,EPSI,description);
 }
 
-bool assert_matrix(MATRIX actual, MATRIX expected, const char *description) {
-    bool ok = true;
-
-    ok &= assert_int(actual.rows, expected.rows, NULL);
-    ok &= assert_int(actual.cols, expected.cols, NULL);
-
-    for (int r = 0; ok && r < expected.rows; r ++) {
-        for (int c = 0; ok && c < expected.cols; c ++) {
-            ok &= assert_double(actual.data[r][c], expected.data[r][c], EPSI, NULL);
-        }
-    }
-
-    if (WILL_PRINT(ok) && (NULL != description)) {        
-        printf("\t -> RESULT: %s (%s) | EXPECTED: ", (true == ok)?"PASSED":"FAILED", description);
-        for (int r = 0; r < expected.rows; r ++) {
-            printf("\n\t\t");
-            for (int c = 0; c < expected.cols; c ++) {
-                printf("%f\t",expected.data[r][c]);
-            }
-        }
-        printf("\n\n\t\tACTUAL: ");
-        for (int r = 0; r < actual.rows; r ++) {
-            printf("\n\t\t");
-            for (int c = 0; c < actual.cols; c ++) {
-                printf("%f\t",actual.data[r][c]);
-            }
-        }
-        printf("\n");
-    }
-    return ok;
-}
-
 
 bool assert_matrixThreshold(MATRIX actual, MATRIX expected, const double threshold, const char *description) {
     bool ok = true;
@@ -750,6 +718,10 @@ bool assert_matrixThreshold(MATRIX actual, MATRIX expected, const double thresho
         printf("\n");
     }
     return ok;
+}
+
+bool assert_matrix(MATRIX actual, MATRIX expected, const char *description) {
+    return assert_matrixThreshold(actual, expected, EPSI, description);
 }
 
 bool assert_matrixIdentity(MATRIX actual, const char *description) {

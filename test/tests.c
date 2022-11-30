@@ -1137,6 +1137,42 @@ bool tst_math_026()
     return ok;
 }
 
+
+bool tst_math_027()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX A = matrix_allocate(2,2);
+    MATRIX b = matrix_allocate(2,1);
+    MATRIX guess = matrix_allocate(2,1);
+    double tolerance = 1e-9;
+    MATRIX expected = matrix_from_matrix_allocate(guess);
+
+    testDescription(__FUNCTION__, "Check the linear equations system solver");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test steps
+    A.data[0][0] = 2.0; A.data[0][1] = 1.0; 
+    A.data[1][0] = 5.0; A.data[1][1] = 7.0;
+    b.data[0][0] = 11.0; b.data[1][0] = 13.0;
+    guess.data[0][0] = 1.0; guess.data[1][0] = 1.0;
+
+    ret = matrix_linear_system_solve(A,b,tolerance,&guess);
+    ok &= assert_OK(ret,"matrix_linear_system_solve");
+
+    expected.data[0][0] = 7.1111111111; expected.data[1][0] = -3.2222222222222;
+    ok &= assert_matrix(guess,expected,"matrix_linear_system_solve result");
+
+    matrix_free(A);
+    matrix_free(b);
+    matrix_free(guess);
+    matrix_free(expected);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
 bool tst_db_001()
 {
     bool ok = true;
@@ -3227,6 +3263,7 @@ bool tst_battery_all()
     ok &= tst_math_024();
     ok &= tst_math_025();
     ok &= tst_math_026();
+    ok &= tst_math_027();
 
     ok &= tst_db_001();
     ok &= tst_db_002();

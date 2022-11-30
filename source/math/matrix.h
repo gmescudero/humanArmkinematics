@@ -160,4 +160,16 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output);
  * @param name (input) Specific name of the matrix. Can be NULL
  */
 void matrix_print(MATRIX a, const char *name);
+/**
+ * @brief Solve a system of linear equations in the form Ax - b = 0 with the Jacobi method
+ * 
+ * @param A (input) Coeficients matrix
+ * @param b (input) Offset vector
+ * @param tolerance (input) Precission value to reach
+ * @param guess (input/output) Solution guess. Serves as initial guess and is set with the final solution
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_linear_system_solve(MATRIX A, MATRIX b, double tolerance, MATRIX *guess);
+
+
 #endif /* __matrix_h__ */
