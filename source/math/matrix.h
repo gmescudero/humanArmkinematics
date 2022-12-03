@@ -60,6 +60,13 @@ void matrix_free(MATRIX a);
  */
 ERROR_CODE matrix_copy(MATRIX a, MATRIX *output);
 /**
+ * @brief Set a given square matrix with an identity
+ * 
+ * @param a (outpt) Identity matrix
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_identity_set(MATRIX *a);
+/**
  * @brief Transpose a given matrix
  * 
  * @param a (input) Matrix to transpose
@@ -170,6 +177,14 @@ void matrix_print(MATRIX a, const char *name);
  * @return ERROR_CODE 
  */
 ERROR_CODE matrix_linear_system_solve(MATRIX A, MATRIX b, double tolerance, MATRIX *guess);
-
+/**
+ * @brief Compute the eigenvalues and eigenvectors of a matrix
+ * 
+ * @param A (input) Matrix to get eigen values of
+ * @param eigenvalues (output) Vector with all the eigenvalues in decreasing order
+ * @param eigenvectors (output) Matrix with the eigenvectors asocianted to each eigenvalue as columns
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_eigen(MATRIX A, double eigenvalues[], MATRIX *eigenvectors);
 
 #endif /* __matrix_h__ */

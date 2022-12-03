@@ -1137,7 +1137,6 @@ bool tst_math_026()
     return ok;
 }
 
-
 bool tst_math_027()
 {
     bool ok = true;
@@ -1172,6 +1171,41 @@ bool tst_math_027()
     testReport(ok);
     return ok;
 }
+
+bool tst_math_028()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX A = matrix_allocate(4,4);
+    double eigenvalues[4] = {0};
+    MATRIX eigenvectors = matrix_allocate(4,4);
+
+    double expected_eigenvalues[4] = {2585.25381032832231, 37.1014913651276582, 1.4780548441181369, 0.1666428611718905};
+
+    testDescription(__FUNCTION__, "Check the eigen values calculation");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test steps
+    A.data[0][0] =   4.0; A.data[0][1] =  -30.0; A.data[0][2] =    60.0; A.data[0][3] =   -35.0;
+    A.data[1][0] = -30.0; A.data[1][1] =  300.0; A.data[1][2] =  -675.0; A.data[1][3] =   420.0;
+    A.data[2][0] =  60.0; A.data[2][1] = -675.0; A.data[2][2] =  1620.0; A.data[2][3] = -1050.0;
+    A.data[3][0] = -35.0; A.data[3][1] =  420.0; A.data[3][2] = -1050.0; A.data[3][3] =   700.0;
+
+    ret = matrix_eigen(A,eigenvalues,&eigenvectors);
+    ok &= assert_OK(ret,"matrix_eigen");
+    for (int i=0; i<4; i++) {
+        ok &= assert_double(eigenvalues[i],expected_eigenvalues[i],EPSI,"matrix_eigen result");
+    }
+    matrix_print(eigenvectors,"eigenvectors matrix");
+
+    matrix_free(A);
+    matrix_free(eigenvectors);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
 
 bool tst_db_001()
 {
@@ -3330,7 +3364,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    ok &= tst_battery_all();
+    // ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_com_002();
@@ -3341,7 +3375,7 @@ int main(int argc, char **argv)
     // ok &= tst_cal_005();
     // ok &= tst_cal_006();
     // ok &= tst_arm_018();
-    // ok &= tst_math_023();
+    ok &= tst_math_028();
     // ok &= tst_arm_016();
 
 
