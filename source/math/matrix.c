@@ -625,20 +625,24 @@ ERROR_CODE smatrix_rotate(int row, int col, double angle, MATRIX *A) {
  * @brief Check if a given matrix is diagonal
  * 
  * @param A (input) Matrix to check
+ * @param check_no_zero_in_diagonal (input) If true, checks that the diagonal is non-zero
  * @return true if matrix is diagonal
  * @return false if matrix is not diagonal
  */
-bool smatrix_diagonal_check(MATRIX A) {
+bool smatrix_diagonal_check(MATRIX A, bool check_no_zero_in_diagonal) {
+    double acum = 0.0;
     if (A.rows != A.cols) return false;
     for (int r = 0; r < A.rows; r++) {
-        if (fabs(A.data[r][r]) < EPSI) {
+        if (true == check_no_zero_in_diagonal && fabs(A.data[r][r]) < EPSI) {
             return false;
         }
         for (int c = r+1; c < A.cols; c++) {
-            if (fabs(A.data[r][c]) > EPSI || fabs(A.data[c][r]) > EPSI) {
-                return false;
-            }
+            acum += A.data[r][c]*A.data[r][c];
+            acum += A.data[c][r]*A.data[c][r];
         }
+    }
+    if (sqrt(acum) > EPSI) {
+        return false;
     }
     return true;
 }
@@ -679,7 +683,7 @@ ERROR_CODE matrix_eigen(MATRIX A, double eigenvalues[], MATRIX *eigenvectors) {
 
     // Iterate rotations
     int iterations = 0;
-    while (iterations++ < 100 && RET_OK == status && !smatrix_diagonal_check(A)) {        
+    while (iterations++ < 100 && RET_OK == status && !smatrix_diagonal_check(A, false)) {        
         // Find pivot index
         int pivot_row = 0;
         int pivot_col = 1;
@@ -692,8 +696,8 @@ ERROR_CODE matrix_eigen(MATRIX A, double eigenvalues[], MATRIX *eigenvectors) {
         // Rotate Eigen vectors
         if (RET_OK == status) status = smatrix_rotate(pivot_row, pivot_col, angle, eigenvectors);
 
-        dbg_str("%s -> Eigen IT [%d]: k:<%d>, l:<%d>, p:<%f>, angle:<%f>",
-            __FUNCTION__,iterations,pivot_row,pivot_col,pivot_value,angle);
+        // dbg_str("%s -> Eigen IT [%d]: k:<%d>, l:<%d>, p:<%f>, angle:<%f>",
+        //     __FUNCTION__,iterations,pivot_row,pivot_col,pivot_value,angle);
     }
 
     // Get eigenvalues
@@ -721,7 +725,7 @@ ERROR_CODE matrix_eigen(MATRIX A, double eigenvalues[], MATRIX *eigenvectors) {
         }
     }
 
-    if (!smatrix_diagonal_check(A)) {
+    if (!smatrix_diagonal_check(A, false)) {
         err_str("Failed to compute eigen values of matrix A");
         matrix_print(A,"A");
         return RET_ERROR;
@@ -733,28 +737,102 @@ ERROR_CODE matrix_eigen(MATRIX A, double eigenvalues[], MATRIX *eigenvectors) {
 }
 
 
-typedef struct MATRIX_SVD_STRUCT {
-    MATRIX U;
-    MATRIX V;
-    MATRIX Sigma;
-    bool set;
-} MATRIX_SVD;
-
-// TODO: Work In Progress, still a lot to do
-MATRIX_SVD matrix_svd_allocate_and_set(MATRIX A, double tolerance, int *iterations) {
-    // ERROR_CODE status = RET_OK;
+MATRIX_SVD matrix_svd_allocate_and_set(MATRIX A) {
+    ERROR_CODE status = RET_OK;
     MATRIX_SVD svd;
-    // double error = tolerance + 10.0;
     int n = A.cols;
     int m = A.rows;
+    double eigenvalues[MAX(n,m)];
 
     // Initialize SVD
-    svd.U = matrix_allocate(n,n);
-    svd.V = matrix_allocate(m,m);
-    svd.Sigma = matrix_allocate(m,n);
+    for (int i = 0; i < MAX(n,m); i++) {
+        eigenvalues[i] = 0.0;
+    }
+    svd.U = matrix_allocate(m,m);
+    svd.V = matrix_allocate(n,n);
+    svd.Sigma = matrix_zeros_allocate(m,n);
     svd.set = false;
 
+    // Allocate auxiliary matrixes
+    MATRIX At = matrix_allocate(n,m);
+    MATRIX A_At = matrix_allocate(m,m);
+    MATRIX At_A = matrix_allocate(n,n);
 
+    // Set A transpose
+    status = matrix_transpose(A,&At);
+
+    // Get A * A transpose and A transpose * A
+    if (RET_OK == status) status = matrix_multiply(A,At, &A_At);
+    if (RET_OK == status) status = matrix_multiply(At,A, &At_A);
+
+    // Compute squared eigenvalues and eigenvectors matrixes 
+    if (RET_OK == status) status = matrix_eigen(A_At, eigenvalues, &svd.U);
+    if (RET_OK == status) status = matrix_eigen(At_A, eigenvalues, &svd.V);
+
+    // Set Sigma diagonal matrix
+    for (int i = 0; RET_OK == status && i < MIN(n,m); i++) {
+        svd.Sigma.data[i][i] = sqrt(eigenvalues[i]);
+    }
+
+    if (RET_OK == status) {
+        svd.set = true;
+    }
+    else {
+        err_str("Failed to compute SVD");
+        matrix_svd_free(svd);
+    }
+
+    // Free auxiliary matrixes
+    matrix_free(At);
+    matrix_free(A_At);
+    matrix_free(At_A);
 
     return svd;
+}
+
+void matrix_svd_free(MATRIX_SVD svd) {
+    matrix_free(svd.Sigma);
+    matrix_free(svd.U);
+    matrix_free(svd.V);
+}
+
+ERROR_CODE matrix_pseudoinverse(MATRIX A, MATRIX *output) {
+    ERROR_CODE status = RET_OK;
+
+    if (false == A.allocated)       return RET_ARG_ERROR;
+    if (false == output->allocated) return RET_ARG_ERROR;
+    if (A.rows != output->cols)     return RET_ARG_ERROR;
+    if (A.cols != output->rows)     return RET_ARG_ERROR;
+
+    MATRIX_SVD svd = matrix_svd_allocate_and_set(A);
+    if (false == svd.set) {
+        return RET_ERROR;
+    }
+
+    // Compute the pseudo-inverse of Sigma
+    MATRIX S_inv  = matrix_zeros_allocate(svd.Sigma.cols, svd.Sigma.rows);
+    for (int i = 0; i < MIN(S_inv.rows,S_inv.cols); i++) {
+        if (fabs(svd.Sigma.data[i][i]) > EPSI) {
+            S_inv.data[i][i] = 1.0/svd.Sigma.data[i][i];
+        }
+    }
+
+    // pinv(A) = V*pinv(S)*Ut
+    MATRIX Ut        = matrix_allocate(svd.U.cols, svd.U.rows);
+    MATRIX Sinv_Ut   = matrix_allocate(S_inv.rows, Ut.cols);
+    MATRIX V_Sinv_Ut = matrix_allocate(svd.V.rows, Sinv_Ut.cols);
+
+    status = matrix_transpose(svd.U,&Ut);
+    if (RET_OK == status) status = matrix_multiply(S_inv,Ut, &Sinv_Ut);
+    if (RET_OK == status) status = matrix_multiply(svd.V,Sinv_Ut, &V_Sinv_Ut);
+
+    if (RET_OK == status) status = matrix_copy(V_Sinv_Ut, output);
+
+    matrix_free(S_inv);
+    matrix_free(Ut);
+    matrix_free(Sinv_Ut);
+    matrix_free(V_Sinv_Ut);
+    matrix_svd_free(svd);
+
+    return status;
 }

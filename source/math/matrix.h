@@ -22,6 +22,13 @@ typedef struct MATRIX_STRUCT
     double **data;
 }MATRIX;
 
+typedef struct MATRIX_SVD_STRUCT {
+    MATRIX U;
+    MATRIX V;
+    MATRIX Sigma;
+    bool set;
+} MATRIX_SVD;
+
 /**
  * @brief Allocate memory for a matrix
  * 
@@ -194,5 +201,27 @@ ERROR_CODE matrix_linear_system_solve(MATRIX A, MATRIX b, double tolerance, MATR
  * @return ERROR_CODE 
  */
 ERROR_CODE matrix_eigen(MATRIX A, double eigenvalues[], MATRIX *eigenvectors);
+/**
+ * @brief Compute the Singular Value Decomposition of a matrix and allocate memory for it
+ * 
+ * @param A (input) Matrix to get SVD from
+ * @return MATRIX_SVD: A structure with the singular values decomposition
+ */
+MATRIX_SVD matrix_svd_allocate_and_set(MATRIX A);
+/**
+ * @brief Free the allocated memory of a SVD
+ * 
+ * @param svd (input) SVD structure to free
+ */
+void matrix_svd_free(MATRIX_SVD svd);
+/**
+ * @brief Compute the Moore-Penrose pseudoinverse of a matrix using SVD
+ * 
+ * @param a (input) Matrix to invert
+ * @param output (output) Inverted matrix
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_pseudoinverse_svd(MATRIX A, MATRIX *output);
+
 
 #endif /* __matrix_h__ */
