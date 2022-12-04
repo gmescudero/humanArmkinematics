@@ -381,6 +381,17 @@ bool assert_double(double actual, double expected, double threshold, const char 
     return ok;
 }
 
+bool assert_bool(bool actual, bool expected, const char *description) {
+    bool ok = true;
+
+    ok = (actual == expected);
+    if (WILL_PRINT(ok) && (NULL != description)) {
+        printf("\t -> RESULT: %s (%s) | EXPECTED: %s, ACTUAL: %s\n", 
+            (true == ok)?"PASSED":"FAILED", description, (expected)?"TRUE":"FALSE", (actual)?"TRUE":"FALSE");
+    }
+    return ok;
+}
+
 bool assert_string(const char *actual, const char *expected, const char *description) {
     bool ok = true;
 

@@ -22,6 +22,13 @@ typedef struct MATRIX_STRUCT
     double **data;
 }MATRIX;
 
+typedef struct MATRIX_SVD_STRUCT {
+    MATRIX U;
+    MATRIX V;
+    MATRIX Sigma;
+    bool set;
+} MATRIX_SVD;
+
 /**
  * @brief Allocate memory for a matrix
  * 
@@ -30,6 +37,14 @@ typedef struct MATRIX_STRUCT
  * @return MATRIX with allocated memory 
  */
 MATRIX matrix_allocate(unsigned rows, unsigned cols);
+/**
+ * @brief Allocate memory for a matrix of zeros
+ * 
+ * @param rows (input) Number of rows
+ * @param cols (input) Number of columns
+ * @return MATRIX with allocated memory 
+ */
+MATRIX matrix_zeros_allocate(unsigned rows, unsigned cols);
 /**
  * @brief Allocate memory for a square matrix and initialize it with an identity matrix
  * 
@@ -59,6 +74,13 @@ void matrix_free(MATRIX a);
  * @return ERROR_CODE 
  */
 ERROR_CODE matrix_copy(MATRIX a, MATRIX *output);
+/**
+ * @brief Set a given square matrix with an identity
+ * 
+ * @param a (outpt) Identity matrix
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_identity_set(MATRIX *a);
 /**
  * @brief Transpose a given matrix
  * 
@@ -170,6 +192,36 @@ void matrix_print(MATRIX a, const char *name);
  * @return ERROR_CODE 
  */
 ERROR_CODE matrix_linear_system_solve(MATRIX A, MATRIX b, double tolerance, MATRIX *guess);
+/**
+ * @brief Compute the eigenvalues and eigenvectors of a real symmetric matrix
+ * 
+ * @param A (input) Matrix to get eigen values of
+ * @param eigenvalues (output) Vector with all the eigenvalues in decreasing order
+ * @param eigenvectors (output) Matrix with the eigenvectors asocianted to each eigenvalue as columns
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_eigen(MATRIX A, double eigenvalues[], MATRIX *eigenvectors);
+/**
+ * @brief Compute the Singular Value Decomposition of a matrix and allocate memory for it
+ * 
+ * @param A (input) Matrix to get SVD from
+ * @return MATRIX_SVD: A structure with the singular values decomposition
+ */
+MATRIX_SVD matrix_svd_allocate_and_set(MATRIX A);
+/**
+ * @brief Free the allocated memory of a SVD
+ * 
+ * @param svd (input) SVD structure to free
+ */
+void matrix_svd_free(MATRIX_SVD svd);
+/**
+ * @brief Compute the Moore-Penrose pseudoinverse of a matrix using SVD
+ * 
+ * @param a (input) Matrix to invert
+ * @param output (output) Inverted matrix
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_pseudoinverse_svd(MATRIX A, MATRIX *output);
 
 
 #endif /* __matrix_h__ */

@@ -68,6 +68,7 @@ bool assert_ERROR(ERROR_CODE status, const char *description);
 bool assert_int(int actual, int expected, const char *description);
 bool assert_int_greater_or_equal(int actual, int expected, const char *description);
 bool assert_double(double actual, double expected, double threshold, const char *description);
+bool assert_bool(bool actual, bool expected, const char *description);
 bool assert_string(const char *actual, const char *expected, const char *description);
 bool assert_string_not_equal(const char *actual, const char *expected, const char *description);
 bool assert_string_empty(const char *actual, const char *description);
