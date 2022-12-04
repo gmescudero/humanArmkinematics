@@ -1194,7 +1194,7 @@ bool tst_math_028()
     ret = matrix_eigen(A,eigenvalues,&eigenvectors);
     ok &= assert_OK(ret,"matrix_eigen");
     for (int i=0; i<4; i++) {
-        ok &= assert_double(eigenvalues[i],expected_eigenvalues[i],EPSI,"matrix_eigen result");
+        ok &= assert_double(eigenvalues[i],expected_eigenvalues[i],1e-5,"matrix_eigen result");
     }
     matrix_print(eigenvectors,"eigenvectors matrix");
 

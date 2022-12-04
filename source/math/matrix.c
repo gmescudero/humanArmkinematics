@@ -39,6 +39,16 @@ MATRIX matrix_allocate(unsigned rows, unsigned cols) {
     return result;
 }
 
+MATRIX matrix_zeros_allocate(unsigned rows, unsigned cols) {
+    MATRIX result = matrix_allocate(rows,cols);
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            result.data[r][c] = 0.0;
+        }
+    }
+    return result;
+}
+
 MATRIX matrix_identity_allocate(unsigned size) {
     MATRIX result = matrix_allocate(size,size);
     if (RET_OK != matrix_identity_set(&result)) {
@@ -544,61 +554,112 @@ ERROR_CODE matrix_linear_system_solve(MATRIX A, MATRIX b, double tolerance, MATR
 }
 
 /**
- * @brief Finds the index of the largest off-diagonal element in a row
+ * @brief Finds the index of the largest off-diagonal element
  * 
  * @param A (input) Matrix in which to look
- * @param row (input) Row to look
- * @return int: the index of the largest off-diagonal element
+ * @param row (output) Row of the maximum index
+ * @param col (output) Column of the maixum index
  */
-int smatrix_maxind(MATRIX A, int row) {
-    int maxind = row+1;
-
-    for (int col = row+2; col < A.cols; col++) {
-        if (A.data[row][col] > A.data[row][maxind]){
-            maxind = col;
+void smatrix_maxind(MATRIX A, int *row, int *col) {
+    *row = 0;
+    *col = 1;
+    for (int r = 0; r < A.rows-1; r++) { 
+        for (int c = r+1; c < A.cols; c++) {
+            if (fabs(A.data[r][c]) > fabs(A.data[*row][*col])){
+                *row = r;
+                *col = c;
+            }
         }
     }
-
-    return maxind;
 }
 
 /**
- * @brief Update the process of the eigen search procedure
+ * @brief Rotate a matrix around a pivot element with a given angle with the form A := P' A P
  * 
- * @param increment (input) Value to increment the eigen value with
- * @param eigen (input/output) The current eigen value to be updated
- * @param changed (input/output) Indicates whether the eigen values has changed or not
- * @param state (input/output) Indicates how many eigen vectors are left to compute
+ * @param row (input) Row of the pivot element
+ * @param col (input) Column of the pivot element
+ * @param angle (inptu) Angle to rotate
+ * @param A (input/output) Matrix to rotate
+ * @return ERROR_CODE 
  */
-void smatrix_eigen_iteration_update(double increment, double *eigen, bool *changed, int *state) {
-    double old_eig = *eigen; 
-    *eigen += increment;
-    if (true == *changed && fabs(old_eig - *eigen) < EPSI) {
-        *changed = false; 
-        state--;
-    }
-    else if (false == *changed && fabs(old_eig - *eigen) > EPSI) {
-        *changed = true;
-        state++;
-    }
+ERROR_CODE smatrix_pivot(int row, int col, double angle, MATRIX *A) {
+    ERROR_CODE status = RET_OK;
+    MATRIX P = matrix_identity_allocate(A->rows);
+
+    P.data[row][row] = cos(angle);  P.data[row][col] =-sin(angle);
+    P.data[col][row] = sin(angle);  P.data[col][col] = cos(angle);  
+
+    // A := Pt A P
+    status = matrix_multiply(*A,P, A);
+    if (RET_OK == status) status = matrix_transpose(P,&P);
+    if (RET_OK == status) status = matrix_multiply(P,*A, A);
+
+    matrix_free(P);
+    return status;
 }
 
 /**
- * @brief Rotate two elements of a matrix
+ * @brief Rotate a matrix around a pivot element with a given angle with the form A := A P
  * 
- * @param row1 (input) Row of the first element to rotate
- * @param col1 (input) Column of the first element to rotate
- * @param row2 (input) Row of the second element to rotate
- * @param col2 (input) Column of the second element to rotate
- * @param sine (input) Sine of the angle Phi that will be rotated
- * @param cosine (input) Cosine of the angle Phi that will be rotated
- * @param A (input/output) Matrix whose index will be rotated
+ * @param row (input) Row of the pivot element
+ * @param col (input) Column of the pivot element
+ * @param angle (inptu) Angle to rotate
+ * @param A (input/output) Matrix to rotate
+ * @return ERROR_CODE 
  */
-void smatrix_two_elements_rotate(int row1, int col1, int row2, int col2, double sine, double cosine, MATRIX *A) {
-    double a_r1c1 = cosine*A->data[row1][col1] - sine*A->data[row2][col2];
-    double a_r2c2 = sine*A->data[row1][col1] + cosine*A->data[row2][col2];
-    A->data[row1][col1] = a_r1c1;
-    A->data[row2][col2] = a_r2c2;
+ERROR_CODE smatrix_rotate(int row, int col, double angle, MATRIX *A) {
+    ERROR_CODE status = RET_OK;
+    MATRIX P = matrix_identity_allocate(A->rows);
+
+    P.data[row][row] = cos(angle);  P.data[row][col] =-sin(angle);
+    P.data[col][row] = sin(angle);  P.data[col][col] = cos(angle);  
+
+    // A := A P
+    status = matrix_multiply(*A,P, A);
+
+    matrix_free(P);
+    return status;
+}
+
+/**
+ * @brief Check if a given matrix is diagonal
+ * 
+ * @param A (input) Matrix to check
+ * @return true if matrix is diagonal
+ * @return false if matrix is not diagonal
+ */
+bool smatrix_diagonal_check(MATRIX A) {
+    if (A.rows != A.cols) return false;
+    for (int r = 0; r < A.rows; r++) {
+        if (fabs(A.data[r][r]) < EPSI) {
+            return false;
+        }
+        for (int c = r+1; c < A.cols; c++) {
+            if (fabs(A.data[r][c]) > EPSI || fabs(A.data[c][r]) > EPSI) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+/**
+ * @brief Check if a given matrix is symmetric
+ * 
+ * @param A (input) Matrix to check
+ * @return true if matrix is symmetric
+ * @return false if matrix is not symmetric
+ */
+bool smatrix_symmetryc_check(MATRIX A) {
+    if (A.rows != A.cols) return false;
+    for (int r = 0; r < A.rows; r++) {
+        for (int c = r+1; c < A.cols; c++) {
+            if (A.data[r][c] != A.data[c][r]) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 ERROR_CODE matrix_eigen(MATRIX A, double eigenvalues[], MATRIX *eigenvectors) {
@@ -609,78 +670,64 @@ ERROR_CODE matrix_eigen(MATRIX A, double eigenvalues[], MATRIX *eigenvectors) {
     if (false == eigenvectors->allocated) return RET_ARG_ERROR;
     if (NULL == eigenvalues)              return RET_ARG_ERROR;
 
-    if (A.rows !=size)              return RET_ARG_ERROR;
-    if (A.cols !=size)              return RET_ARG_ERROR;
-    if (eigenvectors->rows != size) return RET_ARG_ERROR;
-    if (eigenvectors->cols != size) return RET_ARG_ERROR;
-
-    int largest_row_index[size];
-    bool changed[size];
-    int state = size;
+    if (!smatrix_symmetryc_check(A)) return RET_ARG_ERROR;
+    if (eigenvectors->rows != size)  return RET_ARG_ERROR;
+    if (eigenvectors->cols != size)  return RET_ARG_ERROR;
 
     // Initialize
     status = matrix_identity_set(eigenvectors);
-    for (int k = 0; RET_OK == status && k < size; k++) {
-        largest_row_index[k] = smatrix_maxind(A,k);
-        eigenvalues[k] = A.data[k][k];
-        changed[k] = true;
-    }
 
-    // Iterate
-    int iterations = 10000;
-    while (iterations-- > 0 && RET_OK == status && state > 0) {
-        int pivot_row = 0;
-        int pivot_col = largest_row_index[pivot_row];
+    // Iterate rotations
+    int iterations = 0;
+    while (iterations++ < 100 && RET_OK == status && !smatrix_diagonal_check(A)) {        
         // Find pivot index
-        for (int k = 1; k < size-1; k++) {
-            if (A.data[k][largest_row_index[k]] > A.data[pivot_row][pivot_col]) {
-                pivot_row = k;
-                pivot_col = largest_row_index[pivot_row];
-            }
-        }
+        int pivot_row = 0;
+        int pivot_col = 1;
+        smatrix_maxind(A,&pivot_row,&pivot_col);
         double pivot_value = A.data[pivot_row][pivot_col];
         // Compute sine and cosine of rotation
-        double y = (eigenvalues[pivot_col]-eigenvalues[pivot_row])*0.5;
-        double d = fabs(y) + sqrt(pivot_value*pivot_value + y*y);
-        double r = sqrt(pivot_value*pivot_value + d*d);
-        double cosine = d/r;
-        double sine = pivot_value/r;
-        double increment = pivot_value*pivot_value/d;
-        if (y < 0) {
-            sine = -sine;
-            increment = -increment;
+        double angle = 0.5*atan2(2.0*pivot_value, A.data[pivot_row][pivot_row] - A.data[pivot_col][pivot_col]);
+        // Rotate A around pivot
+        status = smatrix_pivot(pivot_row, pivot_col, angle, &A);
+        // Rotate Eigen vectors
+        if (RET_OK == status) status = smatrix_rotate(pivot_row, pivot_col, angle, eigenvectors);
+
+        dbg_str("%s -> Eigen IT [%d]: k:<%d>, l:<%d>, p:<%f>, angle:<%f>",
+            __FUNCTION__,iterations,pivot_row,pivot_col,pivot_value,angle);
+    }
+
+    // Get eigenvalues
+    for (int k = 0; RET_OK == status && k < size; k++) {
+        eigenvalues[k] = A.data[k][k];
+    }
+
+    // Order in decreasing value
+    for (int k = 0; k < size-1; k++) {
+        int maxind = k;
+        for (int l = k+1; l < size; l++) {
+            if (eigenvalues[l] > eigenvalues[k]) {
+                maxind = l;
+            }
         }
-        // Update algorithm status
-        smatrix_eigen_iteration_update(-increment, &eigenvalues[pivot_row], &changed[pivot_row], &state);
-        smatrix_eigen_iteration_update( increment, &eigenvalues[pivot_col], &changed[pivot_col], &state);
-        // Rotate rows and columns around pivot
-        A.data[pivot_row][pivot_col] = 0.0;
-        for (int i = 0; i < pivot_row-1; i++) {
-            smatrix_two_elements_rotate(i,pivot_row,i,pivot_col,sine,cosine,&A);
-        }
-        for (int i = pivot_row+1; i < pivot_col-1; i++) {
-            smatrix_two_elements_rotate(pivot_row,i,i,pivot_col,sine,cosine,&A);
-        }
-        for (int i = pivot_col+1; i < size; i++) {
-            smatrix_two_elements_rotate(pivot_row,i,pivot_col,i,sine,cosine,&A);
-        }
-        // Rotate eigen vectors
-        for (int i = 0; i < size; i++) {
-            smatrix_two_elements_rotate(i,pivot_row,i,pivot_col,sine,cosine,eigenvectors);
-        }
-        // Update largest indexes
-        for (int k = 0; RET_OK == status && k < size; k++) {
-            largest_row_index[k] = smatrix_maxind(A,k);
+        if (k != maxind) {
+            double aux = eigenvalues[k];
+            eigenvalues[k] = eigenvalues[maxind];
+            eigenvalues[maxind] = aux;
+            for(int i = 0; i < size; i++) {
+                aux = eigenvectors->data[i][k];
+                eigenvectors->data[i][k] = eigenvectors->data[i][maxind];
+                eigenvectors->data[i][maxind] = aux;
+            }
         }
     }
 
-    if (0 >= iterations) {
-        err_str("Failed to compute eigen values of matrix A with %d out of %d remaining",state,size);
+    if (!smatrix_diagonal_check(A)) {
+        err_str("Failed to compute eigen values of matrix A");
         matrix_print(A,"A");
         return RET_ERROR;
     }
 
-    dbg_str("%s -> Found eigen values of matrix in %d iterations. Largest eigen value: %f",__FUNCTION__,10000-iterations, eigenvalues[0]);
+    dbg_str("%s -> Found eigen values of matrix in %d iterations. Largest eigen value: %f",__FUNCTION__,iterations, eigenvalues[0]);
 
     return status;
 }
@@ -695,30 +742,19 @@ typedef struct MATRIX_SVD_STRUCT {
 
 // TODO: Work In Progress, still a lot to do
 MATRIX_SVD matrix_svd_allocate_and_set(MATRIX A, double tolerance, int *iterations) {
-    ERROR_CODE status = RET_OK;
+    // ERROR_CODE status = RET_OK;
     MATRIX_SVD svd;
-    double error = tolerance + 10.0;
+    // double error = tolerance + 10.0;
     int n = A.cols;
     int m = A.rows;
 
     // Initialize SVD
     svd.U = matrix_allocate(n,n);
-    svd.V = matrix_identity_allocate(m);
+    svd.V = matrix_allocate(m,m);
     svd.Sigma = matrix_allocate(m,n);
     svd.set = false;
 
-    // status = matrix_copy()
 
-    // Set the U matrix as 
-    for (int it = 0; RET_OK == status && error > tolerance && it < *iterations; it++) {
-        for (int i = 0; i < n-1; i++) {
-            error = 0.0;
-            for (int j = i+1; j < n; j++) {
-                double norm_i, norm_j;
-                
-            }
-        }
-    }
 
     return svd;
 }

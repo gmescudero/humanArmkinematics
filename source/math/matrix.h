@@ -31,6 +31,14 @@ typedef struct MATRIX_STRUCT
  */
 MATRIX matrix_allocate(unsigned rows, unsigned cols);
 /**
+ * @brief Allocate memory for a matrix of zeros
+ * 
+ * @param rows (input) Number of rows
+ * @param cols (input) Number of columns
+ * @return MATRIX with allocated memory 
+ */
+MATRIX matrix_zeros_allocate(unsigned rows, unsigned cols);
+/**
  * @brief Allocate memory for a square matrix and initialize it with an identity matrix
  * 
  * @param size (input) Range of the matrix
@@ -178,7 +186,7 @@ void matrix_print(MATRIX a, const char *name);
  */
 ERROR_CODE matrix_linear_system_solve(MATRIX A, MATRIX b, double tolerance, MATRIX *guess);
 /**
- * @brief Compute the eigenvalues and eigenvectors of a matrix
+ * @brief Compute the eigenvalues and eigenvectors of a real symmetric matrix
  * 
  * @param A (input) Matrix to get eigen values of
  * @param eigenvalues (output) Vector with all the eigenvalues in decreasing order
