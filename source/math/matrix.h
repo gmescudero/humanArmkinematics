@@ -222,6 +222,13 @@ void matrix_svd_free(MATRIX_SVD svd);
  * @return ERROR_CODE 
  */
 ERROR_CODE matrix_pseudoinverse_svd(MATRIX A, MATRIX *output);
-
+/**
+ * @brief Obtain the Householders reduction to upper triangular matrixx
+ * 
+ * @param A (input) Matrix to make upper triangular
+ * @param output (output) The resulting upper triangular matrix
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_housholders_upper_triangular(MATRIX A, MATRIX *output);
 
 #endif /* __matrix_h__ */

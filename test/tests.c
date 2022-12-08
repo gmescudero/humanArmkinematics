@@ -1240,6 +1240,7 @@ bool tst_math_029()
     matrix_free(S_Vt);
     matrix_free(U_S_Vt);
     matrix_svd_free(svd);
+    matrix_free(expected_S);
     matrix_free(A);
 
     testCleanUp();
@@ -1247,6 +1248,48 @@ bool tst_math_029()
     return ok;
 }
 
+bool tst_math_030()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX A1 = matrix_allocate(3,3);
+    MATRIX expected_A1 = matrix_allocate(3,3);
+    MATRIX A2 = matrix_allocate(3,2);
+    MATRIX expected_A2 = matrix_allocate(3,2);
+
+    testDescription(__FUNCTION__, "Check the Householders reduction to upper diagonal form");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test steps
+    A1.data[0][0] = 12.0; A1.data[0][1] = -51.0; A1.data[0][2] =   4.0;
+    A1.data[1][0] =  6.0; A1.data[1][1] = 167.0; A1.data[1][2] = -68.0;
+    A1.data[2][0] = -4.0; A1.data[2][1] =  24.0; A1.data[2][2] = -41.0;
+    ret = matrix_housholders_upper_triangular(A1,&A1);
+    ok &= assert_OK(ret,"matrix_housholders_upper_triangular 1");
+    expected_A1.data[0][0] = 14.0; expected_A1.data[0][1] =  21.0; expected_A1.data[0][2] = -14.0;
+    expected_A1.data[1][0] =  0.0; expected_A1.data[1][1] = 175.0; expected_A1.data[1][2] = -70.0;
+    expected_A1.data[2][0] =  0.0; expected_A1.data[2][1] =   0.0; expected_A1.data[2][2] = -35.0;
+    ok &= assert_matrix(A1,expected_A1,"matrix_housholders_upper_triangular result 1");
+
+    A2.data[0][0] = 12.0; A2.data[0][1] = -51.0; 
+    A2.data[1][0] =  6.0; A2.data[1][1] = 167.0; 
+    A2.data[2][0] = -4.0; A2.data[2][1] =  24.0; 
+    ret = matrix_housholders_upper_triangular(A2,&A2);
+    ok &= assert_OK(ret,"matrix_housholders_upper_triangular 2");
+    expected_A2.data[0][0] = 14.0; expected_A2.data[0][1] =  21.0;
+    expected_A2.data[1][0] =  0.0; expected_A2.data[1][1] = 175.0;
+    expected_A2.data[2][0] =  0.0; expected_A2.data[2][1] =   0.0;
+    ok &= assert_matrix(A2,expected_A2,"matrix_housholders_upper_triangular result 2");
+
+    matrix_free(expected_A1);
+    matrix_free(A1);
+    matrix_free(expected_A2);
+    matrix_free(A2);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
 
 bool tst_db_001()
 {
@@ -3341,6 +3384,7 @@ bool tst_battery_all()
     ok &= tst_math_027();
     ok &= tst_math_028();
     ok &= tst_math_029();
+    ok &= tst_math_030();
 
     ok &= tst_db_001();
     ok &= tst_db_002();
@@ -3414,11 +3458,11 @@ int main(int argc, char **argv)
     // ok &= tst_cal_xxx();
     // ok &= tst_arm_018();
     // ok &= tst_arm_016();
-    // ok &= tst_math_021();
     // ok &= tst_cal_005();
     // ok &= tst_cal_006();
     // ok &= tst_arm_018();
     // ok &= tst_arm_016();
+    // ok &= tst_math_030();
 
 
     return (ok)? RET_OK : RET_ERROR;

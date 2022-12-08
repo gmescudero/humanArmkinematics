@@ -836,3 +836,52 @@ ERROR_CODE matrix_pseudoinverse(MATRIX A, MATRIX *output) {
 
     return status;
 }
+
+ERROR_CODE matrix_housholders_upper_triangular(MATRIX A, MATRIX *output) {
+    ERROR_CODE status = RET_OK;
+    int small_size = MIN(A.rows, A.cols);
+
+    MATRIX result = matrix_from_matrix_allocate(A);
+    MATRIX Householder = matrix_identity_allocate(A.rows);
+    double v[A.rows];
+
+    for (int col = 0; RET_OK == status && col < small_size && col < A.rows-1; col++) {
+        // Compute the non zero value alpha of the working column
+        double alpha = 0;
+        for (int row = col; row < A.rows; row++) {
+            alpha += result.data[row][col]*result.data[row][col];
+        }
+        alpha = sqrt(alpha);
+        // Compute the v vector as v = A[:,col] - [alpha, 0, .. 0]^T and then v = v/|v|
+        double norm = 0;
+        for (int row = col; row < A.rows; row++) {
+            v[row] = result.data[row][col];
+            if (row == col) {
+                v[row] -= alpha;
+            }
+            norm += v[row]*v[row];
+        }
+        if (RET_OK == status) norm = sqrt(norm);
+        for (int row = col; EPSI < norm && row < A.rows; row++) {
+            v[row] *= 1/norm; 
+        }
+        // Compute the Householder
+        for (int row = col; row < A.rows; row++) {
+            for (int v_col = col; v_col < A.rows; v_col++) {
+                Householder.data[row][v_col] -= 2*v[row]*v[v_col]; 
+            }
+        }
+        // Comute the new A 
+        if (RET_OK == status) status = matrix_multiply(Householder, result, &result);
+        matrix_print(Householder,"Householder");
+        matrix_print(result,"HA");
+        // Reset Householder
+        if (RET_OK == status) status = matrix_identity_set(&Householder);
+    }
+
+    if (RET_OK == status) status = matrix_copy(result, output);
+    matrix_free(result);
+    matrix_free(Householder);
+
+    return status;
+}
