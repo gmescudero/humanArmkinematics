@@ -1264,22 +1264,22 @@ bool tst_math_030()
     A1.data[0][0] = 12.0; A1.data[0][1] = -51.0; A1.data[0][2] =   4.0;
     A1.data[1][0] =  6.0; A1.data[1][1] = 167.0; A1.data[1][2] = -68.0;
     A1.data[2][0] = -4.0; A1.data[2][1] =  24.0; A1.data[2][2] = -41.0;
-    ret = matrix_housholders_upper_triangular(A1,&A1);
-    ok &= assert_OK(ret,"matrix_housholders_upper_triangular 1");
+    ret = matrix_upper_triangular(A1,&A1);
+    ok &= assert_OK(ret,"matrix_upper_triangular 1");
     expected_A1.data[0][0] = 14.0; expected_A1.data[0][1] =  21.0; expected_A1.data[0][2] = -14.0;
     expected_A1.data[1][0] =  0.0; expected_A1.data[1][1] = 175.0; expected_A1.data[1][2] = -70.0;
     expected_A1.data[2][0] =  0.0; expected_A1.data[2][1] =   0.0; expected_A1.data[2][2] = -35.0;
-    ok &= assert_matrix(A1,expected_A1,"matrix_housholders_upper_triangular result 1");
+    ok &= assert_matrix(A1,expected_A1,"matrix_upper_triangular result 1");
 
     A2.data[0][0] = 12.0; A2.data[0][1] = -51.0; 
     A2.data[1][0] =  6.0; A2.data[1][1] = 167.0; 
     A2.data[2][0] = -4.0; A2.data[2][1] =  24.0; 
-    ret = matrix_housholders_upper_triangular(A2,&A2);
-    ok &= assert_OK(ret,"matrix_housholders_upper_triangular 2");
+    ret = matrix_upper_triangular(A2,&A2);
+    ok &= assert_OK(ret,"matrix_upper_triangular 2");
     expected_A2.data[0][0] = 14.0; expected_A2.data[0][1] =  21.0;
     expected_A2.data[1][0] =  0.0; expected_A2.data[1][1] = 175.0;
     expected_A2.data[2][0] =  0.0; expected_A2.data[2][1] =   0.0;
-    ok &= assert_matrix(A2,expected_A2,"matrix_housholders_upper_triangular result 2");
+    ok &= assert_matrix(A2,expected_A2,"matrix_upper_triangular result 2");
 
     matrix_free(expected_A1);
     matrix_free(A1);
@@ -1290,6 +1290,38 @@ bool tst_math_030()
     testReport(ok);
     return ok;
 }
+
+bool tst_math_031()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    MATRIX A1 = matrix_allocate(3,3);
+    MATRIX expected_A1 = matrix_allocate(3,3);
+
+    testDescription(__FUNCTION__, "Check the Householders reduction to bidiagonal form");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test steps
+    A1.data[0][0] = 1.0; A1.data[0][1] = 5.0; A1.data[0][2] =  3.0;
+    A1.data[1][0] = 1.0; A1.data[1][1] = 0.0; A1.data[1][2] = -7.0;
+    A1.data[2][0] = 3.0; A1.data[2][1] = 8.0; A1.data[2][2] =  9.0;
+    ret = matrix_upper_bidiagonal(A1,&A1);
+    ok &= assert_OK(ret,"matrix_upper_bidiagonal 1");
+    expected_A1.data[0][0] = 3.316625; expected_A1.data[0][1] = 11.159993; expected_A1.data[0][2] =  0.0;
+    expected_A1.data[1][0] = 0.0     ; expected_A1.data[1][1] =  8.274961; expected_A1.data[1][2] =  5.336122;
+    expected_A1.data[2][0] = 0.0     ; expected_A1.data[2][1] =  0.0     ; expected_A1.data[2][2] = -2.550561;
+    ok &= assert_matrix(A1,expected_A1,"matrix_upper_bidiagonal result 1");
+
+
+    matrix_free(expected_A1);
+    matrix_free(A1);
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
+
 
 bool tst_db_001()
 {
@@ -3385,6 +3417,7 @@ bool tst_battery_all()
     ok &= tst_math_028();
     ok &= tst_math_029();
     ok &= tst_math_030();
+    ok &= tst_math_031();
 
     ok &= tst_db_001();
     ok &= tst_db_002();
@@ -3463,6 +3496,7 @@ int main(int argc, char **argv)
     // ok &= tst_arm_018();
     // ok &= tst_arm_016();
     // ok &= tst_math_030();
+    // ok &= tst_math_031();
 
 
     return (ok)? RET_OK : RET_ERROR;

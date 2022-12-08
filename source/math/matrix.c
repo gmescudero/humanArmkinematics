@@ -837,51 +837,133 @@ ERROR_CODE matrix_pseudoinverse(MATRIX A, MATRIX *output) {
     return status;
 }
 
-ERROR_CODE matrix_housholders_upper_triangular(MATRIX A, MATRIX *output) {
-    ERROR_CODE status = RET_OK;
-    int small_size = MIN(A.rows, A.cols);
+/**
+ * @brief Compute a Householder transformation
+ * 
+ * @param A (input) Matrix to transform
+ * @param h_row (input) Row to start from
+ * @param h_col (input) Column to start from
+ * @param row_vector (input) Treat a column or a row
+ * @param Householder (output) Resulting householder
+ */
+static void smatrix_householder(MATRIX A, int h_row, int h_col, bool row_vector, MATRIX *Householder) {
+    int size;
+    int start_index;
+    double v[MAX(A.rows,A.cols)];
+    MATRIX result;
 
+    // Set the v vector with the A column/row treated
+    if (false == row_vector) {
+        size        = A.rows;
+        start_index = h_row;
+        result = matrix_identity_allocate(size);
+        for (int i = start_index; i < size; i++) {
+            v[i] = A.data[i][h_col];
+        }
+    }
+    else {
+        size        = A.cols;
+        start_index = h_col;
+        result = matrix_identity_allocate(size);
+        for (int i = start_index; i < size; i++) {
+            v[i] = A.data[h_row][i];
+        }
+    }
+
+    // Compute the non zero value alpha of the working column
+    double alpha = 0;
+    for (int i = start_index; i < size; i++) {
+        alpha +=  v[i] * v[i];
+    }
+    alpha = sqrt(alpha);
+    // Compute the v vector as v = x - [alpha, 0, .. 0]^T and then v = v/|v|
+    double norm = 0;
+    v[start_index] -= alpha;
+    for (int i = start_index; i < size; i++) {
+        norm += v[i]*v[i];
+    }
+    if (EPSI < norm) {
+        norm = sqrt(norm);
+        for (int i = start_index; i < size; i++) {
+            v[i] *= 1/norm; 
+        }
+    }
+    // Build the Householder matrix
+    for (int i = start_index; i < size; i++) {
+        for (int j = start_index; j < size; j++) {
+            result.data[i][j] -= 2*v[i]*v[j]; 
+        }
+    }
+    
+    matrix_copy(result, Householder);
+    matrix_free(result);
+}
+
+ERROR_CODE matrix_upper_triangular(MATRIX A, MATRIX *output) {
+    ERROR_CODE status = RET_OK;
+
+    // Check arguments
+    if (NULL == output)             return RET_ARG_ERROR;
+    if (false == A.allocated)       return RET_ARG_ERROR;
+    if (false == output->allocated) return RET_ARG_ERROR;
+    if (A.rows != output->rows)     return RET_ARG_ERROR;
+    if (A.cols != output->cols)     return RET_ARG_ERROR;
+
+    int small_size = MIN(A.rows, A.cols);
     MATRIX result = matrix_from_matrix_allocate(A);
     MATRIX Householder = matrix_identity_allocate(A.rows);
-    double v[A.rows];
 
     for (int col = 0; RET_OK == status && col < small_size && col < A.rows-1; col++) {
-        // Compute the non zero value alpha of the working column
-        double alpha = 0;
-        for (int row = col; row < A.rows; row++) {
-            alpha += result.data[row][col]*result.data[row][col];
-        }
-        alpha = sqrt(alpha);
-        // Compute the v vector as v = A[:,col] - [alpha, 0, .. 0]^T and then v = v/|v|
-        double norm = 0;
-        for (int row = col; row < A.rows; row++) {
-            v[row] = result.data[row][col];
-            if (row == col) {
-                v[row] -= alpha;
-            }
-            norm += v[row]*v[row];
-        }
-        if (RET_OK == status) norm = sqrt(norm);
-        for (int row = col; EPSI < norm && row < A.rows; row++) {
-            v[row] *= 1/norm; 
-        }
-        // Compute the Householder
-        for (int row = col; row < A.rows; row++) {
-            for (int v_col = col; v_col < A.rows; v_col++) {
-                Householder.data[row][v_col] -= 2*v[row]*v[v_col]; 
-            }
-        }
+        // Compute the Householder transform
+        smatrix_householder(result,col,col,false,&Householder);
         // Comute the new A 
-        if (RET_OK == status) status = matrix_multiply(Householder, result, &result);
-        matrix_print(Householder,"Householder");
-        matrix_print(result,"HA");
-        // Reset Householder
-        if (RET_OK == status) status = matrix_identity_set(&Householder);
+        status = matrix_multiply(Householder, result, &result);
+        // matrix_print(Householder,"Householder");
+        // matrix_print(result,"HA");
     }
 
     if (RET_OK == status) status = matrix_copy(result, output);
     matrix_free(result);
     matrix_free(Householder);
+
+    return status;
+}
+
+ERROR_CODE matrix_upper_bidiagonal(MATRIX A, MATRIX *output) {
+    ERROR_CODE status = RET_OK;
+
+    // Check arguments
+    if (NULL == output)             return RET_ARG_ERROR;
+    if (false == A.allocated)       return RET_ARG_ERROR;
+    if (false == output->allocated) return RET_ARG_ERROR;
+    if (A.rows != output->rows)     return RET_ARG_ERROR;
+    if (A.cols != output->cols)     return RET_ARG_ERROR;
+
+    int small_size = MIN(A.rows, A.cols);
+    MATRIX result = matrix_from_matrix_allocate(A);
+    MATRIX Householder_col = matrix_identity_allocate(A.rows);
+    MATRIX Householder_row = matrix_identity_allocate(A.cols);
+
+    for (int ind = 0; RET_OK == status && ind < small_size && ind < A.rows-1; ind++) {
+        // Compute the Householder transform for column
+        smatrix_householder(result,ind,ind,false,&Householder_col);
+        // Comute the new A 
+        if (RET_OK == status) status = matrix_multiply(Householder_col, result, &result);
+        // matrix_print(Householder_col,"Householder_col");
+        // matrix_print(result,"HA");
+
+        // Compute the Householder transform for row
+        smatrix_householder(result,ind,ind+1,true,&Householder_row);
+        // Comute the new A 
+        if (RET_OK == status) status = matrix_multiply(result, Householder_row, &result);
+        // matrix_print(Householder_row,"Householder_row");
+        // matrix_print(result,"HAH");
+    }
+
+    if (RET_OK == status) status = matrix_copy(result, output);
+    matrix_free(result);
+    matrix_free(Householder_col);
+    matrix_free(Householder_row);
 
     return status;
 }

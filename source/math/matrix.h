@@ -223,12 +223,20 @@ void matrix_svd_free(MATRIX_SVD svd);
  */
 ERROR_CODE matrix_pseudoinverse_svd(MATRIX A, MATRIX *output);
 /**
- * @brief Obtain the Householders reduction to upper triangular matrixx
+ * @brief Obtain the Householders reduction to upper triangular matrix
  * 
  * @param A (input) Matrix to make upper triangular
  * @param output (output) The resulting upper triangular matrix
  * @return ERROR_CODE 
  */
-ERROR_CODE matrix_housholders_upper_triangular(MATRIX A, MATRIX *output);
+ERROR_CODE matrix_upper_triangular(MATRIX A, MATRIX *output);
+/**
+ * @brief Obtain the Householders reduction to upper bidiagonal matrix
+ * 
+ * @param A (input) Matrix to make bidiagonal
+ * @param output (output) The resulting upper bidiagonal matrix
+ * @return ERROR_CODE 
+ */
+ERROR_CODE matrix_upper_bidiagonal(MATRIX A, MATRIX *output);
 
 #endif /* __matrix_h__ */
