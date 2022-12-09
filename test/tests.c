@@ -1256,15 +1256,19 @@ bool tst_math_030()
     MATRIX expected_A1 = matrix_allocate(3,3);
     MATRIX A2 = matrix_allocate(3,2);
     MATRIX expected_A2 = matrix_allocate(3,2);
+    MATRIX A3 = matrix_allocate(3,3);
+    MATRIX expected_A3 = matrix_allocate(3,3);
+    MATRIX Q3 = matrix_allocate(3,3);
+    MATRIX expected_Q3 = matrix_allocate(3,3);
 
-    testDescription(__FUNCTION__, "Check the Householders reduction to upper diagonal form");
+    testDescription(__FUNCTION__, "Check the reduction to upper triangular form");
     ok = preconditions_init(__FUNCTION__); 
 
     // Test steps
     A1.data[0][0] = 12.0; A1.data[0][1] = -51.0; A1.data[0][2] =   4.0;
     A1.data[1][0] =  6.0; A1.data[1][1] = 167.0; A1.data[1][2] = -68.0;
     A1.data[2][0] = -4.0; A1.data[2][1] =  24.0; A1.data[2][2] = -41.0;
-    ret = matrix_upper_triangular(A1,&A1);
+    ret = matrix_upper_triangular(A1,&A1,NULL);
     ok &= assert_OK(ret,"matrix_upper_triangular 1");
     expected_A1.data[0][0] = 14.0; expected_A1.data[0][1] =  21.0; expected_A1.data[0][2] = -14.0;
     expected_A1.data[1][0] =  0.0; expected_A1.data[1][1] = 175.0; expected_A1.data[1][2] = -70.0;
@@ -1274,17 +1278,35 @@ bool tst_math_030()
     A2.data[0][0] = 12.0; A2.data[0][1] = -51.0; 
     A2.data[1][0] =  6.0; A2.data[1][1] = 167.0; 
     A2.data[2][0] = -4.0; A2.data[2][1] =  24.0; 
-    ret = matrix_upper_triangular(A2,&A2);
+    ret = matrix_upper_triangular(A2,&A2,NULL);
     ok &= assert_OK(ret,"matrix_upper_triangular 2");
     expected_A2.data[0][0] = 14.0; expected_A2.data[0][1] =  21.0;
     expected_A2.data[1][0] =  0.0; expected_A2.data[1][1] = 175.0;
     expected_A2.data[2][0] =  0.0; expected_A2.data[2][1] =   0.0;
     ok &= assert_matrix(A2,expected_A2,"matrix_upper_triangular result 2");
 
+    A3.data[0][0] = 6.0; A3.data[0][1] = 5.0; A3.data[0][2] = 0.0;
+    A3.data[1][0] = 5.0; A3.data[1][1] = 1.0; A3.data[1][2] = 4.0;
+    A3.data[2][0] = 0.0; A3.data[2][1] = 4.0; A3.data[2][2] = 3.0;
+    ret = matrix_upper_triangular(A3,&A3,&Q3);
+    ok &= assert_OK(ret,"matrix_upper_triangular 3");
+    expected_A3.data[0][0] = 7.810250; expected_A3.data[0][1] = 4.481291; expected_A3.data[0][2] = 2.560738;
+    expected_A3.data[1][0] =      0.0; expected_A3.data[1][1] = 4.681670; expected_A3.data[1][2] = 0.966448;
+    expected_A3.data[2][0] =      0.0; expected_A3.data[2][1] =      0.0; expected_A3.data[2][2] =-4.184328;
+    ok &= assert_matrix(A3,expected_A3,"matrix_upper_triangular result 3");
+    expected_Q3.data[0][0] = 0.768221; expected_Q3.data[0][1] = 0.640184; expected_Q3.data[0][2] = 0.0;
+    expected_Q3.data[1][0] = 0.332654; expected_Q3.data[1][1] =-0.399185; expected_Q3.data[1][2] = 0.854396;
+    expected_Q3.data[2][0] = 0.546971; expected_Q3.data[2][1] =-0.656365; expected_Q3.data[2][2] =-0.519622;
+    ok &= assert_matrix(Q3,expected_Q3,"matrix_upper_triangular transform 3");
+
     matrix_free(expected_A1);
     matrix_free(A1);
     matrix_free(expected_A2);
     matrix_free(A2);
+    matrix_free(expected_A3);
+    matrix_free(expected_Q3);
+    matrix_free(A3);
+    matrix_free(Q3);
 
     testCleanUp();
     testReport(ok);
@@ -1298,20 +1320,19 @@ bool tst_math_031()
     MATRIX A1 = matrix_allocate(3,3);
     MATRIX expected_A1 = matrix_allocate(3,3);
 
-    testDescription(__FUNCTION__, "Check the Householders reduction to bidiagonal form");
+    testDescription(__FUNCTION__, "Check the reduction to bidiagonal form");
     ok = preconditions_init(__FUNCTION__); 
 
     // Test steps
     A1.data[0][0] = 1.0; A1.data[0][1] = 5.0; A1.data[0][2] =  3.0;
     A1.data[1][0] = 1.0; A1.data[1][1] = 0.0; A1.data[1][2] = -7.0;
     A1.data[2][0] = 3.0; A1.data[2][1] = 8.0; A1.data[2][2] =  9.0;
-    ret = matrix_upper_bidiagonal(A1,&A1);
+    ret = matrix_upper_bidiagonal(A1,&A1,NULL,NULL);
     ok &= assert_OK(ret,"matrix_upper_bidiagonal 1");
     expected_A1.data[0][0] = 3.316625; expected_A1.data[0][1] = 11.159993; expected_A1.data[0][2] =  0.0;
     expected_A1.data[1][0] = 0.0     ; expected_A1.data[1][1] =  8.274961; expected_A1.data[1][2] =  5.336122;
     expected_A1.data[2][0] = 0.0     ; expected_A1.data[2][1] =  0.0     ; expected_A1.data[2][2] = -2.550561;
     ok &= assert_matrix(A1,expected_A1,"matrix_upper_bidiagonal result 1");
-
 
     matrix_free(expected_A1);
     matrix_free(A1);

@@ -899,7 +899,51 @@ static void smatrix_householder(MATRIX A, int h_row, int h_col, bool row_vector,
     matrix_free(result);
 }
 
-ERROR_CODE matrix_upper_triangular(MATRIX A, MATRIX *output) {
+/**
+ * @brief Compute a Givens rotation matrix
+ * 
+ * @param A (input) Matrix to transform
+ * @param row (input) Row of the rotation element
+ * @param col (input) Column of the rotation element
+ * @param Givens (output) Resulting Givens rotation matrix
+ */
+static void smatrix_givens_rotation(MATRIX A, int row, int col, MATRIX *Givens) {
+
+    double a = A.data[col][col];
+    double b = A.data[row][col];
+    double norm = sqrt(a*a + b*b);
+    double cosine; 
+    double sine;
+
+    matrix_identity_set(Givens);
+    
+    if ((EPSI > norm) || (EPSI > fabs(b))) {
+        // Givens as identity
+        return;
+    }
+    if (EPSI > fabs(a)) {
+        cosine = 0.0;
+        sine   = -copysign(1.0,b);
+    }
+    else {
+        cosine =  a/norm;
+        sine   = -b/norm;
+    }
+
+    Givens->data[row][row] = cosine;
+    Givens->data[col][col] = cosine;
+    Givens->data[row][col] = sine;
+    Givens->data[col][row] = sine;
+
+    if (row < col) {
+        Givens->data[row][col] *= -1.0;
+    }
+    else {
+        Givens->data[col][row] *= -1.0;
+    }
+}
+
+ERROR_CODE matrix_upper_triangular(MATRIX A, MATRIX *output, MATRIX *transform) {
     ERROR_CODE status = RET_OK;
 
     // Check arguments
@@ -911,6 +955,13 @@ ERROR_CODE matrix_upper_triangular(MATRIX A, MATRIX *output) {
 
     int small_size = MIN(A.rows, A.cols);
     MATRIX result = matrix_from_matrix_allocate(A);
+    bool transform_acum = false;
+    if (NULL != transform && transform->allocated && transform->rows == A.rows && transform->cols == A.rows) {
+        transform_acum = true;
+        status = matrix_identity_set(transform);
+    }
+
+#if 0 // Householder
     MATRIX Householder = matrix_identity_allocate(A.rows);
 
     for (int col = 0; RET_OK == status && col < small_size && col < A.rows-1; col++) {
@@ -920,16 +971,41 @@ ERROR_CODE matrix_upper_triangular(MATRIX A, MATRIX *output) {
         status = matrix_multiply(Householder, result, &result);
         // matrix_print(Householder,"Householder");
         // matrix_print(result,"HA");
+        if (RET_OK == status && true == transform_acum) {
+            status = matrix_multiply(Householder, *transform, transform);
+        }
     }
 
     if (RET_OK == status) status = matrix_copy(result, output);
-    matrix_free(result);
     matrix_free(Householder);
+#else // Givens
+    MATRIX Givens = matrix_identity_allocate(A.rows);
+
+    for (int col = 0; RET_OK == status && col < small_size && col < A.rows-1; col++) {
+        for (int row = col+1; row < A.rows; row++) {
+            // Check if element is already 0
+            if (EPSI > fabs(result.data[row][col])) continue;
+            // Compute Givens transform
+            smatrix_givens_rotation(result,row,col, &Givens);
+            // Comute the new A 
+            status = matrix_multiply(Givens, result, &result);
+            // matrix_print(Givens,"Givens");
+            // matrix_print(result,"GA");
+            if (RET_OK == status && true == transform_acum) {
+                status = matrix_multiply(Givens, *transform, transform);
+            }
+        }
+    }
+
+    if (RET_OK == status) status = matrix_copy(result, output);
+    matrix_free(Givens);
+#endif 
+    matrix_free(result);
 
     return status;
 }
 
-ERROR_CODE matrix_upper_bidiagonal(MATRIX A, MATRIX *output) {
+ERROR_CODE matrix_upper_bidiagonal(MATRIX A, MATRIX *output, MATRIX *left_transform, MATRIX *right_transform) {
     ERROR_CODE status = RET_OK;
 
     // Check arguments
@@ -944,11 +1020,25 @@ ERROR_CODE matrix_upper_bidiagonal(MATRIX A, MATRIX *output) {
     MATRIX Householder_col = matrix_identity_allocate(A.rows);
     MATRIX Householder_row = matrix_identity_allocate(A.cols);
 
+    bool left_acum  = false;
+    bool right_acum = false;
+    if (NULL != left_transform && left_transform->allocated && left_transform->rows == A.rows && left_transform->cols == A.rows) {
+        left_acum = true;
+        status = matrix_identity_set(left_transform);
+    }
+    if (NULL != right_transform && right_transform->allocated && right_transform->rows == A.cols && right_transform->cols == A.cols) {
+        right_acum = true;
+        status = matrix_identity_set(right_transform);
+    }
+
     for (int ind = 0; RET_OK == status && ind < small_size && ind < A.rows-1; ind++) {
         // Compute the Householder transform for column
         smatrix_householder(result,ind,ind,false,&Householder_col);
         // Comute the new A 
         if (RET_OK == status) status = matrix_multiply(Householder_col, result, &result);
+        if (RET_OK == status && true == left_acum) {
+            status = matrix_multiply(Householder_col, *left_transform, left_transform);
+        }
         // matrix_print(Householder_col,"Householder_col");
         // matrix_print(result,"HA");
 
@@ -956,6 +1046,9 @@ ERROR_CODE matrix_upper_bidiagonal(MATRIX A, MATRIX *output) {
         smatrix_householder(result,ind,ind+1,true,&Householder_row);
         // Comute the new A 
         if (RET_OK == status) status = matrix_multiply(result, Householder_row, &result);
+        if (RET_OK == status && true == right_acum) {
+            status = matrix_multiply(*right_transform, Householder_row, right_transform);
+        }
         // matrix_print(Householder_row,"Householder_row");
         // matrix_print(result,"HAH");
     }
@@ -967,3 +1060,4 @@ ERROR_CODE matrix_upper_bidiagonal(MATRIX A, MATRIX *output) {
 
     return status;
 }
+

@@ -227,16 +227,19 @@ ERROR_CODE matrix_pseudoinverse_svd(MATRIX A, MATRIX *output);
  * 
  * @param A (input) Matrix to make upper triangular
  * @param output (output) The resulting upper triangular matrix
+ * @param transform (output) The transformation multiplied to the original A matrix from the left. Can be NULL.
  * @return ERROR_CODE 
  */
-ERROR_CODE matrix_upper_triangular(MATRIX A, MATRIX *output);
+ERROR_CODE matrix_upper_triangular(MATRIX A, MATRIX *output, MATRIX *transform);
 /**
  * @brief Obtain the Householders reduction to upper bidiagonal matrix
  * 
  * @param A (input) Matrix to make bidiagonal
  * @param output (output) The resulting upper bidiagonal matrix
+ * @param left_transform (output) The transformation multiplied to the original A matrix from the left. Can be NULL.
+ * @param right_transform (output) The transformation multiplied to the original A matrix from the right. Can be NULL.
  * @return ERROR_CODE 
  */
-ERROR_CODE matrix_upper_bidiagonal(MATRIX A, MATRIX *output);
+ERROR_CODE matrix_upper_bidiagonal(MATRIX A, MATRIX *output, MATRIX *left_transform, MATRIX *right_transform);
 
 #endif /* __matrix_h__ */
