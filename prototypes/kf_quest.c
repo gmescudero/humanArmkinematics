@@ -289,7 +289,7 @@ void kf_gravity_and_north_estimate(int imuInd, ImuData d, double grv[3], double 
     }
 }
 
-int quest_quaternion_compute(double r[QUEST_VECTORS_NUM][3], double b[QUEST_VECTORS_NUM][3], double weights[QUEST_VECTORS_NUM], double q[4]) {
+int quest_2_vectors_compute(double r[QUEST_VECTORS_NUM][3], double b[QUEST_VECTORS_NUM][3], double weights[QUEST_VECTORS_NUM], double q[4]) {
     static int recursion = 0;
     double B[3][3] = {{0.0}};
     double z[3]    = {0.0};
@@ -352,7 +352,7 @@ int quest_quaternion_compute(double r[QUEST_VECTORS_NUM][3], double b[QUEST_VECT
         for (int i=0; i<QUEST_VECTORS_NUM; i++) {
             r_aux[i][0] =  r[i][0]; r_aux[i][1] = -r[i][1]; r_aux[i][2] = -r[i][2];
         }
-        recursion = quest_quaternion_compute(r_aux,b,a, q_aux);
+        recursion = quest_2_vectors_compute(r_aux,b,a, q_aux);
         if (0 == recursion) {
             q[0] =  q_aux[1]; q[1] = -q_aux[0]; q[2] = -q_aux[2]; q[3] =  q_aux[3]; 
             return 0;
@@ -362,7 +362,7 @@ int quest_quaternion_compute(double r[QUEST_VECTORS_NUM][3], double b[QUEST_VECT
         for (int i=0; i<QUEST_VECTORS_NUM; i++) {
             r_aux[i][0] = -r[i][0]; r_aux[i][1] =  r[i][1]; r_aux[i][2] = -r[i][2]; 
         }
-        recursion = quest_quaternion_compute(r_aux,b,a, q_aux);
+        recursion = quest_2_vectors_compute(r_aux,b,a, q_aux);
         if (0 == recursion) {
             q[0] =  q_aux[2]; q[1] = -q_aux[1]; q[2] = -q_aux[0]; q[3] =  q_aux[3]; 
             return 0;
@@ -372,7 +372,7 @@ int quest_quaternion_compute(double r[QUEST_VECTORS_NUM][3], double b[QUEST_VECT
         for (int i=0; i<QUEST_VECTORS_NUM; i++) {
             r_aux[i][0] = -r[i][0]; r_aux[i][1] = -r[i][1]; r_aux[i][2] =  r[i][2];
         }
-        recursion = quest_quaternion_compute(r_aux,b,a, q_aux);
+        recursion = quest_2_vectors_compute(r_aux,b,a, q_aux);
         if (0 == recursion) {
             q[0] =  q_aux[3]; q[1] = -q_aux[2]; q[2] = -q_aux[1]; q[3] = -q_aux[0]; 
             return 0;
@@ -424,7 +424,7 @@ void quaternion_from_imu_data_compute(int imuInd, ImuData d, double q[4]) {
         mag[0]/norm_mag,mag[1]/norm_mag,mag[2]/norm_mag
     };
     double weights[QUEST_VECTORS_NUM] = {0.5,0.5};
-    quest_quaternion_compute(reference,actual,weights, q);
+    quest_2_vectors_compute(reference,actual,weights, q);
 }
 
 int main(int argc, char **argv) {
