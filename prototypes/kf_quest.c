@@ -1,8 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 
-typedef struct
-{
+typedef struct ImuDataStruct {
     double a[3]; // accelerometer
     double g[3]; // gyroscope
     double b[3]; // magnetometer
@@ -14,14 +13,25 @@ typedef struct
 #define IMU_MAX_NUMBER (1)
 #define QUEST_VECTORS_NUM (2)
 
+/**
+ * @brief Gyroscope noise value
+ * @details The manufacturer indicates 0.007 dps/sqrt(Hz), which makes it 7.071 dps for 50 Hz
+ */
+#define GYR_NOISE_50HZ (7.071)
+/**
+ * @brief Q matrix for EKF. Process noise.
+ */
 double Q[36] = {
-    1,0,0,0,0,0,
-    0,1,0,0,0,0,
-    0,0,1,0,0,0,
-    0,0,0,1,0,0,
-    0,0,0,0,1,0,
-    0,0,0,0,0,1
+    GYR_NOISE_50HZ,0,0,0,0,0,
+    0,GYR_NOISE_50HZ,0,0,0,0,
+    0,0,GYR_NOISE_50HZ,0,0,0,
+    0,0,0,GYR_NOISE_50HZ,0,0,
+    0,0,0,0,GYR_NOISE_50HZ,0,
+    0,0,0,0,0,GYR_NOISE_50HZ
 };
+/**
+ * @brief R matrix for EKF. Sensors nosie. To be determined exactly
+ */
 double R[36] = {
     1,0,0,0,0,0,
     0,1,0,0,0,0,
@@ -30,9 +40,18 @@ double R[36] = {
     0,0,0,0,1,0,
     0,0,0,0,0,1
 };
-
+/**
+ * @brief State vector for each sensor. gx, gy, gz, mx, my, mz
+ * @details The state vector is composed by the gravity and magnetic north in cartesian coordinates
+ */
 static double x[IMU_MAX_NUMBER][6]  = {{0.0}};
+/**
+ * @brief Covariance matrix for each sensor
+ */
 static double P[IMU_MAX_NUMBER][36] = {{0.0}};
+/**
+ * @brief Time period between samples for each sensor. 1/frequency
+ */
 static double T[IMU_MAX_NUMBER];
 
 
@@ -252,10 +271,10 @@ void kf_initialize(int imuInd, double grv[3], double mag[3], double period) {
 }
 
 
-void kf_gravity_and_north_estimate(int imuInd, ImuData d, double grv[3], double mag[3]) {
+void kf_gravity_and_north_filter(int imuInd, double gyr[3], double grv[3], double mag[3]) {
     double x_kp1_k[6]  = {0};
     double P_kp1_k[36] = {0};
-    double z[6] = {d.a[0]-d.linAcc[0], d.a[1]-d.linAcc[1], d.a[2]-d.linAcc[2], d.b[0], d.b[1], d.b[2]};
+    double z[6] = {grv[0], grv[1], grv[2], mag[0], mag[1], mag[2]};
     double y[6] = {0};
     double S[36] = {0};
     double S_inv[36] = {0};
@@ -266,11 +285,11 @@ void kf_gravity_and_north_estimate(int imuInd, ImuData d, double grv[3], double 
     // Predict
     kf_state_estimate(T[imuInd],
         x[imuInd][0],x[imuInd][1],x[imuInd][2],x[imuInd][3],x[imuInd][4],x[imuInd][5],
-        d.g[0],d.g[1],d.g[2], 
+        gyr[0],gyr[1],gyr[2], 
         x_kp1_k);
     kf_covariance_estimate(T[imuInd],
         P[imuInd],Q,
-        d.g[0],d.g[1],d.g[2], 
+        gyr[0],gyr[1],gyr[2], 
         P_kp1_k);
     // Correct
     for (int i=0;i<6;i++) {
@@ -404,11 +423,12 @@ int quest_2_vectors_compute(double r[QUEST_VECTORS_NUM][3], double b[QUEST_VECTO
 
 
 void quaternion_from_imu_data_compute(int imuInd, ImuData d, double q[4]) {
-    double grv[3];
-    double mag[3];
+    double gyr[3] = {d.g[0],d.g[1],d.g[2]};
+    double grv[3] = {d.a[0]-d.linAcc[0],d.a[1]-d.linAcc[1],d.a[2]-d.linAcc[2]};
+    double mag[3] = {d.b[0],d.b[1],d.b[2]};
 
     // Filter gravity and Magnetic North from imu data
-    kf_gravity_and_north_estimate(imuInd,d, grv, mag);
+    kf_gravity_and_north_filter(imuInd,gyr, grv, mag);
     printf("Gravity: %f,%f,%f\n",grv[0],grv[1],grv[2]);
     printf("North:   %f,%f,%f\n",mag[0],mag[1],mag[2]);
 
@@ -428,6 +448,7 @@ void quaternion_from_imu_data_compute(int imuInd, ImuData d, double q[4]) {
 }
 
 int main(int argc, char **argv) {
+#if 1
     double period = 0.02;
     ImuData imu = {
         .a = {0.0, 0.0,-1.0},
@@ -436,9 +457,9 @@ int main(int argc, char **argv) {
         .linAcc = {0.0,0.0,0.0},
         .timeStamp = 0
     };
-    double q[4] = {0};
+    double q[4] = {0.0};
     kf_initialize(0,imu.a,imu.b,period);
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 150; i++) {
         imu.b[0] = cos(period*imu.g[2]*i);
         imu.b[1] = sin(period*imu.g[2]*i);
         quaternion_from_imu_data_compute(0, imu, q);
@@ -447,6 +468,26 @@ int main(int argc, char **argv) {
     imu.g[2] = 0.0;
     for (int i = 0; i < 50; i++) {
         quaternion_from_imu_data_compute(0, imu, q);
-        printf("[%d] Quaternion: %f, %f,%f,%f\n\n",i+50,q[0],q[1],q[2],q[3]);
+        printf("[%d] Quaternion: %f, %f,%f,%f\n\n",i+150,q[0],q[1],q[2],q[3]);
     }
+#else
+    double reference[QUEST_VECTORS_NUM][3] = {
+        0,0,1,
+        1,0,0
+    };
+    double actual1[QUEST_VECTORS_NUM][3] = {
+        0,0,1,
+        -1,0,0
+    };
+    double actual2[QUEST_VECTORS_NUM][3] = {
+        0,0,-1,
+        1,0,0
+    };
+    double weights[QUEST_VECTORS_NUM] = {0.7071,0.7071};
+    double q[4] = {0.0};
+    quest_2_vectors_compute(reference,actual1,weights,q);
+    printf("Quaternion: %f, %f,%f,%f\n\n",q[0],q[1],q[2],q[3]);
+    quest_2_vectors_compute(reference,actual2,weights,q);
+    printf("Quaternion: %f, %f,%f,%f\n\n",q[0],q[1],q[2],q[3]);
+#endif
 }
