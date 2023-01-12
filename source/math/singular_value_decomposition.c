@@ -10,9 +10,9 @@
 #include <stdlib.h>              // required for malloc()
 #include <math.h>                // required for fabs(), sqrt();
 #include <stdio.h>               // required for printf()
-// #include "matrix.h"
-// #include "constants.h"
-// #include "general.h"
+#include "matrix.h"
+#include "constants.h"
+#include "general.h"
 
 #ifndef EPSI
 #define EPSI (1e-9)
@@ -133,37 +133,37 @@ int smatrix_Singular_Value_Decomposition(
    Householders_Reduction_to_Bidiagonal_Form( A, nrows, ncols, U, V,
                                                 singular_values, dummy_array);
 
-   printf("U after HH matrix:");
-   for (int r = 0; r < nrows; r++) {
-      printf("\n\t");
-      for (int c = 0; c < ncols; c++) {
-         printf("%f\t",*(U+ncols*r+c));
-      }
-   }
-   printf("\n");
+   // printf("U after HH matrix:");
+   // for (int r = 0; r < nrows; r++) {
+   //    printf("\n\t");
+   //    for (int c = 0; c < ncols; c++) {
+   //       printf("%f\t",*(U+ncols*r+c));
+   //    }
+   // }
+   // printf("\n");
 
    if (Givens_Reduction_to_Diagonal_Form( nrows, ncols, U, V,
                                 singular_values, dummy_array ) < 0) return -1;
 
-   printf("U after Givens matrix:");
-   for (int r = 0; r < nrows; r++) {
-      printf("\n\t");
-      for (int c = 0; c < ncols; c++) {
-         printf("%f\t",*(U+ncols*r+c));
-      }
-   }
-   printf("\n");
+   // printf("U after Givens matrix:");
+   // for (int r = 0; r < nrows; r++) {
+   //    printf("\n\t");
+   //    for (int c = 0; c < ncols; c++) {
+   //       printf("%f\t",*(U+ncols*r+c));
+   //    }
+   // }
+   // printf("\n");
 
    Sort_by_Decreasing_Singular_Values(nrows, ncols, singular_values, U, V);
   
-   printf("U after order matrix:");
-   for (int r = 0; r < nrows; r++) {
-      printf("\n\t");
-      for (int c = 0; c < ncols; c++) {
-         printf("%f\t",*(U+ncols*r+c));
-      }
-   }
-   printf("\n");
+   // printf("U after order matrix:");
+   // for (int r = 0; r < nrows; r++) {
+   //    printf("\n\t");
+   //    for (int c = 0; c < ncols; c++) {
+   //       printf("%f\t",*(U+ncols*r+c));
+   //    }
+   // }
+   // printf("\n");
 
    return 0;
 }
@@ -741,7 +741,7 @@ void smatrix_Singular_Value_Decomposition_Inverse(
            if (D[k] > tolerance) *pa += *(pv + k) * *pu / D[k];
 }
 
-#if 0
+#if 1
 ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
     ERROR_CODE status = RET_OK;
 
@@ -780,8 +780,7 @@ ERROR_CODE matrix_pseudoinverse(MATRIX a, MATRIX *output) {
 
     return status;
 }
-#endif
-
+#else
 int main(int argc, char **argv) {
 
    int rows = 2;
@@ -846,3 +845,4 @@ int main(int argc, char **argv) {
 
    return 0;
 }
+#endif

@@ -796,7 +796,7 @@ void matrix_svd_free(MATRIX_SVD svd) {
     matrix_free(svd.V);
 }
 
-ERROR_CODE matrix_pseudoinverse(MATRIX A, MATRIX *output) {
+ERROR_CODE matrix_pseudoinverse_wip(MATRIX A, MATRIX *output) {
     ERROR_CODE status = RET_OK;
 
     if (false == A.allocated)       return RET_ARG_ERROR;

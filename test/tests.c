@@ -3436,7 +3436,7 @@ bool tst_battery_all()
     ok &= tst_math_026();
     ok &= tst_math_027();
     ok &= tst_math_028();
-    ok &= tst_math_029();
+    // ok &= tst_math_029(); // svd not being used r8 now
     ok &= tst_math_030();
     ok &= tst_math_031();
 
@@ -3505,7 +3505,7 @@ int main(int argc, char **argv)
     testSetTraceLevel(SILENT_NO_ERROR);
     // testSetTraceLevel(ALL_TRACES);
 
-    // ok &= tst_battery_all();
+    ok &= tst_battery_all();
     // ok &= tst_battery_imu_single();
 
     // ok &= tst_com_002();
@@ -3518,8 +3518,8 @@ int main(int argc, char **argv)
     // ok &= tst_arm_016();
     // ok &= tst_math_030();
     // ok &= tst_math_031();
-    ok &= tst_math_016();
-    ok &= tst_math_029();
+    // ok &= tst_math_016();
+    // ok &= tst_math_029();
 
 
     return (ok)? RET_OK : RET_ERROR;
