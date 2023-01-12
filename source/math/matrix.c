@@ -737,7 +737,7 @@ ERROR_CODE matrix_eigen(MATRIX A, double eigenvalues[], MATRIX *eigenvectors) {
 }
 
 
-MATRIX_SVD matrix_svd_allocate_and_set(MATRIX A) {
+MATRIX_SVD matrix_svd_allocate_and_set_old(MATRIX A) {
     ERROR_CODE status = RET_OK;
     MATRIX_SVD svd;
     int n = A.cols;
@@ -796,7 +796,7 @@ void matrix_svd_free(MATRIX_SVD svd) {
     matrix_free(svd.V);
 }
 
-ERROR_CODE matrix_pseudoinverse(MATRIX A, MATRIX *output) {
+ERROR_CODE matrix_pseudoinverse_wip(MATRIX A, MATRIX *output) {
     ERROR_CODE status = RET_OK;
 
     if (false == A.allocated)       return RET_ARG_ERROR;
@@ -1061,3 +1061,74 @@ ERROR_CODE matrix_upper_bidiagonal(MATRIX A, MATRIX *output, MATRIX *left_transf
     return status;
 }
 
+MATRIX_SVD matrix_svd_allocate_and_set(MATRIX A) {
+    ERROR_CODE status = RET_OK;
+    MATRIX_SVD svd;
+
+    // Initialize SVD
+    svd.U = matrix_allocate(A.rows,A.rows);
+    svd.V = matrix_allocate(A.cols,A.cols);
+    svd.Sigma = matrix_zeros_allocate(A.rows,A.cols);
+    svd.set = false;
+
+    MATRIX A_transformed = matrix_from_matrix_allocate(A);
+    MATRIX left_transform = matrix_from_matrix_allocate(svd.U);
+    MATRIX right_transform = matrix_from_matrix_allocate(svd.V);
+    status = matrix_upper_bidiagonal(A, &A_transformed, &left_transform, &right_transform);
+    matrix_print(A_transformed,"Bidiagonal");
+
+    MATRIX At  = matrix_allocate(A.cols,A.rows);
+    MATRIX AtA = matrix_allocate(A.cols,A.cols);
+    MATRIX Givens_right = matrix_allocate(A.cols,A.cols);
+    MATRIX Givens_left = matrix_allocate(A.rows,A.rows);
+
+    for (int ind = 0; RET_OK == status && ind < A.cols-1; ind++) {
+        dbg_str("Iteration %d",ind);
+        // Compute AtA
+        status = matrix_transpose(A_transformed, &At);
+        if (RET_OK == status) status = matrix_multiply(At,A_transformed, &AtA);
+        // Compute Givens rotation for AtA
+        if (RET_OK == status) smatrix_givens_rotation(AtA, ind+1, ind, &Givens_right);
+        // Apply Givens transform to the right
+        if (RET_OK == status) status = matrix_multiply(A_transformed,Givens_right, &A_transformed);
+        matrix_print(AtA, "AtA");
+        matrix_print(Givens_right,"Givens right");
+        matrix_print(A_transformed,"A after Givens right");
+        matrix_multiply(Givens_right,AtA,&AtA);
+        matrix_print(AtA,"Givens to AtA");
+        // Acumulate right transform
+        if (RET_OK == status) status = matrix_multiply(right_transform,Givens_right, &right_transform);
+        if (ind < A.rows-1) {
+            // Compute Givens rotation for A
+            if (RET_OK == status) smatrix_givens_rotation(A_transformed,ind+1,ind, &Givens_left);
+            // Apply transposed Givens transform to the left
+            // if (RET_OK == status) status = matrix_transpose(Givens_left,&Givens_left);
+            if (RET_OK == status) status = matrix_multiply(Givens_left, A_transformed, &A_transformed);
+            matrix_print(Givens_left,"Givens left");
+            matrix_print(A_transformed,"A after Givens left");
+            // Acumulate left transform
+            if (RET_OK == status) status = matrix_multiply(Givens_left,left_transform, &left_transform);
+        }
+    }
+
+    if (RET_OK == status) status = matrix_transpose(left_transform,&svd.U);
+    if (RET_OK == status) status = matrix_copy(right_transform, &svd.V);
+    if (RET_OK == status) status = matrix_copy(A_transformed, &svd.Sigma);
+
+    matrix_free(Givens_left);
+    matrix_free(Givens_right);
+    matrix_free(AtA);
+    matrix_free(A_transformed);
+    matrix_free(left_transform);
+    matrix_free(right_transform);
+
+    if (RET_OK == status) {
+        svd.set = true;
+    }
+    else {
+        err_str("Failed to compute SVD");
+        matrix_svd_free(svd);
+    }
+
+    return svd;
+}

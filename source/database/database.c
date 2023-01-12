@@ -45,12 +45,12 @@ typedef struct DB_CSV_LOG_STRUCT {
     int indexes[CSV_FILE_VALUES_NUMBER];                            // Field data index for each data column 
 } DB_CSV_LOG_STRUCT;
 
-#define DB_FIELD_INIT(id,n,t,inst,mult) { \
-    .identifier=id,\
-    .name=n,\
-    .type=t,\
-    .instances=inst,\
-    .multiplicity=mult,\
+#define DB_FIELD_INIT(_identifier, _name, _type, _instances, _multiplicity) { \
+    .identifier=_identifier,\
+    .name=_name,\
+    .type=_type,\
+    .instances=_instances,\
+    .multiplicity=_multiplicity,\
     .mutex={{0}},\
     .data_ptr={NULL},\
     .initialized=0,\
