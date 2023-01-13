@@ -106,7 +106,7 @@ ERROR_CODE vector3_normalize(double a[3], double output[3]);
  * @param output (output) The angle between both given vectors
  * @return ERROR_CODE 
  */
-ERROR_CODE vector3_angleBetweenTwoVectorsCalculate(double a[3], double b[3], double *output);
+ERROR_CODE vector3_angle_between_vectors_calculate(double a[3], double b[3], double *output);
 
 /**
  * @brief Convert a 3D vector to spherical coordinates

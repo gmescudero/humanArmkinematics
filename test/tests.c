@@ -802,17 +802,17 @@ bool tst_math_020()
     ok = preconditions_init(__FUNCTION__); 
 
     // Test Steps
-    ret = vector3_angleBetweenTwoVectorsCalculate(v1, v2, &angle);
-    ok &= assert_OK(ret,"vector3_angleBetweenTwoVectorsCalculate 1");
-    ok &= assert_double(angle,angle_expected1, EPSI, "vector3_angleBetweenTwoVectorsCalculate result 1");
+    ret = vector3_angle_between_vectors_calculate(v1, v2, &angle);
+    ok &= assert_OK(ret,"vector3_angle_between_vectors_calculate 1");
+    ok &= assert_double(angle,angle_expected1, EPSI, "vector3_angle_between_vectors_calculate result 1");
 
-    ret = vector3_angleBetweenTwoVectorsCalculate(v1, v3, &angle);
-    ok &= assert_OK(ret,"vector3_angleBetweenTwoVectorsCalculate 2");
-    ok &= assert_double(angle,angle_expected2, EPSI, "vector3_angleBetweenTwoVectorsCalculate result 2");
+    ret = vector3_angle_between_vectors_calculate(v1, v3, &angle);
+    ok &= assert_OK(ret,"vector3_angle_between_vectors_calculate 2");
+    ok &= assert_double(angle,angle_expected2, EPSI, "vector3_angle_between_vectors_calculate result 2");
 
-    ret = vector3_angleBetweenTwoVectorsCalculate(v1, v4, &angle);
-    ok &= assert_OK(ret,"vector3_angleBetweenTwoVectorsCalculate 3");
-    ok &= assert_double(angle,angle_expected3, EPSI, "vector3_angleBetweenTwoVectorsCalculate result 3");
+    ret = vector3_angle_between_vectors_calculate(v1, v4, &angle);
+    ok &= assert_OK(ret,"vector3_angle_between_vectors_calculate 3");
+    ok &= assert_double(angle,angle_expected3, EPSI, "vector3_angle_between_vectors_calculate result 3");
 
     testCleanUp();
     testReport(ok);

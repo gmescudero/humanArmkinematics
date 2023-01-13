@@ -160,7 +160,7 @@ ERROR_CODE vector3_normalize(double a[3], double output[3]) {
     return status;
 }
 
-ERROR_CODE vector3_angleBetweenTwoVectorsCalculate(double a[3], double b[3], double *output) {
+ERROR_CODE vector3_angle_between_vectors_calculate(double a[3], double b[3], double *output) {
     ERROR_CODE status;
     double aux[3];
     double sinAngle;

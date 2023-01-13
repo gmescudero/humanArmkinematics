@@ -618,8 +618,8 @@ ERROR_CODE cal_gn2_two_rot_axes_calib_correct(double rotationV1[3], double rotat
     double x_axis[] = {1,0,0};
     double z_axis[] = {0,0,1};
     double angle1, angle2;
-    if (RET_OK == status) status = vector3_angleBetweenTwoVectorsCalculate(z_axis,rotationV1,&angle1);
-    if (RET_OK == status) status = vector3_angleBetweenTwoVectorsCalculate(x_axis,rotationV2,&angle2);
+    if (RET_OK == status) status = vector3_angle_between_vectors_calculate(z_axis,rotationV1,&angle1);
+    if (RET_OK == status) status = vector3_angle_between_vectors_calculate(x_axis,rotationV2,&angle2);
     if (M_PI_4 < angle1 && M_PI_2+M_PI_4 > angle1 && 
         M_PI_4 < angle2 && M_PI_2+M_PI_4 > angle2    ) 
     {
