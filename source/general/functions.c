@@ -1,3 +1,13 @@
+/**
+ * @file functions.c
+ * @author German Moreno Escudero
+ * @brief Generic functions
+ * @version 0.1
+ * @date 2023-01-13
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include <unistd.h>
 #include <string.h>
 #include <libserialport.h>  /* READ COM ports before connect */

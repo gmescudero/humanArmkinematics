@@ -1,4 +1,13 @@
-
+/**
+ * @file tst_lib.h
+ * @author German Moreno Escudero
+ * @brief Tools for testing
+ * @version 0.1
+ * @date 2023-01-13
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #ifndef __tst_lib_h__
 #define __tst_lib_h__
 

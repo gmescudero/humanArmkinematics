@@ -1,4 +1,13 @@
-
+/**
+ * @file database.c
+ * @author German Moreno Escudero
+ * @brief This module implements a dynamically allocated reentrant table-like database
+ * @version 0.1
+ * @date 2022-11-05
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include "database.h"
 #include "general.h"
 #include "imu.h"

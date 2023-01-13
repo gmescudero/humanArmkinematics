@@ -1,11 +1,11 @@
 /**
  * @file matrix.h
- * @author Germán Moreno Escudero
- * @brief Tools to manage matrixes
+ * @author German Moreno Escudero
+ * @brief Library to operate with dynamically allocaded matrixes
  * @version 0.1
- * @date 2022-07-10
+ * @date 2023-01-13
  * 
- * @copyright Copyright (c) 2022
+ * @copyright Copyright (c) 2023
  * 
  */
 #ifndef __matrix_h__

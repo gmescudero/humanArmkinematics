@@ -1,3 +1,14 @@
+/**
+ * @file tst_lib.c
+ * @author German Moreno Escudero
+ * @brief Tools for testing
+ * @version 0.1
+ * @date 2023-01-13
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

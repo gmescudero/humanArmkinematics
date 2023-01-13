@@ -1,4 +1,13 @@
-
+/**
+ * @file matrix.c
+ * @author German Moreno Escudero
+ * @brief Library to operate with dynamically allocaded matrixes
+ * @version 0.1
+ * @date 2023-01-13
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include "constants.h"
 #include "matrix.h"
 #include "general.h"

@@ -1,4 +1,13 @@
-
+/**
+ * @file logging.c
+ * @author German Moreno Escudero
+ * @brief Tools for logging system information at different levels through console and log file
+ * @version 0.1
+ * @date 2023-01-13
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>

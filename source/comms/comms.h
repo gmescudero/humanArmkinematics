@@ -1,5 +1,5 @@
 /**
- * @file comms.c
+ * @file comms.h
  * @author German Moreno Escudero
  * @brief This file implements the communications through UDP
  * @version 0.1

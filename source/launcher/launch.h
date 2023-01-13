@@ -1,5 +1,5 @@
 /**
- * @file boot.h
+ * @file launch.h
  * @author Germán Moreno Escudero
  * @brief This file is used to manage the initialization and cleaning of all pack resources
  * @version 0.1
