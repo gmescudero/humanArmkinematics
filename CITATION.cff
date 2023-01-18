@@ -1,9 +1,15 @@
-cff-version: 1.0
-message: "If you use this software, please cite it as below."
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: Human Arm Kinematics
+abstract: This project provides a library that allows gathering data from LPMS imus, calibrate it and compute the kinematic position.
 authors:
-- family-names: "Moreno Escudero"
-  given-names: "German"
-title: "Human Arm Kinematics"
+- family-names: Moreno Escudero
+  given-names: German
+keywords:
+- kinematics
+- inertial measurement unit
+- calibration
+- online calibration
 version: 1.0
 date-released: 2023-01-07
 url: "https://github.com/gmescudero/humanArmkinematics"
