@@ -46,11 +46,11 @@ lib: $(OBJS)
 	$(LD) $(INC) $(BINARIES_DIR)/*.o $(IMULIB) $(PTHREADSERIAL) --shared -o $(LIB_TARGET) -lm -ldl
 
 test: $(OBJS) lib other_dirs_create
-	cd test && make && cd -
+	cd test && $(MAKE) && cd -
 	./test/tests
 
 test_nl: $(OBJS) all other_dirs_create
-	cd test && make && cd -
+	cd test && $(MAKE) && cd -
 
 client: $(SOURCE_DIR)/comms/simple_client.c comms.o logging.o functions.o
 	$(info building client ...)
@@ -124,4 +124,4 @@ other_dirs_create:
 clean:
 	$(info cleaning up workspace ...)
 	rm -rf $(BINARIES_DIR) $(INCLUDES_DIR) $(LOGGING_DIR) $(DATA_DIR) $(TARGET) $(CLI_TARGET) $(SRV_TARGET) $(LIB_TARGET)
-	cd test && make clean && cd -
+	cd test && $(MAKE) clean && cd -
