@@ -13,7 +13,7 @@
 #include "imu.h"
 #include "constants.h"
 #include "calib.h"
-#include "arm.h"
+#include "arm_kin.h"
 #include "comms.h"
 #include <string.h>
 

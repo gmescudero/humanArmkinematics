@@ -14,7 +14,7 @@
 #include "matrix.h"
 #include "general.h"
 #include "constants.h"
-#include "arm.h"
+#include "arm_kin.h"
 #include "imu.h"
 
 typedef struct CAL_ROT_AXIS_CALIB_CONFIG_STRUCT {

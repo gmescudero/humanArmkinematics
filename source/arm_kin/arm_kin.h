@@ -1,5 +1,5 @@
 /**
- * @file arm.h
+ * @file arm_kin.h
  * @author German Moreno Escudero
  * @brief Human Arm descriptor package
  * @version 0.1

@@ -10,7 +10,7 @@
  */
 #include "Quaternion.h"
 #include "constants.h"
-#include "arm.h"
+#include "arm_kin.h"
 #include "imu.h"
 #include "vector3.h"
 #include "matrix.h"

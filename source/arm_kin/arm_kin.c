@@ -9,7 +9,7 @@
  * 
  */
 #include "constants.h"
-#include "arm.h"
+#include "arm_kin.h"
 #include "Quaternion.h"
 #include "vector3.h"
 #include "general.h"

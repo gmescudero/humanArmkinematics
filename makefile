@@ -35,7 +35,7 @@ WARN = -Wall
 CCFLAGS = $(DEBUG) $(OPT) $(WARN) -fPIC
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN) -fPIC
 
-OBJS =  quaternion.o arm.o vector3.o matrix.o imu.o imu_config.o functions.o logging.o database.o calib.o calib_two_axes_gn.o svd.o boot.o launch.o comms.o
+OBJS =  quaternion.o arm_kin.o vector3.o matrix.o imu.o imu_config.o functions.o logging.o database.o calib.o calib_two_axes_gn.o svd.o boot.o launch.o comms.o
 
 all: $(OBJS) main.o other_dirs_create
 	$(info building target ...)
@@ -78,7 +78,7 @@ logging.o: $(SOURCE_DIR)/general/logging.c bin_dirs_create
 quaternion.o: $(SOURCE_DIR)/quat_lib/Quaternion.c bin_dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@
 
-arm.o: $(SOURCE_DIR)/arm/arm.c vector3.o bin_dirs_create
+arm_kin.o: $(SOURCE_DIR)/arm_kin/arm_kin.c vector3.o bin_dirs_create
 	$(CC) -c  $(CPPFLAGS) $(INC) $< -o $(BINARIES_DIR)/$@ 
 
 calib.o: $(SOURCE_DIR)/calibration/calib.c vector3.o bin_dirs_create

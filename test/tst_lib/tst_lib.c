@@ -15,7 +15,7 @@
 #include <string.h>
 #include <signal.h>
 #include "tst_lib.h"
-#include "arm.h"
+#include "arm_kin.h"
 #include "vector3.h"
 #include "errors.h"
 #include "imu.h"

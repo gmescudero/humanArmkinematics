@@ -9,7 +9,7 @@
  * 
  */
 #include "calib.h"
-#include "arm.h"
+#include "arm_kin.h"
 #include "vector3.h"
 #include "constants.h"
 #include "matrix.h"

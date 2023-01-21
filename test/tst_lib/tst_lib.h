@@ -11,7 +11,7 @@
 #ifndef __tst_lib_h__
 #define __tst_lib_h__
 
-#include "arm.h"
+#include "arm_kin.h"
 #include "database.h"
 #include "matrix.h"
 #include "general.h"

@@ -27,11 +27,11 @@ CCFLAGS = $(DEBUG) $(OPT) $(WARN)
 CPPFLAGS = $(DEBUG) $(OPT) $(WARN)
 
 # objects
-# OBJS =  $(BINARIES_DIR)/quaternion.o $(BINARIES_DIR)/arm.o $(BINARIES_DIR)/vector3.o
-OBJS = 	$(BINARIES_DIR)/arm.o  	   $(BINARIES_DIR)/database.o   $(BINARIES_DIR)/functions.o \
+# OBJS =  $(BINARIES_DIR)/quaternion.o $(BINARIES_DIR)/arm_kin.o $(BINARIES_DIR)/vector3.o
+OBJS = 	$(BINARIES_DIR)/arm_kin.o  $(BINARIES_DIR)/database.o   $(BINARIES_DIR)/functions.o \
 		$(BINARIES_DIR)/imu.o  	   $(BINARIES_DIR)/imu_config.o $(BINARIES_DIR)/logging.o \
 		$(BINARIES_DIR)/vector3.o  $(BINARIES_DIR)/matrix.o     $(BINARIES_DIR)/calib.o \
-		$(BINARIES_DIR)/svd.o        $(BINARIES_DIR)/quaternion.o  $(BINARIES_DIR)/comms.o \
+		$(BINARIES_DIR)/svd.o      $(BINARIES_DIR)/quaternion.o $(BINARIES_DIR)/comms.o \
 		$(BINARIES_DIR)/calib_two_axes_gn.o
 all: tst_lib.o tests.c $(OBJS)
 	$(info building tests ... )
