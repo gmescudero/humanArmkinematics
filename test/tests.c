@@ -1779,6 +1779,52 @@ bool tst_db_012()
     return ok;
 }
 
+bool tst_db_013()
+{
+    bool ok = true;
+    ERROR_CODE ret;
+    DB_FIELD_IDENTIFIER field = DB_IMU_GYROSCOPE;
+    int size = 5;
+    double gyrData[3] = {0.0,0.0,0.0};
+
+    testDescription(__FUNCTION__, "Check filling the buffer and computing statistic parameters");
+    ok = preconditions_init(__FUNCTION__); 
+
+    // Test Steps
+    ret = db_field_buffer_setup(field, 0, size);
+    ok &= assert_OK(ret, "db_field_buffer_setup");
+
+    for (int i = 0; ok && i < size; i++) {
+        gyrData[0] += 0.1;
+        gyrData[1] -= 1.0;
+        gyrData[2] += 10.0;
+        ret = db_write(field, 0, gyrData);
+        ok &= assert_OK(ret, "db_write");
+    }
+
+    DB_BUFFER_STATS stats = db_field_buffer_stats_compute(field,0);
+    // Assert max
+    ok &= assert_double(stats.max[0],size*0.1,EPSI,"max gyr x");
+    ok &= assert_double(stats.max[1],-1.0,EPSI,"max gyr y");
+    ok &= assert_double(stats.max[2],size*10.0,EPSI,"max gyr z");
+    // Assert min
+    ok &= assert_double(stats.min[0],0.1,EPSI,"min gyr x");
+    ok &= assert_double(stats.min[1],size*-1.0,EPSI,"min gyr y");
+    ok &= assert_double(stats.min[2],10.0,EPSI,"min gyr z");
+    // Assert mean
+    ok &= assert_double(stats.mean[0],0.3,EPSI,"mean gyr x");
+    ok &= assert_double(stats.mean[1],-3.0,EPSI,"mean gyr y");
+    ok &= assert_double(stats.mean[2],30.0,EPSI,"mean gyr z");
+    // Assert var
+    ok &= assert_double(stats.var[0],0.025,EPSI,"var gyr x");
+    ok &= assert_double(stats.var[1],2.5,EPSI,"var gyr y");
+    ok &= assert_double(stats.var[2],250.0,EPSI,"var gyr z");
+
+    testCleanUp();
+    testReport(ok);
+    return ok;
+}
+
 bool tst_arm_001()
 {
     bool ok = true;
@@ -3452,6 +3498,7 @@ bool tst_battery_all()
     ok &= tst_db_010();
     ok &= tst_db_011();
     ok &= tst_db_012();
+    ok &= tst_db_013();
 
     ok &= tst_arm_001();
     ok &= tst_arm_002();
@@ -3520,7 +3567,6 @@ int main(int argc, char **argv)
     // ok &= tst_math_031();
     // ok &= tst_math_016();
     // ok &= tst_math_029();
-
 
     return (ok)? RET_OK : RET_ERROR;
 }

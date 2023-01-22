@@ -17,6 +17,13 @@
 #define DB_FIELD_NAME_MAX_LENGTH  (128)
 #define DB_FIELD_IDENTIFIER_INVALID (-1)
 
+#define DB_INSTANCE_MAX_NUM (10)
+
+#define DB_MULTIPLICITY_MAX_NUM (10)
+
+#define DB_MAX_BUFFER_SIZE (1000)
+#define DB_MAX_BUFFER_FIELDS (10)
+
 typedef enum DB_FIELD_IDENTIFIER_ENUM {
     DB_IMU_NUMBER = 0,
     DB_IMU_TIMESTAMP,
@@ -52,6 +59,13 @@ typedef enum DB_FIELD_TYPE_ENUM {
     DB_REAL,
     DB_FIELD_TYPES_NUM
 } DB_FIELD_TYPE;
+
+typedef struct DB_BUFFER_STATS_STRUCT {
+    double max[DB_MULTIPLICITY_MAX_NUM];
+    double min[DB_MULTIPLICITY_MAX_NUM];
+    double mean[DB_MULTIPLICITY_MAX_NUM];
+    double var[DB_MULTIPLICITY_MAX_NUM];
+} DB_BUFFER_STATS;
 
 /**
  * @brief Inititalize the database with default values
@@ -198,7 +212,14 @@ ERROR_CODE db_field_buffer_clear(const DB_FIELD_IDENTIFIER field, int instance);
  * @return int 
  */
 int db_field_buffer_current_size_get(const DB_FIELD_IDENTIFIER field, int instance);
-
+/**
+ * @brief 
+ * 
+ * @param field 
+ * @param instance 
+ * @return DB_BUFFER_STATS 
+ */
+DB_BUFFER_STATS db_field_buffer_stats_compute(const DB_FIELD_IDENTIFIER field, int instance);
 
 
 #endif /* __database_h__ */

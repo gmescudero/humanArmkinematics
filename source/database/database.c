@@ -17,12 +17,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#define DB_INSTANCE_MAX_NUM (10)
-
-#define DB_MULTIPLICITY_MAX_NUM (10)
-
-#define DB_MAX_BUFFER_SIZE (1000)
-#define DB_MAX_BUFFER_FIELDS (10)
 
 typedef struct DB_BUFFER_STRUCT {
     int size;                           // Total size of the buffer
@@ -651,6 +645,60 @@ int db_field_buffer_current_size_get(const DB_FIELD_IDENTIFIER field, int instan
 
     return (database[field].buffer[instance]->current_size);
 }
+
+static void sdb_field_buffer_stats_print(DB_FIELD_IDENTIFIER field, int instance, DB_BUFFER_STATS data) {
+    log_str("Stats of field %s_%d",database[field].name,instance);
+    log_str("\tparam\tmax\tmin\tmean\tvar");
+    for (int i = 0; i < database[field].multiplicity; i++) {
+        log_str("\t%d\t%f\t%f\t%f\t%f",i,data.max[i],data.min[i],data.mean[i],data.var[i]);
+    }
+}
+
+DB_BUFFER_STATS db_field_buffer_stats_compute(const DB_FIELD_IDENTIFIER field, int instance) {
+    DB_BUFFER_STATS results = {
+        {NAN,NAN,NAN,NAN}
+    };
+    // Check arguments
+    if (0 > field || DB_NUMBER_OF_ENTRIES <= field) return results;
+    if (0 > instance || database[field].instances <= instance) return results;
+    if (NULL == database[field].buffer[instance]) return results;
+
+    DB_BUFFER *buffer = (database[field].buffer[instance]);
+    double x;
+    double sum[DB_MULTIPLICITY_MAX_NUM]  = {0.0};
+    double sum2[DB_MULTIPLICITY_MAX_NUM] = {0.0};
+
+    // Init max and min
+    for (int m = 0; m < database[field].multiplicity; m++) {
+        results.max[m] = -__DBL_MAX__;
+        results.min[m] =  __DBL_MAX__;    
+    }
+
+    // Compute min and max and acumulate the sum and sum squared
+    for (int i = 0; i < buffer->current_size; i++) {
+        for (int m = 0; m < database[field].multiplicity; m++) {
+            x = buffer->buff[i][m];
+            results.max[m] = MAX(results.max[m],x);
+            results.min[m] = MIN(results.min[m],x);
+            sum[m] += x;
+            sum2[m] += x*x;
+        }
+    }
+
+    // Compute mean and variance
+    for (int m = 0; m < database[field].multiplicity; m++) {
+        results.mean[m] = sum[m]/buffer->current_size;
+        results.var[m]  = 
+            (sum2[m] - pow(results.mean[m],2)*buffer->current_size)
+            /(buffer->current_size-1);    
+    }
+
+    // Print stats
+    sdb_field_buffer_stats_print(field,instance,results);
+
+    return results;
+}
+
 
 /**
  * @brief Free a field buffer
