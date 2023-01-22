@@ -3025,7 +3025,7 @@ bool tst_cal_004()
 
             if (imu_data_window <= db_field_buffer_current_size_get(DB_IMU_GYROSCOPE,0)) {
                 // Set observations
-                ret = cal_gn2_observations_from_database_update();
+                ret = cal_gn2_observations_from_database_update(0.0);
                 ok &= assert_OK(ret, "cal_gn2_observations_from_database_update");
             }
 

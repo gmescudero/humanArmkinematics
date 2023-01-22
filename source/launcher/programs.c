@@ -217,7 +217,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
     if (RET_OK == status) {
         do {
             if (RET_OK == status) sleep_s(1);
-            if (RET_OK == status) status = cal_gn2_observations_from_database_update();
+            if (RET_OK == status) status = cal_gn2_observations_from_database_update(0.0);
             log_str("Current observations count: %d/%d",db_field_buffer_current_size_get(DB_CALIB_OMEGA,0),CALIB_TWO_ROT_AXES_WINDOW);
         } while (RET_OK == status && CALIB_TWO_ROT_AXES_WINDOW > db_field_buffer_current_size_get(DB_CALIB_OMEGA,0));
         log_str(" -> [USER]: Finished recording calibration data");
@@ -272,7 +272,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics(double time, bool computeShoul
 
         do {
             /* Update observations buffer */
-            if (RET_OK == status) status = cal_gn2_observations_from_database_update();
+            if (RET_OK == status) status = cal_gn2_observations_from_database_update(0.0);
 
             /* Update calibration error */
             if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &current_error);
@@ -514,7 +514,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
     if (RET_OK == status) {
         do {
             if (RET_OK == status) sleep_s(1);
-            if (RET_OK == status) status = cal_gn2_observations_from_database_update();
+            if (RET_OK == status) status = cal_gn2_observations_from_database_update(0.0);
             observations = db_field_buffer_current_size_get(DB_CALIB_OMEGA,0);
             log_str("Current observations count: %d/%d",observations,CALIB_TWO_ROT_AXES_WINDOW);
         } while (RET_OK == status && CALIB_TWO_ROT_AXES_WINDOW > observations);
@@ -584,7 +584,7 @@ ERROR_CODE hak_two_axes_auto_calib_and_kinematics_forever(bool shoulder, bool el
 
         do {
             /* Update observations buffer */
-            if (RET_OK == status) status = cal_gn2_observations_from_database_update();
+            if (RET_OK == status) status = cal_gn2_observations_from_database_update(0.0);
 
             /* Update calibration error */
             if (RET_OK == status) status = cal_gn2_root_mean_square(rotationV1,rotationV2, &current_error);
@@ -699,7 +699,7 @@ ERROR_CODE hak_laidig2017() {
     if (RET_OK == status) {
         do {
             if (RET_OK == status) sleep_s(1);
-            if (RET_OK == status) status = cal_gn2_observations_from_database_update();
+            if (RET_OK == status) status = cal_gn2_observations_from_database_update(0.0);
             observations = db_field_buffer_current_size_get(DB_CALIB_OMEGA,0);
             log_str("Current observations count: %d/%d",observations,CALIB_TWO_ROT_AXES_WINDOW);
         } while (RET_OK == status && CALIB_TWO_ROT_AXES_WINDOW > observations);

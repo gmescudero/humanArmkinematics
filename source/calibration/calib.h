@@ -116,15 +116,17 @@ void cal_gn2_terminate();
  * @param omega2_from2 (input) Angular velocity of the second IMU sensor in IMU ref. frame
  * @param q_sensor1 (input) Orientation quaternnion of the first IMU sensor
  * @param q_sensor2 (input) Orientation quaternnion of the second IMU sensor
+ * @param threshold (input) Minimum relative velocity to use
  * @return ERROR_CODE 
  */
-ERROR_CODE cal_gn2_observations_update(double omega1_from1[3], double omega2_from2[3], Quaternion q_sensor1, Quaternion q_sensor2);
+ERROR_CODE cal_gn2_observations_update(double omega1_from1[3], double omega2_from2[3], Quaternion q_sensor1, Quaternion q_sensor2, double threshold);
 /**
  * @brief Update database observations from database values.
  * 
+ * @param threshold (input) Minimum relative velocity to use 
  * @return ERROR_CODE 
  */
-ERROR_CODE cal_gn2_observations_from_database_update();
+ERROR_CODE cal_gn2_observations_from_database_update(double threshold);
 /**
  * @brief Compute total Root Mean Square value for Gauss-Newton
  * 

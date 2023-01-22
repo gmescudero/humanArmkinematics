@@ -315,7 +315,7 @@ void cal_gn2_terminate() {
     scal_data.initialized = false;
 }
 
-ERROR_CODE cal_gn2_observations_update(double omega1_from1[3], double omega2_from2[3], Quaternion q_sensor1, Quaternion q_sensor2) {
+ERROR_CODE cal_gn2_observations_update(double omega1_from1[3], double omega2_from2[3], Quaternion q_sensor1, Quaternion q_sensor2, double threshold) {
     ERROR_CODE status = RET_OK;
     Quaternion qR;
     double omega2_from1[3];
@@ -334,13 +334,15 @@ ERROR_CODE cal_gn2_observations_update(double omega1_from1[3], double omega2_fro
     // Update database
     double omegaR_norm;
     if (RET_OK == status) status = vector3_norm(omegaR, &omegaR_norm);
-    if (RET_OK == status) status = db_write(DB_CALIB_OMEGA,0,omegaR);
-    if (RET_OK == status) status = db_write(DB_CALIB_OMEGA_NORM, 0, &omegaR_norm);
+    if (threshold < omegaR_norm) {
+        if (RET_OK == status) status = db_write(DB_CALIB_OMEGA,0,omegaR);
+        if (RET_OK == status) status = db_write(DB_CALIB_OMEGA_NORM, 0, &omegaR_norm);
+    }
     
     return status;
 }
 
-ERROR_CODE cal_gn2_observations_from_database_update() {
+ERROR_CODE cal_gn2_observations_from_database_update(double threshold) {
     ERROR_CODE status = RET_OK;
     double omega1_from1[3];
     double omega2_from2[3];
@@ -362,7 +364,7 @@ ERROR_CODE cal_gn2_observations_from_database_update() {
         if (RET_OK == status) status = db_field_buffer_from_tail_data_get(DB_IMU_QUATERNION,1,i,q_buff);
         if (RET_OK == status) quaternion_from_buffer_build(q_buff, &q_sensor2);
         // Compute observations and log them into the database
-        if (RET_OK == status) status = cal_gn2_observations_update(omega1_from1, omega2_from2, q_sensor1, q_sensor2);
+        if (RET_OK == status) status = cal_gn2_observations_update(omega1_from1, omega2_from2, q_sensor1, q_sensor2, threshold);
     }
     if (RET_OK == status) {
         // Clear buffers
