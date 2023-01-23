@@ -36,8 +36,7 @@ void cal_min_velocity_set(double min_vel);
  * @brief Set the calibration data from a given set of IMU sensor readings
  * 
  * @param known_quat (input) Predefined known quaternion during calibration
- * @param im (input) Readings from IMU sensors
- * @param number_of_imus (input) Number of IMU sensors to calibrate
+ * @param imus_quat (input) Readings from IMU sensors
  */
 void cal_static_imu_quat_calibration_set(
     Quaternion known_quat[IMU_MAX_NUMBER],
